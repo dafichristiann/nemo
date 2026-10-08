@@ -1,12 +1,17 @@
 # PRD — Anchor (Personal Focus Assistant)
 
-> **Status:** Approved / Locked for Architecture · **Version:** 0.3
-> **Tanggal:** 2026-10-07 (v0.2) · 2026-10-08 (v0.3)
+> **Status:** Approved / Locked for Architecture · **Version:** 0.4
+> **Tanggal:** 2026-10-07 (v0.2) · 2026-10-08 (v0.3) · 2026-10-08 (v0.4)
 > **Dokumen terkait:** `00-product-brief.md`
 > **Catatan:** PRD ini mendefinisikan aturan perilaku (*behavioral rules*) yang telah dikunci.
 > **v0.3:** mengaktifkan AI Personal Insight via **Gemini opt-in** (§10.8, §13.1); Phase 6
 > item "Insight AI" dipromosikan. Perubahan ini melonggarkan prinsip "no egress" **hanya**
 > untuk AI yang di-opt-in; default tetap OFF.
+> **v0.4:** menuntaskan blocking **Strict/Custom** via `AccessibilityService` (§10.5, §14).
+> Menjelaskan semantik pemblokiran (layar perantara "kembali fokus", bukan paksa), gerbang
+> tiga lapis (build flag + toggle opt-in + izin OS), dan fallback Gentle yang wajib.
+> **Tidak ada** aturan perilaku baru selain yang sudah terkunci di §10.5; dokumen ini hanya
+> memindahkan FR-F4/F8 dari "no-op" ke implementasi sesuai keputusan Spike B.
 
 ---
 
@@ -431,6 +436,21 @@ Then   Anchor menahan intervensi tambahan (maksimum harian dihormati)
 | **Strict** | App distraksi terpilih dibatasi sementara. |
 | **Custom** | User menentukan app mana yang dibatasi. |
 
+**Pemblokiran Strict/Custom (v0.4 — implementasi FR-F4/F8):**
+
+- **Gerbang tiga lapis.** Pemblokiran hanya aktif bila **ketiganya** benar: (a) build flag
+  `FOCUS_BLOCKING_ENABLED`, (b) toggle opt-in di Settings (`focusBlockingEnabled`, default OFF),
+  dan (c) izin `AccessibilityService` aktif di OS. Bila salah satu tidak terpenuhi → sesi berjalan
+  sebagai **Gentle** + user diberi tahu (FR-F8). **Tidak pernah gagal keras.**
+- **Semantik non-paksa.** Saat user membuka app yang diblokir selama sesi, Anchor menampilkan
+  **layar perantara "kembali fokus"** (bukan memaksa keluar tanpa penjelasan) — konsisten dengan
+  prinsip *Awareness > Control* (§4). User tetap dapat menutupnya dan lanjut; tidak ada mekanisme
+  kunci yang tidak bisa dilewati.
+- **Privasi.** `AccessibilityService` **tidak** membaca konten layar (`canRetrieveWindowContent=false`);
+  hanya nama package dari event perpindahan window. Tidak ada data yang dikirim keluar (docs 09).
+- **Emergency exit selalu tersedia** (FR-F5) dan seketika menghentikan pemblokiran.
+- **Detail teknis** ada di `docs/superpowers/specs/2026-10-08-focus-strict-custom-blocking-design.md`.
+
 **Active Focus — wajib menampilkan:**
 - Nama task
 - Current step (subtask aktif)
@@ -763,6 +783,10 @@ Then   semua data lokal terhapus (kecuali yang user pilih untuk dipertahankan)
 | **5** | AI Personal Insight | Daily reflection, patterns, recommendations, rule-based fallback, aggregated Gemini insights | MVP (Locked v0.2) |
 | **6** | Advanced Blocking + Sync | Blocking lanjutan, cloud sync, backup, akun (opsional) | Post-MVP |
 
+> **Catatan v0.4:** Item "Accessibility Experiment" (Phase 3) dan bagian blocking dari Phase 6
+> kini **terimplementasi** sebagai blocking Strict/Custom yang opt-in & feature-flagged
+> (lihat §10.5, §14, §16 OQ-Focus-Blocking). Cloud sync/backup/akun tetap Post-MVP.
+
 **Definition of Done utama:** Phase 1–5 berjalan baik di real device.
 
 ---
@@ -829,6 +853,11 @@ Saat user **menyalakan** toggle AI, Anchor mengizinkan satu jalur egress:
 
 **First launch tidak memaksa apa pun.** Smart Todo jalan tanpa izin apa pun.
 
+**Accessibility (v0.4).** Diminta **hanya** saat user memilih Strict/Custom atau menyalakan
+toggle "Focus blocking (experimental)" di Settings — **bukan** di onboarding. Bersifat
+*opsional & feature-flagged*; bila tidak tersedia/dimatikan OS → Strict/Custom **turun ke Gentle**
++ diberi tahu (FR-F8). Tanpa Accessibility, app tetap berfungsi penuh (spike B, docs 08 §4).
+
 ---
 
 ## 15. Risiko Teknis & Mitigasi (ringkas — register lengkap di dokumen terpisah)
@@ -837,7 +866,7 @@ Saat user **menyalakan** toggle AI, Anchor mengizinkan satu jalur egress:
 |---|---|---|
 | Background execution limits (Doze/Standby) | Tinggi | WorkManager, hindari polling |
 | UsageStats granularitas terbatas | Tinggi | Spike A; degradasi bertahap |
-| Accessibility rapuh & boros | Tinggi | Eksperimental; fallback ke notifikasi |
+| Accessibility rapuh & boros | Tinggi | Eksperimental; **opt-in + feature-flagged**; fallback ke Gentle (v0.4, FR-F8) |
 | Notification permission ditolak | Sedang | Fallback in-app |
 | Exact alarm restrictions | Sedang | Alarm fleksibel / WorkManager |
 | OEM killing background | Sedang–Tinggi | Panduan battery optimization; uji device nyata |
@@ -861,6 +890,11 @@ Saat user **menyalakan** toggle AI, Anchor mengizinkan satu jalur egress:
   opt-in (default OFF), key dari `local.properties`→`BuildConfig.GEMINI_API_KEY`,
   wajib fallback rule-based, hanya agregat yang dikirim (§13.1). Ini **promosi** Phase 6
   "Insight AI" ke dalam scope aktif.
+- **OQ-Focus-Blocking (v0.4):** Blocking Strict/Custom diimplementasikan via
+  `AccessibilityService` (menggantikan `GentleBlockingStrategy` no-op). **Opt-in &
+  feature-flagged** (build flag + toggle Settings + izin OS), semantik **non-paksa** (layar
+  perantara "kembali fokus"), dan **fallback Gentle wajib** (FR-F8). Emergency exit selalu
+  tersedia (FR-F5). Detail: `specs/2026-10-08-focus-strict-custom-blocking-design.md`.
 
 ---
 

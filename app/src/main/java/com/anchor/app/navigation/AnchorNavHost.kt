@@ -111,7 +111,9 @@ fun AnchorNavHost(
                     onOpenSettings = { navController.navigate(Routes.SETTINGS) },
                 )
             }
-            composable(TopLevelDestination.WELLBEING.route) { WellbeingScreen() }
+            composable(TopLevelDestination.WELLBEING.route) {
+                WellbeingScreen(onOpenSettings = { navController.navigate(Routes.SETTINGS) })
+            }
             composable(TopLevelDestination.FOCUS.route) { FocusScreen() }
             composable(TopLevelDestination.INSIGHTS.route) { InsightsScreen() }
 

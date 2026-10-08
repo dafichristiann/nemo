@@ -110,11 +110,11 @@ class UsageUseCasesTest {
         )
         repo.upsertAppCategories(
             listOf(
-                AppCategory("com.tiktok", "SOCIAL", isDistraction = true, overrideSource = "AUTO"),
-                AppCategory("com.study", "PRODUCTIVE", isDistraction = false, overrideSource = "AUTO"),
+                AppCategory("com.tiktok", "SOCIAL", isDistraction = true, overrideSource = AppCategory.SOURCE_USER),
+                AppCategory("com.study", "PRODUCTIVE", isDistraction = false, overrideSource = AppCategory.SOURCE_USER),
             ),
         )
-        val useCase = AggregateUsageUseCase(repo, time)
+        val useCase = AggregateUsageUseCase(repo, CategorizeAppsUseCase(repo), time)
 
         val summary = useCase.aggregateDay(LocalDate.of(2026, 10, 7).toEpochDay())
 
@@ -135,7 +135,7 @@ class UsageUseCasesTest {
         repo.insertSessions(
             listOf(session("com.tiktok", millis(2026, 10, 7, 23, 30), millis(2026, 10, 8, 0, 30))),
         )
-        val useCase = AggregateUsageUseCase(repo, time)
+        val useCase = AggregateUsageUseCase(repo, CategorizeAppsUseCase(repo), time)
 
         val oct7 = useCase.aggregateDay(LocalDate.of(2026, 10, 7).toEpochDay())
         val oct8 = useCase.aggregateDay(LocalDate.of(2026, 10, 8).toEpochDay())
@@ -154,7 +154,7 @@ class UsageUseCasesTest {
         repo.insertSessions(
             listOf(session("com.a", millis(2026, 10, 7, 18, 0, utc), millis(2026, 10, 7, 18, 30, utc))),
         )
-        val useCase = AggregateUsageUseCase(repo, time)
+        val useCase = AggregateUsageUseCase(repo, CategorizeAppsUseCase(repo), time)
 
         val oct8 = useCase.aggregateDay(LocalDate.of(2026, 10, 8).toEpochDay())
         val oct7 = useCase.aggregateDay(LocalDate.of(2026, 10, 7).toEpochDay())
@@ -174,7 +174,7 @@ class UsageUseCasesTest {
                 session("com.tiktok", millis(2026, 10, 7, 20), millis(2026, 10, 7, 21, 0)),
             ),
         )
-        val useCase = AggregateUsageUseCase(repo, time)
+        val useCase = AggregateUsageUseCase(repo, CategorizeAppsUseCase(repo), time)
         // Aggregate both days first.
         repo.upsertDailySummary(useCase.aggregateDay(LocalDate.of(2026, 10, 5).toEpochDay()))
         repo.upsertDailySummary(useCase.aggregateDay(LocalDate.of(2026, 10, 7).toEpochDay()))
@@ -198,7 +198,7 @@ class UsageUseCasesTest {
                 session("com.a", millis(2026, 10, 7, 10), millis(2026, 10, 7, 11)),
             ),
         )
-        val useCase = AggregateUsageUseCase(repo, time)
+        val useCase = AggregateUsageUseCase(repo, CategorizeAppsUseCase(repo), time)
 
         val days = useCase()
 

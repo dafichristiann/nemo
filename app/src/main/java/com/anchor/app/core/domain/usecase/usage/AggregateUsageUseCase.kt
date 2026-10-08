@@ -21,6 +21,7 @@ import javax.inject.Inject
  */
 class AggregateUsageUseCase @Inject constructor(
     private val usageRepository: UsageRepository,
+    private val categorizeApps: CategorizeAppsUseCase,
     private val timeProvider: TimeProvider,
 ) {
     /**
@@ -55,6 +56,9 @@ class AggregateUsageUseCase @Inject constructor(
 
         // Widen the query slightly so sessions straddling the edges are included, then clip.
         val sessions = usageRepository.sessionsBetween(dayStart, dayEnd)
+
+        // Ensure every app seen today has a category (user overrides are preserved).
+        categorizeApps(sessions.map { it.packageName })
 
         val clipped = sessions.mapNotNull { it.clipTo(dayStart, dayEnd) }
         val totalMs = clipped.sumOf { it.durationMs }

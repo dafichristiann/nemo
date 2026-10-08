@@ -54,6 +54,17 @@ class UsageWorkScheduler @Inject constructor(
             pruning,
         )
 
+        // Phase-2 drift check: also periodic (UsageStatsManager has no real-time events).
+        val driftCheck = PeriodicWorkRequestBuilder<DriftCheckWorker>(
+            COLLECT_INTERVAL_MINUTES,
+            TimeUnit.MINUTES,
+        ).build()
+        workManager.enqueueUniquePeriodicWork(
+            DriftCheckWorker.UNIQUE_NAME,
+            ExistingPeriodicWorkPolicy.KEEP,
+            driftCheck,
+        )
+
         // Kick off one aggregation now so the first summaries appear without waiting a day.
         runAggregationNow()
     }

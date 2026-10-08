@@ -18,6 +18,22 @@
     <string name="wellbeing_placeholder_title">Wellbeing</string>
     <string name="wellbeing_placeholder_body">Local screen-time insights and personal baseline arrive in Sprint 2–3. Your usage data never leaves the device.</string>
 
+    <!-- 03 Digital Wellbeing (07-screens.md §2.7, PRD §10.2) -->
+    <string name="wellbeing_title">Wellbeing</string>
+    <string name="wellbeing_screen_time">Screen time today</string>
+    <string name="wellbeing_top_apps">TOP APPS</string>
+    <string name="wellbeing_this_week">THIS WEEK</string>
+    <string name="wellbeing_local_only">All numbers come from your device. Nothing is sent anywhere.</string>
+    <string name="wellbeing_no_comparison">No data for yesterday yet.</string>
+    <string name="wellbeing_same_as_yesterday">About the same as yesterday.</string>
+    <string name="wellbeing_more_than_yesterday">%1$s more than yesterday.</string>
+    <string name="wellbeing_less_than_yesterday">%1$s less than yesterday.</string>
+    <string name="wellbeing_perm_title">See your screen time</string>
+    <string name="wellbeing_perm_body">Anchor needs Usage access to show your local screen-time insights. Enable it in Settings — your data stays on this device.</string>
+    <string name="wellbeing_perm_cta">Open Settings</string>
+    <string name="wellbeing_nodata_title">No usage data yet</string>
+    <string name="wellbeing_nodata_body">Once you use your phone a little, your screen-time summary will appear here.</string>
+
     <string name="focus_placeholder_title">Focus</string>
     <string name="focus_placeholder_body">Focus Setup and the active session arrive in Sprint 5, together with a gentle, always-available emergency exit.</string>
 

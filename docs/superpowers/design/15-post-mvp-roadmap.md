@@ -5,6 +5,10 @@
 > `12-sprint-backlog.md` §Post-MVP, `10-risk-register.md` (R34)
 > **Dokumen terkait:** `09-privacy-and-security.md`, `08-permissions.md`
 
+> **Update v0.3 (2026-10-08):** **P6-8 (Insight AI)** telah **dipromosikan** ke scope aktif
+> sesuai PRD v0.3 §10.8/§13.1 — AI nyata via **Gemini REST opt-in** (agregat saja, fallback
+> rule-based wajib). Item lain di dokumen ini tetap backlog.
+
 > ⚠️ **PRD terkunci.** Phase 6 **secara sengaja di luar MVP** (`05-mvp-scope.md` §7,
 > `01-prd.md` §11). Dokumen ini **hanya mencatat ide** agar tidak hilang, **bukan**
 > komitmen atau izin untuk mulai mengerjakan. Untuk memindahkan item ke MVP, **ubah PRD
@@ -89,6 +93,9 @@ Setiap ide Phase 6 **wajib** tetap menghormati prinsip yang sudah dikunci:
 - **Deskripsi:** menjalankan model kecil on-device → nol egress.
 - **Catatan:** menghapus kebutuhan jaringan untuk AI; namun menambah ukuran APK & RAM
   (bertabrakan dengan target < 150 MB). Perlu evaluasi.
+- **Status (v0.3):** **sebagian dipromosikan** — AI nyata kini memakai **Gemini REST
+  opt-in** (cloud, agregat saja), bukan on-device. Ide on-device ini tetap backlog bila
+  ingin menghapus egress sepenuhnya.
 - **Risiko:** sedang.
 
 ### P6-9 — Lokalisasi Tambahan

@@ -24,6 +24,17 @@ val keystoreProperties = Properties().apply {
 }
 val hasReleaseKeystore = keystoreProperties.getProperty("storeFile") != null
 
+// Optional Gemini API key for the opt-in AI insight (PRD v0.3 §10.8/§13.1).
+// Read from an untracked local.properties (machine-specific) so the key is never committed.
+// When absent, the AI source is a no-op and insight falls back to rule-based (FR-AI4, FR-AI7).
+val localPropertiesFile = rootProject.file("local.properties")
+val localProperties = Properties().apply {
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use { load(it) }
+    }
+}
+val geminiApiKey: String = localProperties.getProperty("GEMINI_API_KEY") ?: ""
+
 android {
     namespace = "com.anchor.app"
     compileSdk = 35
@@ -39,6 +50,9 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        // Expose the opt-in AI key to code without committing it (FR-AI7). Empty when unset.
+        buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
     }
 
     signingConfigs {
@@ -82,6 +96,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     androidResources {

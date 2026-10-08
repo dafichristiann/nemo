@@ -7,14 +7,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Placeholder [AiInsightSource] for the local-first build (docs 09-privacy §6).
- *
- * No network endpoint or API key is configured, so it always returns null → the generator falls
- * back to the rule-based source (FR-AI4). This keeps the app 100% offline-capable and makes the
- * "AI is optional and off by default" guarantee structural: even if `aiEnabled` were true, no raw
- * or aggregate data leaves the device until a real source is provided here.
- *
- * A future Gemini-backed source replaces this binding (docs 02 §1) — the domain contract is fixed.
+ * A no-op [AiInsightSource] that always returns null → the generator falls back to rule-based
+ * (FR-AI4). Retained primarily as a test double and as the "no key" reference behaviour; the
+ * shipped binding is now [GeminiInsightSource] (PRD v0.3 §10.8), which behaves identically
+ * whenever no API key is configured.
  */
 @Singleton
 class NoOpAiInsightSource @Inject constructor() : AiInsightSource {

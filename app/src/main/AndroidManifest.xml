@@ -5,8 +5,17 @@
     <!--
       Privacy: allowBackup="false" (docs/superpowers/design/09-privacy-and-security.md §5)
       prevents user data leaving the device via OS auto-backup.
-      No network permissions are declared (local-first, no AI in Sprint 0).
+      Local-first by default: INTERNET is declared only to support the OPT-IN AI insight
+      (Gemini, PRD v0.3 §10.8/§13.1). No request is ever made unless the user enables the
+      AI toggle AND a key is configured (FR-AI7). All other features are offline-only.
     -->
+
+    <!--
+      Opt-in AI insight only (PRD v0.3 §13.1). Used exclusively by GeminiInsightSource when
+      aiEnabled && key present; otherwise zero egress.
+    -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <!--
       Digital Wellbeing (Phase 2, docs 08-permissions.md §?). PACKAGE_USAGE_STATS is a

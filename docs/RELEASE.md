@@ -72,12 +72,28 @@ keytool -genkeypair -v -keystore anchor-release.jks -alias anchor `
 ---
 
 ## 5. Lokalisasi
-
 - Default: **English** (`app/src/main/res/values/strings.xml`).
 - **Bahasa Indonesia**: `app/src/main/res/values-id/strings.xml` (paritas 183 kunci).
 - Per-app language (Android 13+) aktif via `generateLocaleConfig` +
   `app/src/main/res/resources.properties` (`unqualifiedResLocale=en-US`).
 - Menambah string baru: tambahkan ke **kedua** berkas (EN & ID) agar paritas terjaga.
+
+---
+
+## 5b. AI Insight (Gemini — opt-in)
+
+AI Personal Insight memakai Gemini REST (lihat `superpowers/design/16-ai-insight-gemini.md`).
+Konfigurasi key di `local.properties` (git-ignored, machine-specific):
+
+```properties
+GEMINI_API_KEY=<key dari Google AI Studio>
+```
+
+- Bila key **kosong** → AI no-op, insight memakai rule-based lokal, **tanpa egress**.
+- Bila key **ada** & toggle AI di Settings **ON** → `generateContent` mengirim
+  **hanya agregat**; gagal/offline → fallback rule-based otomatis.
+- Default toggle AI = **OFF** (privacy).
+- ⚠️ **Jangan commit** `local.properties` / key. Rotasi key bila pernah terekspos.
 
 ---
 

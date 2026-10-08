@@ -51,6 +51,7 @@ Dokumentasi ini adalah *source of truth* untuk desain, arsitektur, dan MVP Ancho
 | 13 | `13-spike-b-accessibility.md` | Keputusan Spike B (Accessibility) | Spike decision |
 | 14 | `14-hardening-report.md` | Verifikasi Sprint 8 (hardening) | Report |
 | 15 | `15-post-mvp-roadmap.md` | Roadmap Phase 6 (backlog ide, bukan komitmen) | Backlog |
+| 16 | `16-ai-insight-gemini.md` | AI Insight aktif via Gemini (opt-in) | Spec |
 | — | `gamabaran.pen` | Mockup desain (pen.dev) | Mockup |
 | — | `build_pen.js` / `_cleanup.js` | Pembangun & pembersih file `.pen` | Tooling |
 

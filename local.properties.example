@@ -1,0 +1,10 @@
+# Anchor — local.properties template (copy to `local.properties`, git-ignored).
+# This file is host/machine-specific and MUST NOT be committed.
+
+# Android SDK path (required for building).
+sdk.dir=C\:\\Users\\you\\AppData\\Local\\Android\\Sdk
+
+# Optional: Gemini API key for the opt-in AI insight (PRD v0.3 §10.8/§13.1).
+# Get one free at https://aistudio.google.com/apikey
+# Leave empty to keep the app 100% offline (rule-based insight only).
+GEMINI_API_KEY=

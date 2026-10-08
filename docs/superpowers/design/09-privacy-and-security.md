@@ -53,6 +53,14 @@ fun assertAggregatedOnly(payload: InsightPayload) {
 }
 ```
 
+> **Update v0.3 (2026-10-08):** AI nyata (Gemini REST) sekarang **aktif** saat user
+> meng-opt-in. Satu-satunya jalur egress adalah `InsightPayload` agregat ke
+> `generativelanguage.googleapis.com` (PRD §13.1). Implementasi: `GeminiInsightSource`
+> memakai `HttpURLConnection`, key dari `BuildConfig.GEMINI_API_KEY`
+> (`local.properties`, git-ignored). Saat AI OFF (default) **tidak ada request apa pun**;
+> `NoOp`/rule-based menjadi jalur default. Semua prinsip "no raw leaves the device" tetap
+> berlaku tanpa pengecualian.
+
 - Payload **hanya** berisi: total screen time, top-N app **durasi agregat**, kategori,
   jumlah sesi — **bukan** timestamp per sesi.
 - Ada unit test yang **menolak** payload berisi raw (PRD §10.8 acceptance).

@@ -722,7 +722,7 @@ function createScreenSettings(x, y) {
  text('Sec Data', 32, 394, 'DATA CONTROLS', 11, '700', '#888888', { letterSpacing: 2 }),
  rect('Ret Card', 32, 418, 311, 52, '#F8F8F8', 12, shadowEffect(0, 4, 12, '#00000008')),
  text('Ret Title', 48, 430, 'Data Retention', 14, '600', '#0A0A0A'),
- text('Ret Sub', 48, 450, 'Simpan maksimal 90 hari', 12, '400', '#777777'),
+ text('Ret Sub', 48, 450, 'Simpan maksimal 30 hari', 12, '400', '#777777'),
  icon('Ret Chevron', 322, 436, 22, 'chevron_right', '#AAAAAA'),
 
  rect('Del Card', 32, 478, 311, 52, '#FFF5F5', 12, shadowEffect(0, 4, 12, '#CC333315')),

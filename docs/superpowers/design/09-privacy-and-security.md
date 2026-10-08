@@ -71,8 +71,8 @@ fun assertAggregatedOnly(payload: InsightPayload) {
 | `insight` | Permanen / dibatasi | – |
 
 - Retensi **configurable** di Settings (14–30 hari) — PRD FR-S5.
-- ⚠️ **Mockup menulis "90 hari"** — ini **tidak sesuai** PRD. Ikuti PRD (14–30 hari),
-  perbarui teks mockup (lihat `07-screens.md` §7).
+- ✅ **Mockup diperbarui** menjadi "Simpan maksimal 30 hari" agar konsisten dengan PRD
+  (14–30 hari); koreksi diterapkan di `build_pen.js` dan `gamabaran.pen` (lihat `07-screens.md` §7).
 - Hapus raw **setelah** agregasi berhasil (jangan hapus sebelum diagregasi).
 
 ---

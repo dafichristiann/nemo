@@ -10,6 +10,7 @@ import com.anchor.app.core.domain.model.FocusSession
 import com.anchor.app.core.domain.model.FocusStatus
 import com.anchor.app.core.domain.model.Subtask
 import com.anchor.app.core.domain.model.Task
+import com.anchor.app.core.domain.model.TaskStatus
 import com.anchor.app.core.domain.repository.FocusRepository
 import com.anchor.app.core.domain.repository.TaskRepository
 import com.anchor.app.core.domain.usecase.focus.FinishFocusUseCase
@@ -108,6 +109,22 @@ class FocusViewModel @Inject constructor(
         initialValue = FocusUiState(),
     )
 
+    init {
+        // Keep the *actual* selection in sync with the effective default shown in the UI: when
+        // no task is chosen yet and open tasks exist, adopt the first one. Without this the setup
+        // screen would display a selection that `onBegin()` never sees (taskId stays null).
+        viewModelScope.launch {
+            taskRepository.observeAll().collect { tasks ->
+                if (selectedTaskId.value == null) {
+                    val firstOpen = tasks.firstOrNull {
+                        it.status == TaskStatus.TODO || it.status == TaskStatus.IN_PROGRESS
+                    }
+                    if (firstOpen != null) selectedTaskId.value = firstOpen.id
+                }
+            }
+        }
+    }
+
     private fun buildState(
         tasks: List<Task>,
         current: FocusSession?,
@@ -117,7 +134,7 @@ class FocusViewModel @Inject constructor(
         elapsed: Long,
     ): FocusUiState {
         val options = tasks
-            .filter { it.status == com.anchor.app.core.domain.model.TaskStatus.TODO || it.status == com.anchor.app.core.domain.model.TaskStatus.IN_PROGRESS }
+            .filter { it.status == TaskStatus.TODO || it.status == TaskStatus.IN_PROGRESS }
             .map { FocusTaskOption(it.id, it.title) }
 
         val active = current?.let { session ->

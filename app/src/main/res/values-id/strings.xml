@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Terjemahan Bahasa Indonesia (PRD 12 "Localization"). Default app = English; berkas ini
+  menyediakan terjemahan penuh yang siap dipakai. Semua teks antarmuka lewat string
+  resources — jangan hardcode. Nada: tenang, mendukung, ringkas, tanpa menghakimi.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">Anchor</string>
+
+    <!-- Navigation / bottom bar (07-screens.md 2, PRD 12) -->
+    <string name="nav_tasks">Tugas</string>
+    <string name="nav_wellbeing">Kesejahteraan</string>
+    <string name="nav_focus">Fokus</string>
+    <string name="nav_insights">Wawasan</string>
+
+    <!-- 03 Digital Wellbeing (07-screens.md 2.7, PRD 10.2) -->
+    <string name="wellbeing_title">Kesejahteraan</string>
+    <string name="wellbeing_screen_time">Waktu layar hari ini</string>
+    <string name="wellbeing_top_apps">APLIKASI TERATAS</string>
+    <string name="wellbeing_this_week">MINGGU INI</string>
+    <string name="wellbeing_local_only">Semua angka berasal dari perangkatmu. Tidak ada yang dikirim ke mana pun.</string>
+    <string name="wellbeing_no_comparison">Belum ada data untuk kemarin.</string>
+    <string name="wellbeing_same_as_yesterday">Hampir sama dengan kemarin.</string>
+    <string name="wellbeing_more_than_yesterday">%1$s lebih banyak dari kemarin.</string>
+    <string name="wellbeing_less_than_yesterday">%1$s lebih sedikit dari kemarin.</string>
+    <string name="wellbeing_perm_title">Lihat waktu layarmu</string>
+    <string name="wellbeing_perm_body">Anchor butuh akses Penggunaan untuk menampilkan wawasan waktu layar lokalmu. Aktifkan di Pengaturan — datamu tetap di perangkat ini.</string>
+    <string name="wellbeing_perm_cta">Buka Pengaturan</string>
+    <string name="wellbeing_perm_app_settings">Pengaturan aplikasi</string>
+    <string name="wellbeing_nodata_title">Belum ada data penggunaan</string>
+    <string name="wellbeing_nodata_body">Setelah kamu memakai ponsel sebentar, ringkasan waktu layarmu akan muncul di sini.</string>
+
+    <!-- 01 Home · Smart Todo (07-screens.md 2.5) -->
+    <string name="home_greeting_morning">Selamat pagi</string>
+    <string name="home_greeting_afternoon">Selamat siang</string>
+    <string name="home_greeting_evening">Selamat malam</string>
+    <string name="home_progress_title">Progres hari ini</string>
+    <string name="home_progress_count" tools:ignore="PluralsCandidate">%1$d dari %2$d tugas selesai</string>
+    <string name="home_progress_percent">%1$d%%</string>
+    <string name="task_filter_all">Semua</string>
+    <string name="task_filter_today">Hari Ini</string>
+    <string name="task_filter_upcoming">Mendatang</string>
+    <string name="task_filter_completed">Selesai</string>
+
+    <string name="home_empty_title">Belum ada tugas — rencanakan harimu.</string>
+    <string name="home_empty_body">Ketuk + untuk menambah tugas pertamamu.</string>
+
+    <string name="task_priority_low">RENDAH</string>
+    <string name="task_priority_medium">SEDANG</string>
+    <string name="task_priority_high">TINGGI</string>
+    <string name="task_priority_urgent">MENDESAK</string>
+
+    <string name="cd_add_task">Tambah tugas</string>
+
+    <!-- Overdue banner (07-screens 2.5 / 06-design-system 7.12, FR-T11) -->
+    <string name="overdue_banner_review">Tinjau &amp; Jadwalkan Ulang</string>
+    <string name="overdue_action_reschedule">Jadwalkan Ulang</string>
+    <string name="overdue_action_complete">Selesaikan</string>
+    <string name="overdue_action_keep">Simpan untuk Hari Ini</string>
+    <string name="overdue_action_dismiss">Abaikan</string>
+
+    <!-- 02 Add Task sheet (07-screens.md 2.6) -->
+    <string name="add_task_title">Tugas Baru</string>
+    <string name="add_task_field_title_hint">Judul tugas…</string>
+    <string name="add_task_field_description_hint">Deskripsi (opsional)</string>
+    <string name="add_task_priority_label">Prioritas</string>
+    <string name="add_task_deadline_label">Tenggat</string>
+    <string name="add_task_deadline_hint">Tanpa tenggat</string>
+    <string name="add_task_duration_label">Perkiraan durasi (menit)</string>
+    <string name="add_task_duration_hint">mis. 120</string>
+    <string name="add_task_category_label">Kategori (opsional)</string>
+    <string name="add_task_category_hint">mis. Belajar</string>
+    <string name="add_task_subtasks_label">Sub-tugas (%1$d)</string>
+    <string name="add_task_subtask_hint">Tambah langkah…</string>
+    <string name="add_task_subtask_add">Tambah langkah</string>
+    <string name="add_task_recurrence_label">Ulangi</string>
+    <string name="recurrence_none">Tidak ada</string>
+    <string name="recurrence_daily">Harian</string>
+    <string name="recurrence_weekly">Mingguan</string>
+    <string name="add_task_save">Simpan Tugas</string>
+    <string name="cd_close_sheet">Tutup</string>
+
+    <!-- Reschedule sheet (07-screens.md 2.5/2.14, FR-T12) -->
+    <string name="reschedule_title">Jadwalkan Ulang</string>
+    <string name="reschedule_day_label">Hari</string>
+    <string name="reschedule_time_label">Waktu</string>
+    <string name="reschedule_day_today">Hari Ini</string>
+    <string name="reschedule_day_tomorrow">Besok</string>
+    <string name="reschedule_day_plus3">+3 Hari</string>
+    <string name="reschedule_day_plus7">+7 Hari</string>
+    <string name="reschedule_confirm">Pindahkan tenggat</string>
+    <string name="reschedule_clear">Hapus tenggat</string>
+
+    <!-- 10 Task Detail (07-screens.md 2.14) -->
+    <string name="detail_back">Tugas</string>
+    <string name="detail_status_in_progress">SEDANG DIKERJAKAN</string>
+    <string name="detail_meta_estimated">Perkiraan: %1$s</string>
+    <string name="detail_meta_progress" tools:ignore="PluralsCandidate">Progres: %1$d%% (%2$d dari %3$d langkah)</string>
+    <string name="detail_subtasks_title">Langkah</string>
+    <string name="detail_no_subtasks">Belum ada langkah.</string>
+    <string name="detail_action_start_focus">Mulai Sesi Fokus</string>
+    <string name="detail_action_reschedule">Jadwalkan Ulang</string>
+    <string name="detail_action_complete">Tandai Selesai</string>
+    <string name="detail_action_delete">Hapus Tugas</string>
+    <string name="detail_future_callout">Lihat apa yang terjadi jika kamu menundanya</string>
+    <string name="detail_add_subtask">Tambah langkah</string>
+
+    <!-- 09 Settings & Privacy (07-screens.md 2.13) -->
+    <string name="settings_title">Pengaturan</string>
+    <string name="settings_open">Pengaturan</string>
+    <string name="settings_section_privacy">Privasi &amp; AI</string>
+    <string name="settings_section_data">Kontrol data</string>
+    <string name="settings_ai_title">Wawasan Personal AI</string>
+    <string name="settings_ai_subtitle">Hanya ringkasan agregat yang dikirim, tidak pernah penggunaan mentah.</string>
+    <string name="settings_tracking_title">Pelacakan penggunaan</string>
+    <string name="settings_tracking_subtitle">Kumpulkan waktu layar lokal untuk menggerakkan Kesejahteraan.</string>
+    <string name="settings_retention_label" tools:ignore="PluralsCandidate">Retensi data — simpan maksimal %1$d hari</string>
+    <string name="settings_delete_all">Hapus semua data</string>
+    <string name="settings_assurance">Data penggunaan mentah tidak pernah meninggalkan ponselmu.</string>
+
+    <!-- 00 / 00b Onboarding (2.3–2.4, 10.10) -->
+    <string name="onboarding_skip">Lewati</string>
+    <string name="onboarding_title_line1">Tetap berlabuh</string>
+    <string name="onboarding_title_line2">pada yang penting.</string>
+    <string name="onboarding_subtitle">Anchor menyadari ketika kamu menjauh dari hal yang penting — dan dengan lembut membantumu kembali, tanpa menghakimi.</string>
+    <string name="onboarding_get_started">Mulai</string>
+    <string name="onboarding_perm_step">Persiapan %1$d dari %2$d</string>
+    <string name="onboarding_perm_headline">Smart Todo langsung berfungsi.</string>
+    <string name="onboarding_perm_sub">Izin ini opsional — buka fitur lengkap Anchor kapan pun kamu siap.</string>
+    <string name="onboarding_perm_usage_title">Akses penggunaan</string>
+    <string name="onboarding_perm_usage_sub">Untuk Kesejahteraan &amp; deteksi drift</string>
+    <string name="onboarding_perm_notif_title">Notifikasi</string>
+    <string name="onboarding_perm_notif_sub">Intervensi lembut &amp; sesi fokus</string>
+    <string name="onboarding_perm_optional">Opsional</string>
+    <string name="onboarding_privacy_card">Semua data tersimpan lokal di ponselmu.</string>
+    <string name="onboarding_continue">Lanjutkan</string>
+    <string name="onboarding_skip_for_now">Lewati dulu</string>
+
+    <!-- Plurals -->
+    <plurals name="overdue_banner_title">
+        <item quantity="one">%1$d tugas dari kemarin masih menunggu.</item>
+        <item quantity="other">%1$d tugas dari kemarin masih menunggu.</item>
+    </plurals>
+
+    <!-- 04 Contextual Intervention (07-screens.md 2.8, PRD 10.4, docs 04 3/6) -->
+    <string name="intervention_channel_name">Pengingat lembut</string>
+    <string name="intervention_channel_desc">Pengingat sesekali yang tidak menghakimi saat kamu menjauh dari hal yang penting.</string>
+
+    <string name="intervention_notif_title_gentle">Pengingat lembut</string>
+    <string name="intervention_notif_title_contextual">Masih ada di daftarmu</string>
+    <string name="intervention_notif_title_future">Waktu untuk merencanakan</string>
+    <string name="intervention_notif_title_focus">Siap untuk fokus?</string>
+
+    <string name="intervention_notif_body_gentle">Kamu sudah di sini cukup lama. Tanpa tekanan — hanya menyadari.</string>
+    <string name="intervention_notif_body_contextual">Ada tugas yang penting masih menunggumu.</string>
+    <string name="intervention_notif_body_future">Mulai sekarang bisa memberimu waktu luang nanti malam.</string>
+    <string name="intervention_notif_body_focus">Siap kapan pun kamu mau memulai sesi fokus.</string>
+
+    <string name="intervention_action_start_focus">Mulai Fokus</string>
+    <string name="intervention_action_later">Nanti</string>
+    <string name="intervention_action_dismiss">Bukan sekarang</string>
+
+    <!-- In-app overlay copy (screen 04) -->
+    <string name="intervention_overlay_title_gentle">Kamu sudah di sini lebih lama dari biasanya.</string>
+    <string name="intervention_overlay_title_contextual">Tugasmu masih belum selesai.</string>
+    <string name="intervention_overlay_title_future">Mulai sekarang memberimu waktu luang nanti.</string>
+    <string name="intervention_overlay_title_focus">Mulai sesi fokus?</string>
+    <string name="intervention_overlay_body">Hanya kesadaran — kamu yang memutuskan.</string>
+    <string name="intervention_overlay_later_hint">Kami akan diam soal ini untuk sementara.</string>
+
+    <!-- 05 Focus Setup + 06 Focus Active (07-screens.md 2.9-2.10, PRD 10.5) -->
+    <string name="focus_setup_title">Sesi fokus</string>
+    <string name="focus_task_label">Tugas</string>
+    <string name="focus_task_none">Belum ada tugas dipilih</string>
+    <string name="focus_mode_label">Mode</string>
+    <string name="focus_mode_gentle">Lembut</string>
+    <string name="focus_mode_strict">Ketat</string>
+    <string name="focus_mode_custom">Kustom</string>
+    <string name="focus_mode_gentle_hint">Hanya mengurangi gangguan — tidak ada yang diblokir.</string>
+    <string name="focus_mode_strict_hint">Bisa menghentikan sementara aplikasi pengganggu saat kamu fokus.</string>
+    <string name="focus_mode_custom_hint">Kamu yang memilih aplikasi mana yang dihentikan.</string>
+    <string name="focus_duration_label">Durasi</string>
+    <string name="focus_duration_min">%1$d menit</string>
+    <string name="focus_begin">Mulai Fokus</string>
+    <string name="focus_fallback_notice">Pemblokiran tidak tersedia, jadi sesi ini berjalan dalam mode Lembut.</string>
+    <string name="focus_none_scheduled">Belum ada sesi fokus. Atur satu untuk memulai.</string>
+
+    <string name="focus_active_tag">FOKUS</string>
+    <string name="focus_active_current_step">Langkah saat ini</string>
+    <string name="focus_active_pause">Jeda</string>
+    <string name="focus_active_resume">Lanjutkan</string>
+    <string name="focus_active_finish">Selesai</string>
+    <string name="focus_emergency_exit">Keluar darurat</string>
+    <string name="focus_finished_toast">Sesi tercatat. Perbarui progresmu?</string>
+    <string name="focus_update_progress">Perbarui progres</string>
+
+    <string name="focus_channel_name">Sesi fokus</string>
+    <string name="focus_channel_desc">Menampilkan sesi fokus yang berjalan dengan cara keluar kapan saja.</string>
+    <string name="focus_service_title">Sesi fokus sedang berjalan</string>
+    <string name="focus_service_text">Ketuk untuk kembali. Keluar darurat selalu tersedia.</string>
+
+    <!-- 07 Future View + Domino (07-screens.md 2.11, PRD 10.6-10.7) -->
+    <string name="future_title">Apa yang terjadi selanjutnya?</string>
+    <string name="future_disclaimer">Berdasarkan jadwalmu saat ini — sebuah proyeksi, bukan ramalan.</string>
+    <string name="future_scenario_now">JIKA SAYA MULAI SEKARANG</string>
+    <string name="future_scenario_delay">JIKA SAYA TERUS MENUNDA</string>
+    <string name="future_scenario_range">%1$s → %2$s</string>
+    <string name="future_scenario_deadline">Tenggat %1$s</string>
+    <string name="future_assumptions">Beberapa nilai memakai asumsi bawaan (durasi atau tenggat) — ditandai agar kamu tahu.</string>
+    <string name="future_domino_title">Efek Domino</string>
+    <string name="future_domino_count" tools:ignore="PluralsCandidate">1 tugas dapat memengaruhi %1$d tugas mendatang.</string>
+    <string name="future_domino_empty">Belum ada tugas terkait.</string>
+    <string name="future_domino_current">SAAT INI</string>
+    <string name="future_start_focus">Mulai Fokus Sekarang</string>
+
+    <!-- 08 Insights - Daily Reflection (07-screens.md 2.12, PRD 10.8-10.9) -->
+    <string name="insights_title">Wawasan</string>
+    <string name="insights_day_label">Refleksi Harian</string>
+    <string name="insights_your_day">HARIMU</string>
+    <string name="insights_stat_tasks">Tugas</string>
+    <string name="insights_stat_tasks_value" tools:ignore="PluralsCandidate">%1$d / %2$d selesai</string>
+    <string name="insights_stat_focus">Fokus</string>
+    <string name="insights_stat_screen_time">Waktu Layar</string>
+    <string name="insights_longest_distraction">Distraksi terpanjang</string>
+    <string name="insights_tag_insight">WAWASAN</string>
+    <string name="insights_tag_suggestion">SARAN</string>
+    <string name="insights_source_ai">Dihasilkan oleh AI Anchor (hanya data agregat)</string>
+    <string name="insights_source_rule">Dihasilkan secara lokal di perangkatmu</string>
+    <string name="insights_pattern_label">Pola</string>
+    <string name="insights_refresh">Segarkan</string>
+    <string name="insights_empty_title">Belum ada yang bisa direfleksikan</string>
+    <string name="insights_empty_body">Setelah kamu merencanakan atau menyelesaikan tugas, refleksi harianmu akan muncul di sini.</string>
+</resources>

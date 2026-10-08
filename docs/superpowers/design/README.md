@@ -25,6 +25,8 @@ Dokumentasi ini adalah *source of truth* untuk desain, arsitektur, dan MVP Ancho
 | Mau tahu risiko & mitigasi | `10-risk-register.md` |
 | Mau tahu cara menguji | `11-testing-strategy.md` |
 | Mau mulai ngoding | `12-sprint-backlog.md` |
+| Mau tahu hardening/rilis | `14-hardening-report.md` (dan `../RELEASE.md`) |
+| Mau lihat rencana Phase 6 | `15-post-mvp-roadmap.md` |
 | Mau lihat mockup | `gamabaran.pen` |
 
 ---
@@ -46,6 +48,9 @@ Dokumentasi ini adalah *source of truth* untuk desain, arsitektur, dan MVP Ancho
 | 10 | `10-risk-register.md` | Register risiko lengkap + mitigasi | Derived (PRD §15) |
 | 11 | `11-testing-strategy.md` | Strategi QA + mapping AC→test + non-fungsional | Derived |
 | 12 | `12-sprint-backlog.md` | Backlog sprint-ready Phase 1–5 | Derived |
+| 13 | `13-spike-b-accessibility.md` | Keputusan Spike B (Accessibility) | Spike decision |
+| 14 | `14-hardening-report.md` | Verifikasi Sprint 8 (hardening) | Report |
+| 15 | `15-post-mvp-roadmap.md` | Roadmap Phase 6 (backlog ide, bukan komitmen) | Backlog |
 | — | `gamabaran.pen` | Mockup desain (pen.dev) | Mockup |
 | — | `build_pen.js` / `_cleanup.js` | Pembangun & pembersih file `.pen` | Tooling |
 
@@ -121,6 +126,9 @@ docs/superpowers/design/
 ├── 10-risk-register.md
 ├── 11-testing-strategy.md
 ├── 12-sprint-backlog.md
+├── 13-spike-b-accessibility.md
+├── 14-hardening-report.md
+├── 15-post-mvp-roadmap.md
 ├── README.md                  (ini)
 ├── gamabaran.pen              (mockup)
 ├── build_pen.js               (pembangun mockup)

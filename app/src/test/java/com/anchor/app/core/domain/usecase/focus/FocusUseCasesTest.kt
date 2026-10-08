@@ -41,7 +41,19 @@ class FocusUseCasesTest {
         val session = repo.getById(result.sessionId)!!
         assertEquals(FocusStatus.ACTIVE, session.status)
         assertEquals(0L, session.actualDurationMs)
+        // The task passed in must be attached to the recorded session (FR-F1/F5).
+        assertEquals("t1", session.taskId)
         assertNull(blocking.engaged) // Gentle never engages blocking.
+    }
+
+    @Test
+    fun start_withoutTask_recordsSessionWithNullTask() = runTest {
+        val repo = FakeFocusRepository()
+        val useCase = StartFocusUseCase(repo, FakeBlockingStrategy(), time(), FakeIdProvider())
+
+        val result = useCase(taskId = null, mode = FocusMode.GENTLE, plannedDurationMin = 25)
+
+        assertNull(repo.getById(result.sessionId)!!.taskId)
     }
 
     @Test

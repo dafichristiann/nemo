@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,6 +7,22 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
 }
+
+// Release signing is read from an untracked keystore.properties at the repo root:
+//   storeFile=anchor-release.jks
+//   storePassword=...
+//   keyAlias=anchor
+//   keyPassword=...
+// When absent (CI/fresh clone), release falls back to the debug signing config so
+// `assembleRelease`/`bundleRelease` still produce an installable artifact. Never
+// commit real credentials.
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties().apply {
+    if (keystorePropertiesFile.exists()) {
+        keystorePropertiesFile.inputStream().use { load(it) }
+    }
+}
+val hasReleaseKeystore = keystoreProperties.getProperty("storeFile") != null
 
 android {
     namespace = "com.anchor.app"
@@ -23,13 +41,33 @@ android {
         }
     }
 
+    signingConfigs {
+        if (hasReleaseKeystore) {
+            create("release") {
+                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // R8 shrinking keeps the APK small (RAM/footprint target, PRD §12) and
+            // strips unused code. Room/Hilt/WorkManager/Compose ship their own keep
+            // rules; app-specific rules live in proguard-rules.pro.
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = if (hasReleaseKeystore) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 
@@ -46,10 +84,23 @@ android {
         compose = true
     }
 
+    androidResources {
+        // Auto-generate locales_config.xml from res/values-*/ so users can pick the
+        // app language in system settings (Android 13+). Default locale is English;
+        // values-id provides the Bahasa Indonesia translation (PRD §12).
+        generateLocaleConfig = true
+    }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+    }
+
+    // Expose the exported Room schemas to instrumented tests so MigrationTestHelper can
+    // open each historical version (docs 03 §9, MigrationTest.kt).
+    sourceSets {
+        getByName("androidTest").assets.srcDir("$projectDir/schemas")
     }
 }
 

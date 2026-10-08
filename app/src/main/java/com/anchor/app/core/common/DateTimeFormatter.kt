@@ -1,7 +1,10 @@
 package com.anchor.app.core.common
 
+import java.time.DayOfWeek
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.Month
 import java.time.ZoneId
 
 /**
@@ -13,7 +16,7 @@ import java.time.ZoneId
  */
 object DateTimeFormatter {
 
-    /** e.g. "Today 23:59", "Tomorrow 09:00", "Wed, Oct 7 23:59". */
+    /** e.g. "Today 23:59", "Tomorrow 09:00", "Wed Oct 7, 23:59". */
     fun deadlineLabel(millis: Long, now: Long, zone: ZoneId): String {
         val dt = LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), zone)
         val today = LocalDateTime.ofInstant(Instant.ofEpochMilli(now), zone).toLocalDate()
@@ -32,13 +35,17 @@ object DateTimeFormatter {
         return "Completed %02d:%02d".format(dt.hour, dt.minute)
     }
 
-    /** e.g. "Wed, Oct 7". */
+    /** e.g. "Wed Oct 7". */
     fun dateLabel(millis: Long, zone: ZoneId): String {
         val dt = LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), zone)
         return "${dt.dayOfWeek.short()} ${dt.month.short()} ${dt.dayOfMonth}"
     }
 
-    /** e.g. "2h est", "45 min est", "1h 30m est". */
+    /** e.g. "Wed, Oct 7" (Home header style). */
+    fun dateLabelComma(date: LocalDate): String =
+        "${date.dayOfWeek.short()}, ${date.month.short()} ${date.dayOfMonth}"
+
+    /** e.g. "2h est", "45m est", "1h 30m est". */
     fun durationLabel(minutes: Int?): String? {
         if (minutes == null || minutes <= 0) return null
         val hours = minutes / 60
@@ -49,7 +56,15 @@ object DateTimeFormatter {
             else -> "${mins}m est"
         }
     }
-
-    private fun java.time.DayOfWeek.short(): String = name.take(3).replaceFirstChar { it.uppercase() }
-    private fun java.time.Month.short(): String = name.take(3).replaceFirstChar { it.uppercase() }
 }
+
+/**
+ * 3-letter weekday, title-cased (e.g. "Wed"). Top-level so any screen can format a day label
+ * without re-deriving it (and accidentally getting "WED" from the already-uppercase enum name).
+ */
+internal fun DayOfWeek.short(): String =
+    name.take(3).lowercase().replaceFirstChar { it.uppercase() }
+
+/** 3-letter month, title-cased (e.g. "Oct"). */
+internal fun Month.short(): String =
+    name.take(3).lowercase().replaceFirstChar { it.uppercase() }

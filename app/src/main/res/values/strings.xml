@@ -1,18 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <!--
-  Default locale = English (PRD Â§12 "Localization"). All user-facing text must go
-  through string resources â€” never hardcode. Ready for a values-id/ translation.
+  Default locale = English (PRD §12 "Localization"). All user-facing text must go
+  through string resources — never hardcode. Ready for a values-id/ translation.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Anchor</string>
 
-    <!-- Navigation / bottom bar (07-screens.md Â§2, PRD Â§12: labels stay English) -->
+    <!-- Navigation / bottom bar (07-screens.md §2, PRD §12: labels stay English) -->
     <string name="nav_tasks">Tasks</string>
     <string name="nav_wellbeing">Wellbeing</string>
     <string name="nav_focus">Focus</string>
     <string name="nav_insights">Insights</string>
 
-    <!-- 03 Digital Wellbeing (07-screens.md Â§2.7, PRD Â§10.2) -->
+    <!-- 03 Digital Wellbeing (07-screens.md §2.7, PRD §10.2) -->
     <string name="wellbeing_title">Wellbeing</string>
     <string name="wellbeing_screen_time">Screen time today</string>
     <string name="wellbeing_top_apps">TOP APPS</string>
@@ -23,12 +23,13 @@
     <string name="wellbeing_more_than_yesterday">%1$s more than yesterday.</string>
     <string name="wellbeing_less_than_yesterday">%1$s less than yesterday.</string>
     <string name="wellbeing_perm_title">See your screen time</string>
-    <string name="wellbeing_perm_body">Anchor needs Usage access to show your local screen-time insights. Enable it in Settings â€” your data stays on this device.</string>
+    <string name="wellbeing_perm_body">Anchor needs Usage access to show your local screen-time insights. Enable it in Settings — your data stays on this device.</string>
     <string name="wellbeing_perm_cta">Open Settings</string>
+    <string name="wellbeing_perm_app_settings">App settings</string>
     <string name="wellbeing_nodata_title">No usage data yet</string>
     <string name="wellbeing_nodata_body">Once you use your phone a little, your screen-time summary will appear here.</string>
 
-    <!-- 01 Home Â· Smart Todo (07-screens.md Â§2.5) -->
+    <!-- 01 Home · Smart Todo (07-screens.md §2.5) -->
     <string name="home_greeting_morning">Good morning</string>
     <string name="home_greeting_afternoon">Good afternoon</string>
     <string name="home_greeting_evening">Good evening</string>
@@ -40,7 +41,7 @@
     <string name="task_filter_upcoming">Upcoming</string>
     <string name="task_filter_completed">Completed</string>
 
-    <string name="home_empty_title">No tasks yet â€” plan your day.</string>
+    <string name="home_empty_title">No tasks yet — plan your day.</string>
     <string name="home_empty_body">Tap + to add your first task.</string>
 
     <string name="task_priority_low">LOW</string>
@@ -50,16 +51,16 @@
 
     <string name="cd_add_task">Add task</string>
 
-    <!-- Overdue banner (07-screens Â§2.5 / 06-design-system Â§7.12, FR-T11) -->
+    <!-- Overdue banner (07-screens §2.5 / 06-design-system §7.12, FR-T11) -->
     <string name="overdue_banner_review">Review &amp; Reschedule</string>
     <string name="overdue_action_reschedule">Reschedule</string>
     <string name="overdue_action_complete">Complete</string>
     <string name="overdue_action_keep">Keep for Today</string>
     <string name="overdue_action_dismiss">Dismiss</string>
 
-    <!-- 02 Add Task sheet (07-screens.md Â§2.6) -->
+    <!-- 02 Add Task sheet (07-screens.md §2.6) -->
     <string name="add_task_title">New Task</string>
-    <string name="add_task_field_title_hint">Task titleâ€¦</string>
+    <string name="add_task_field_title_hint">Task title…</string>
     <string name="add_task_field_description_hint">Description (optional)</string>
     <string name="add_task_priority_label">Priority</string>
     <string name="add_task_deadline_label">Deadline</string>
@@ -69,7 +70,7 @@
     <string name="add_task_category_label">Category (optional)</string>
     <string name="add_task_category_hint">e.g. Study</string>
     <string name="add_task_subtasks_label">Subtasks (%1$d)</string>
-    <string name="add_task_subtask_hint">Add a stepâ€¦</string>
+    <string name="add_task_subtask_hint">Add a step…</string>
     <string name="add_task_subtask_add">Add step</string>
     <string name="add_task_recurrence_label">Repeat</string>
     <string name="recurrence_none">None</string>
@@ -78,7 +79,7 @@
     <string name="add_task_save">Save Task</string>
     <string name="cd_close_sheet">Close</string>
 
-    <!-- Reschedule sheet (07-screens.md Â§2.5/Â§2.14, FR-T12) -->
+    <!-- Reschedule sheet (07-screens.md §2.5/§2.14, FR-T12) -->
     <string name="reschedule_title">Reschedule</string>
     <string name="reschedule_day_label">Day</string>
     <string name="reschedule_time_label">Time</string>
@@ -89,7 +90,7 @@
     <string name="reschedule_confirm">Move deadline</string>
     <string name="reschedule_clear">Clear deadline</string>
 
-    <!-- 10 Task Detail (07-screens.md Â§2.14) -->
+    <!-- 10 Task Detail (07-screens.md §2.14) -->
     <string name="detail_back">Tasks</string>
     <string name="detail_status_in_progress">IN PROGRESS</string>
     <string name="detail_meta_estimated">Estimated: %1$s</string>
@@ -103,7 +104,7 @@
     <string name="detail_future_callout">See what happens if you delay</string>
     <string name="detail_add_subtask">Add step</string>
 
-    <!-- 09 Settings & Privacy (07-screens.md Â§2.13) -->
+    <!-- 09 Settings & Privacy (07-screens.md §2.13) -->
     <string name="settings_title">Settings</string>
     <string name="settings_open">Settings</string>
     <string name="settings_section_privacy">Privacy &amp; AI</string>
@@ -112,19 +113,19 @@
     <string name="settings_ai_subtitle">Only aggregated summaries are sent, never raw usage.</string>
     <string name="settings_tracking_title">Usage tracking</string>
     <string name="settings_tracking_subtitle">Collect local screen-time to power Wellbeing.</string>
-    <string name="settings_retention_label" tools:ignore="PluralsCandidate">Data retention â€” keep at most %1$d days</string>
+    <string name="settings_retention_label" tools:ignore="PluralsCandidate">Data retention — keep at most %1$d days</string>
     <string name="settings_delete_all">Delete all data</string>
     <string name="settings_assurance">Raw usage data never leaves your phone.</string>
 
-    <!-- 00 / 00b Onboarding (Â§2.3â€“2.4, Â§10.10) -->
+    <!-- 00 / 00b Onboarding (§2.3–2.4, §10.10) -->
     <string name="onboarding_skip">Skip</string>
     <string name="onboarding_title_line1">Stay anchored</string>
     <string name="onboarding_title_line2">to what matters.</string>
-    <string name="onboarding_subtitle">Anchor notices when you drift away from what matters â€” and gently helps you return, without judging.</string>
+    <string name="onboarding_subtitle">Anchor notices when you drift away from what matters — and gently helps you return, without judging.</string>
     <string name="onboarding_get_started">Get started</string>
     <string name="onboarding_perm_step">Setup %1$d of %2$d</string>
     <string name="onboarding_perm_headline">Smart Todo works right away.</string>
-    <string name="onboarding_perm_sub">These permissions are optional â€” unlock Anchor\'s full features whenever you\'re ready.</string>
+    <string name="onboarding_perm_sub">These permissions are optional — unlock Anchor\'s full features whenever you\'re ready.</string>
     <string name="onboarding_perm_usage_title">Usage access</string>
     <string name="onboarding_perm_usage_sub">For Wellbeing &amp; drift detection</string>
     <string name="onboarding_perm_notif_title">Notifications</string>
@@ -140,7 +141,7 @@
         <item quantity="other">%1$d tasks from yesterday are still waiting.</item>
     </plurals>
 
-    <!-- 04 Contextual Intervention (07-screens.md Â§2.8, PRD Â§10.4, docs 04 Â§3/Â§6) -->
+    <!-- 04 Contextual Intervention (07-screens.md §2.8, PRD §10.4, docs 04 §3/§6) -->
     <string name="intervention_channel_name">Gentle check-ins</string>
     <string name="intervention_channel_desc">Occasional, non-judgemental nudges when you drift from what matters.</string>
 
@@ -149,7 +150,7 @@
     <string name="intervention_notif_title_future">A moment to plan</string>
     <string name="intervention_notif_title_focus">Ready to focus?</string>
 
-    <string name="intervention_notif_body_gentle">You\'ve been here a while. No pressure â€” just noticing.</string>
+    <string name="intervention_notif_body_gentle">You\'ve been here a while. No pressure — just noticing.</string>
     <string name="intervention_notif_body_contextual">A task that matters is still waiting for you.</string>
     <string name="intervention_notif_body_future">Starting now could give you some free time later tonight.</string>
     <string name="intervention_notif_body_focus">Here whenever you\'re ready to start a focus session.</string>
@@ -163,10 +164,10 @@
     <string name="intervention_overlay_title_contextual">Your task is still unfinished.</string>
     <string name="intervention_overlay_title_future">Starting now gives you free time later.</string>
     <string name="intervention_overlay_title_focus">Start a focus session?</string>
-    <string name="intervention_overlay_body">Awareness only â€” it\'s your call.</string>
+    <string name="intervention_overlay_body">Awareness only — it\'s your call.</string>
     <string name="intervention_overlay_later_hint">We\'ll stay quiet about this one for a while.</string>
 
-    <!-- 05 Focus Setup + 06 Focus Active (07-screens.md Â§2.9-2.10, PRD Â§10.5) -->
+    <!-- 05 Focus Setup + 06 Focus Active (07-screens.md §2.9-2.10, PRD §10.5) -->
     <string name="focus_setup_title">Focus session</string>
     <string name="focus_task_label">Task</string>
     <string name="focus_task_none">No task selected</string>
@@ -174,7 +175,7 @@
     <string name="focus_mode_gentle">Gentle</string>
     <string name="focus_mode_strict">Strict</string>
     <string name="focus_mode_custom">Custom</string>
-    <string name="focus_mode_gentle_hint">Just reduces interruptions â€” nothing is blocked.</string>
+    <string name="focus_mode_gentle_hint">Just reduces interruptions — nothing is blocked.</string>
     <string name="focus_mode_strict_hint">May pause distraction apps while you focus.</string>
     <string name="focus_mode_custom_hint">You choose which apps are paused.</string>
     <string name="focus_duration_label">Duration</string>
@@ -197,21 +198,21 @@
     <string name="focus_service_title">Focus session in progress</string>
     <string name="focus_service_text">Tap to return. Emergency exit is always available.</string>
 
-    <!-- 07 Future View + Domino (07-screens.md Â§2.11, PRD Â§10.6-10.7) -->
+    <!-- 07 Future View + Domino (07-screens.md §2.11, PRD §10.6-10.7) -->
     <string name="future_title">What happens next?</string>
-    <string name="future_disclaimer">Based on your current schedule â€” a projection, not a prediction.</string>
+    <string name="future_disclaimer">Based on your current schedule — a projection, not a prediction.</string>
     <string name="future_scenario_now">IF I START NOW</string>
     <string name="future_scenario_delay">IF I KEEP DELAYING</string>
-    <string name="future_scenario_range">%1$s â†’ %2$s</string>
+    <string name="future_scenario_range">%1$s → %2$s</string>
     <string name="future_scenario_deadline">Deadline %1$s</string>
-    <string name="future_assumptions">Some values use default assumptions (duration or deadline) â€” marked so you know.</string>
+    <string name="future_assumptions">Some values use default assumptions (duration or deadline) — marked so you know.</string>
     <string name="future_domino_title">Domino Effect</string>
     <string name="future_domino_count" tools:ignore="PluralsCandidate">1 task may affect %1$d upcoming tasks.</string>
     <string name="future_domino_empty">No linked tasks yet.</string>
     <string name="future_domino_current">CURRENT</string>
     <string name="future_start_focus">Start Focus Now</string>
 
-    <!-- 08 Insights - Daily Reflection (07-screens.md Â§2.12, PRD Â§10.8-10.9) -->
+    <!-- 08 Insights - Daily Reflection (07-screens.md §2.12, PRD §10.8-10.9) -->
     <string name="insights_title">Insights</string>
     <string name="insights_day_label">Daily Reflection</string>
     <string name="insights_your_day">YOUR DAY</string>

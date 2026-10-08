@@ -25,13 +25,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.DisposableEffect
 import com.anchor.app.R
 import com.anchor.app.core.design.components.PrimaryButton
 import com.anchor.app.core.design.components.SectionHeader
@@ -41,6 +46,7 @@ import com.anchor.app.core.design.theme.InterFamily
 import com.anchor.app.core.design.theme.LocalAnchorElevation
 import com.anchor.app.core.design.theme.Radius
 import com.anchor.app.core.design.theme.Spacing
+import com.anchor.app.platform.usagestats.UsageAccessSettings
 
 /**
  * 03 Digital Wellbeing (docs/superpowers/design/07-screens.md §2.7, PRD §10.2).
@@ -56,6 +62,22 @@ fun WellbeingScreen(
     viewModel: WellbeingViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    // Re-read the permission + summaries whenever the screen comes back to the foreground, so
+    // granting Usage access in system Settings (then returning) reflects immediately.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) viewModel.refresh()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    // The Usage-access permission is granted only in OS Settings, so the CTA opens the system
+    // screen directly (PRD §14); the in-app settings remain reachable separately.
+    val openUsageAccess: () -> Unit = { UsageAccessSettings.open(context) }
 
     Column(
         modifier = modifier
@@ -75,7 +97,10 @@ fun WellbeingScreen(
         )
 
         when (state.availability) {
-            WellbeingAvailability.PERMISSION_MISSING -> PermissionEmptyState(onOpenSettings = onOpenSettings)
+            WellbeingAvailability.PERMISSION_MISSING -> PermissionEmptyState(
+                onOpenSettings = openUsageAccess,
+                onOpenAppSettings = onOpenSettings,
+            )
             WellbeingAvailability.NO_DATA -> NoDataEmptyState()
             WellbeingAvailability.AVAILABLE -> {
                 ScreenTimeCard(
@@ -234,7 +259,7 @@ private fun WeeklyChart(week: List<DayBar>) {
 }
 
 @Composable
-private fun PermissionEmptyState(onOpenSettings: () -> Unit) {
+private fun PermissionEmptyState(onOpenSettings: () -> Unit, onOpenAppSettings: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -260,6 +285,17 @@ private fun PermissionEmptyState(onOpenSettings: () -> Unit) {
         PrimaryButton(
             label = stringResource(R.string.wellbeing_perm_cta),
             onClick = onOpenSettings,
+        )
+        Text(
+            text = stringResource(R.string.wellbeing_perm_app_settings),
+            fontFamily = InterFamily,
+            fontWeight = FontWeight.Medium,
+            fontSize = 13.sp,
+            color = AnchorColors.textMuted,
+            modifier = Modifier
+                .clip(RoundedCornerShape(Radius.chip))
+                .clickable(onClick = onOpenAppSettings)
+                .padding(horizontal = Spacing.x3, vertical = Spacing.x2),
         )
     }
 }

@@ -15,6 +15,11 @@ captures/
 *.ap_
 *.aab
 
+# Release signing (never commit credentials / keystores)
+keystore.properties
+*.jks
+*.keystore
+
 # Kotlin
 .kotlin/
 

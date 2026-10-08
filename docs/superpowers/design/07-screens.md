@@ -276,7 +276,7 @@ Overlay kartu di tengah (scrim), muncul kontekstual.
 | Title | "Settings" |
 | `PERMISSIONS` | Usage Access — "Granted" · Notifications — "Belum aktif — ketuk untuk izinkan" |
 | `PRIVACY & AI` | AI Personal Insights — "Hanya kirim ringkasan agregat" + **toggle** on/off |
-| `DATA CONTROLS` | Data Retention — "Simpan maksimal 90 hari" · **Hapus Semua Data** (danger lembut) |
+| `DATA CONTROLS` | Data Retention — "Simpan maksimal 30 hari" · **Hapus Semua Data** (danger lembut) |
 | Assurance | "Raw usage data tidak pernah meninggalkan HP." |
 
 **Behavior (PRD §10.10):**
@@ -284,9 +284,9 @@ Overlay kartu di tengah (scrim), muncul kontekstual.
 - Atur retensi + tombol hapus semua data.
 - **Default privacy-preserving** (tracking & AI off sampai opt-in).
 
-> ⚠️ **Ketidaksesuaian mockup ↔ PRD:** mockup menulis retensi **"maksimal 90 hari"**,
-> sedangkan PRD §10.2 mengunci **14–30 hari** (raw `UsageSession`, dengan contoh 30 hari).
-> Saat implementasi, **ikuti PRD** (14–30 hari) dan perbarui teks mockup. Lihat §7.
+> ✅ **Mockup diperbarui:** teks retensi kini **"maksimal 30 hari"**, konsisten dengan
+> PRD §10.2 yang mengunci **14–30 hari** (raw `UsageSession`, contoh 30 hari). Koreksi
+> diterapkan di `build_pen.js` dan `gamabaran.pen`. Lihat §7.
 
 ---
 
@@ -383,18 +383,23 @@ ditambahkan saat implementasi:
 
 Mockup memakai campuran **English** dan **Bahasa Indonesia** pada label:
 - ID: "Lanjutkan", "Lewati dulu", "Nanti saja", "Lihat dampak jika menunda",
-  "Simpan maksimal 90 hari", "Hapus Semua Data", "Pilih task dan mode fokus kamu."
+  "Simpan maksimal 30 hari", "Hapus Semua Data", "Pilih task dan mode fokus kamu."
 - EN: "Get started", "Save Task", "Begin Focus", "Start Focus Now", "Mark as Done",
   "Tasks/Wellbeing/Focus/Insights".
 
 **Rekomendasi:** pilih **satu** default bahasa untuk rilis (PRD §12: default **English**,
 siap Indonesia). Seluruh teks harus lewat `string.xml` — jangan hardcode.
 
+> ✅ **Status implementasi:** default rilis = **English** (`res/values/strings.xml`), dengan
+> terjemahan **Bahasa Indonesia** penuh (`res/values-id/strings.xml`, 183 kunci, paritas
+> 100%). Pemilihan bahasa per-app diaktifkan via `generateLocaleConfig` + `res/resources.properties`
+> (default `en-US`), sehingga pengguna Android 13+ dapat memilih bahasa dari pengaturan sistem.
+
 ### 7.2 Selisih yang perlu diperbaiki di mockup
 
 | # | Di mockup | PRD (Locked) | Tindakan |
 |---|---|---|---|
-| 1 | Settings: retensi "maksimal 90 hari" | §10.2: raw `UsageSession` di-prune **14–30 hari** (contoh 30) | Ikuti PRD; perbarui teks mockup |
+| 1 | Settings: retensi "maksimal 90 hari" | §10.2: raw `UsageSession` di-prune **14–30 hari** (contoh 30) | ✅ Diperbarui ke "maksimal 30 hari" (mockup + docs) |
 | 2 | Overdue **banner** tidak tampak di mockup Home | §10.1: banner non-blocking wajib | Tambah ke mockup/implementasi |
 | 3 | Notifikasi intervensi & fullscreen tidak digambar | §10.4: notification channel utama | Tambah (mockup belum ada) |
 | 4 | Empty states (tanpa task/izin/data) tidak digambar | §10.2, §10.9, §10.10 | Tambah |

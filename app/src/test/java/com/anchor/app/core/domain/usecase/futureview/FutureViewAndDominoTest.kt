@@ -80,8 +80,8 @@ class FutureViewAndDominoTest {
 
         assertTrue(view.usingAssumedDeadline)
         assertNotNull(view.startNow.deadlineAt)
-        // 23:59 same day (UTC): local day start + 23h.
-        val expectedDeadline = time().startOfDayMillis(fixedNow) + 23 * 60 * 60 * 1000L
+        // 23:59 same day (UTC) — the locked heuristic (PRD §10.6), not 23:00.
+        val expectedDeadline = time().startOfDayMillis(fixedNow) + (23 * 60 + 59) * 60 * 1000L
         assertEquals(expectedDeadline, view.startNow.deadlineAt)
     }
 

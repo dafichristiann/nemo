@@ -1,8 +1,10 @@
 package com.anchor.app.platform.usagestats
 
+import android.app.AppOpsManager
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.Context
+import android.os.Process
 import androidx.core.content.getSystemService
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -30,12 +32,25 @@ class AndroidUsageStatsSource @Inject constructor(
         get() = context.getSystemService()
 
     override fun hasPermission(): Boolean {
-        val m = manager ?: return false
-        // queryEvents with a tiny window returns an empty cursor when access is missing;
-        // a non-null cursor from queryUsageStats is the cheapest reliable probe.
+        // PACKAGE_USAGE_STATS is a *special* permission granted via Settings → Usage access,
+        // not a runtime permission. `queryUsageStats` returns a non-null (often empty) list
+        // even when access is missing, so it is NOT a reliable probe. The correct check is
+        // the AppOps "get_usage_stats" op for this app's uid.
         return runCatching {
-            val now = System.currentTimeMillis()
-            m.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, now - ONE_MINUTE_MS, now) != null
+            val appOps = context.getSystemService<AppOpsManager>() ?: return false
+            @Suppress("DEPRECATION")
+            val mode = appOps.checkOpNoThrow(
+                OPSTR_GET_USAGE_STATS,
+                Process.myUid(),
+                context.packageName,
+            )
+            if (mode == AppOpsManager.MODE_DEFAULT) {
+                // MODE_DEFAULT: fall back to the declared-permission grant state.
+                context.checkCallingOrSelfPermission(android.Manifest.permission.PACKAGE_USAGE_STATS) ==
+                    android.content.pm.PackageManager.PERMISSION_GRANTED
+            } else {
+                mode == AppOpsManager.MODE_ALLOWED
+            }
         }.getOrDefault(false)
     }
 
@@ -99,7 +114,8 @@ class AndroidUsageStatsSource @Inject constructor(
     }
 
     private companion object {
-        const val ONE_MINUTE_MS = 60_000L
+        // AppOps op name for the PACKAGE_USAGE_STATS special permission.
+        const val OPSTR_GET_USAGE_STATS = "android:get_usage_stats"
 
         // ACTIVITY_* were renamed in API 29; the FOREGROUND/BACKGROUND aliases cover 26–28.
         const val FOREGROUND_EVENT = UsageEvents.Event.MOVE_TO_FOREGROUND

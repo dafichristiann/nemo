@@ -141,9 +141,11 @@ class TaskUseCasesTest {
         assertEquals(id, event.taskId)
     }
 
-    // FR-T7: recurring generator is idempotent per occurrence day.
+    // FR-T7: a freshly created recurring task already covers today, so the generator must NOT
+    // add a duplicate for the same occurrence day (AC "no double instance"). This guards the
+    // occurrence-date unit consistency between CreateTaskUseCase (epoch day) and the generator.
     @Test
-    fun recurringGenerator_isIdempotentForSameDay() = runTest {
+    fun recurringGenerator_doesNotDuplicateFreshlyCreatedTask() = runTest {
         val (tasks, defs, time) = fakes()
         val create = CreateTaskUseCase(tasks, defs, FakeIdProvider(), time)
         create(CreateTaskInput(title = "Daily", recurrenceRule = RecurrenceRule.DAILY))
@@ -153,10 +155,29 @@ class TaskUseCasesTest {
         val firstRun = generate(time.today())
         val secondRun = generate(time.today())
 
-        assertEquals(1, firstRun)
+        assertEquals(0, firstRun)
         assertEquals(0, secondRun)
-        // 1 initial + 1 generated for today = 2 (same definition, same occurrence day).
-        assertEquals(2, tasks.tasks.value.size)
+        // Exactly one instance for today — no duplicate.
+        assertEquals(1, tasks.tasks.value.size)
+        val todayEpoch = time.today().toEpochDay()
+        assertEquals(todayEpoch, tasks.tasks.value.single().definitionOccurrenceDate)
+    }
+
+    // FR-T7: a recurring task created with a deadline uses the LOCAL DAY of that deadline as its
+    // occurrence key, matching the generator's `today.toEpochDay()` guard.
+    @Test
+    fun recurringTask_occurrenceDateIsEpochDayOfDeadline() = runTest {
+        val (tasks, defs, time) = fakes()
+        val create = CreateTaskUseCase(tasks, defs, FakeIdProvider(), time)
+        val deadline = fixedNow + 5 * 60 * 60 * 1000L // same local day
+
+        create(CreateTaskInput(title = "Daily", deadline = deadline, recurrenceRule = RecurrenceRule.DAILY))
+
+        val saved = tasks.tasks.value.single()
+        assertEquals(time.epochDayOf(deadline), saved.definitionOccurrenceDate)
+        // And the generator agrees nothing new is due today.
+        val generate = GenerateRecurringTasksUseCase(tasks, defs, FakeIdProvider("gen"), time)
+        assertEquals(0, generate(time.today()))
     }
 
     // FR-T7 / AC "no double instance": second run on the same day adds nothing.

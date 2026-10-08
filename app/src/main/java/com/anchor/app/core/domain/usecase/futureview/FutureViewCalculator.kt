@@ -12,7 +12,7 @@ import javax.inject.Inject
  *
  * Pure and rule-based: given a task + the current time it returns projections with every
  * assumption flagged. It never fabricates data — when a task lacks a duration or deadline it
- * applies the locked defaults ([DEFAULT_TASK_DURATION_MIN], [DEFAULT_SAME_DAY_DEADLINE_HOUR])
+ * applies the locked defaults ([DEFAULT_TASK_DURATION_MIN], [DEFAULT_SAME_DAY_DEADLINE_MINUTE])
  * and reports `usingAssumed*` so the UI marks them (FR-FV5).
  *
  * The "delay" scenario models a realistic slip: the task tends to start late, so we project a
@@ -63,14 +63,17 @@ class FutureViewCalculator @Inject constructor(
     }
 
     private fun sameDayDeadline(now: Long): Long =
-        timeProvider.startOfDayMillis(now) + DEFAULT_SAME_DAY_DEADLINE_HOUR * 60 * MINUTE_MS
+        timeProvider.startOfDayMillis(now) + DEFAULT_SAME_DAY_DEADLINE_MINUTE * MINUTE_MS
 
     companion object {
         /** Heuristic default task duration (PRD §10.6, docs 05 §3). Locked default. */
         const val DEFAULT_TASK_DURATION_MIN = 60
 
-        /** Heuristic same-day deadline: 23:59 (PRD §10.6). */
-        const val DEFAULT_SAME_DAY_DEADLINE_HOUR = 23
+        /**
+         * Heuristic same-day deadline: **23:59** (PRD §10.6, `DEFAULT_SAME_DAY_DEADLINE = 23:59`).
+         * Expressed as minutes-from-midnight so it is exact (23 * 60 + 59 = 1439).
+         */
+        const val DEFAULT_SAME_DAY_DEADLINE_MINUTE = 23 * 60 + 59
 
         /** How late the "delay" scenario assumes the user starts (heuristic, tunable). */
         const val DELAY_OFFSET_MIN = 240

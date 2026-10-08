@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.anchor.app.R
+import com.anchor.app.core.common.DateTimeFormatter
 import com.anchor.app.core.design.components.AddTaskFab
 import com.anchor.app.core.design.components.Banner
 import com.anchor.app.core.design.components.Divider
@@ -195,8 +196,7 @@ private fun HomeHeader(onOpenSettings: () -> Unit) {
         else -> stringResource(R.string.home_greeting_evening)
     }
     val today = LocalDate.now()
-    val dateLabel = "${today.dayOfWeek.name.take(3).replaceFirstChar { it.uppercase() }}, " +
-        "${today.month.name.take(3).replaceFirstChar { it.uppercase() }} ${today.dayOfMonth}"
+    val dateLabel = DateTimeFormatter.dateLabelComma(today)
 
     Row(
         modifier = Modifier.fillMaxWidth(),

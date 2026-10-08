@@ -158,6 +158,8 @@
 Backlog ide (bukan komitmen): advanced blocking, cloud sync, backup, akun, ekspor data.
 Disimpan untuk mencegah **scope creep** (Risiko R34).
 
+> Rincian ide + guardrails + cara promosi ke MVP ada di `15-post-mvp-roadmap.md`.
+
 ---
 
 ## Ringkasan

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.anchor.app.core.common.DispatcherProvider
 import com.anchor.app.core.common.TimeProvider
+import com.anchor.app.core.common.short
 import com.anchor.app.core.domain.model.AppUsage
 import com.anchor.app.core.domain.model.DailyUsageSummary
 import com.anchor.app.core.domain.repository.SettingsRepository
@@ -119,7 +120,7 @@ class WellbeingViewModel @Inject constructor(
     ): List<DayBar> = days.mapIndexed { index, date ->
         DayBar(
             epochDay = date.toEpochDay(),
-            label = date.dayOfWeek.name.take(3).replaceFirstChar { it.uppercase() },
+            label = date.dayOfWeek.short(),
             totalMs = summaries[index]?.totalScreenTimeMs ?: 0L,
             isToday = date.toEpochDay() == todayEpoch,
         )

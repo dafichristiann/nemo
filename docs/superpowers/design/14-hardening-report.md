@@ -15,8 +15,12 @@
 | 8-03 Jalur izin ditolak/OEM batasi | Tak crash | Teruji (unit) |
 | 8-04 Migrasi DB semua versi | `MigrationTestHelper` | Teruji (instrumented) |
 | 8-05 Audit privasi | allowBackup=false, no logs, payload agregat | Teruji + diperiksa |
-| 8-06 Copy & lokalisasi | String resources, nada calm | Diverifikasi lint |
+| 8-06 Copy & lokalisasi | String resources, nada calm | Diverifikasi lint + `values-id` |
 | 8-07 Lint | 0 error | Teruji (lintDebug hijau) |
+
+> **Update 2026-10-08:** wiring schema `androidTest.assets` diperbaiki sehingga seluruh
+> 5 test migrasi **benar-benar berjalan** di emulator (`connectedDebugAndroidTest` hijau,
+> 22 test termasuk DAO). Ditambah 20 unit test baru (112 total). Lihat §8.
 
 > **Manual/device-only** item (8-01, 8-02, regresi alur kritis di device) tidak dapat
 > dieksekusi tanpa perangkat fisik/emulator; dicatat di sini sebagai langkah rilis yang tersisa.
@@ -89,6 +93,27 @@ Checklist docs 09 §7:
 ## 7. Sisa untuk Rilis (butuh device nyata)
 
 1. Ukur RAM & baterai (8-01/8-02) di device low-RAM.
-2. Jalankan `connectedDebugAndroidTest` (migrasi + DAO) di emulator/device.
+2. ~~Jalankan `connectedDebugAndroidTest` (migrasi + DAO) di emulator/device.~~ ✅
+   Diverifikasi di emulator Pixel_7 (API 17/preview) — 22 test hijau.
 3. Regresi manual 5–8 alur kritis (docs 11 §2) termasuk tiap izin dinonaktifkan.
 4. Uji OEM yang agresif mematikan service/WorkManager.
+
+---
+
+## 8. Update — Test & Rilis (2026-10-08)
+
+- **Fix migrasi:** `app/build.gradle.kts` kini mengekspos `schemas/` ke
+  `androidTest.assets`, sehingga `MigrationTestHelper` benar-benar menemukan schema
+  historis. Sebelumnya 5 test migrasi **gagal** (`FileNotFoundException`); sekarang hijau.
+- **Unit test:** 92 → **112** (+20): `DateTimeFormatterTest` (menangkap bug format
+  hari/bulan `WED OCT` → `Wed Oct`), `ObserveTasksUseCaseTest` (filter + batas hari),
+  `TasksViewModelTest` (state Home).
+- **Instrumented test:** 11 → **22** (+11): `TaskDaoTest`, `UsageSessionDaoTest`.
+- **Rilis:** `release` memakai R8 + `shrinkResources` (APK ≈ **2.3 MB**), signing dari
+  `keystore.properties` (fallback debug bila tak ada), keep-rules di
+  `app/proguard-rules.pro`. Panduan: `docs/RELEASE.md`.
+- **Lokalisasi:** `values-id/strings.xml` penuh (183 kunci, paritas 100%) +
+  per-app language (`generateLocaleConfig`, default `en-US`).
+- **Housekeeping:** hapus `SprintPlaceholder.kt` (dead code); mockup retensi
+  "90 hari" → "30 hari" agar konsisten PRD.
+

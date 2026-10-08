@@ -5345,7 +5345,7 @@
           "y": 450,
           "name": "Ret Sub",
           "fill": "#777777",
-          "content": "Simpan maksimal 90 hari",
+          "content": "Simpan maksimal 30 hari",
           "fontFamily": "Inter",
           "fontSize": 12
         },

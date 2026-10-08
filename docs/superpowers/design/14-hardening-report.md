@@ -117,3 +117,35 @@ Checklist docs 09 §7:
 - **Housekeeping:** hapus `SprintPlaceholder.kt` (dead code); mockup retensi
   "90 hari" → "30 hari" agar konsisten PRD.
 
+---
+
+## 9. Update — Verifikasi Build Lokal (2026-10-08)
+
+Paket Sprint 8 (di atas) dikomit; setelah itu quality gate & build rilis
+dijalankan ulang secara lokal untuk konfirmasi.
+
+**Quality gate (lokal, hijau):**
+- `lintDebug` — BUILD SUCCESSFUL, **0 error**.
+- `testDebugUnitTest` (`--rerun-tasks`) — **114 test, 0 failure, 0 error, 0 skip**.
+
+**Build rilis (lokal, hijau):**
+- `assembleRelease` — BUILD SUCCESSFUL (R8 + `shrinkResources` + `lintVital` hijau).
+- `bundleRelease` — BUILD SUCCESSFUL.
+
+**Ukuran artefak (aktual; bukan target, dapat berubah dengan tuning R8/ASO):**
+
+| Artefak | Ukuran |
+|---|---|
+| `app-release.apk` | 2,395,812 bytes (≈ 2.28 MB) |
+| `app-release.aab` | 4,363,686 bytes (≈ 4.16 MB) |
+
+> ⚠️ **Signing:** tidak ada `keystore.properties` di mesin build, sehingga artefak
+> release ini **locally signed with debug key** (`CN=Android Debug`,
+> diverifikasi via `apksigner verify --print-certs`). Ini **hanya untuk verifikasi
+> lokal** — **bukan** artefak distribusi. Untuk distribusi, isi `keystore.properties`
+> dengan kunci rilis asli (lihat `../RELEASE.md` §3) dan build ulang.
+
+**Sisa yang tetap butuh device nyata** (lihat §7): pengukuran RAM/baterai, regresi
+manual alur kritis, uji OEM agresif. `connectedDebugAndroidTest` belum dijalankan ulang
+pada verifikasi ini (butuh emulator/device).
+

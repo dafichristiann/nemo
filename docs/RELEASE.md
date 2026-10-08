@@ -26,7 +26,9 @@
 | `.\gradlew.bat :app:lintDebug` | Lint (0 error) |
 | `.\gradlew.bat :app:connectedDebugAndroidTest` | Instrumented test (butuh device/emulator) |
 
-> Ukuran release (R8 + shrink) ≈ **2.3 MB** — sangat ringan, mendukung target RAM PRD §12.
+> **Ukuran aktual** (2026-10-08, R8 + shrink): APK ≈ 2.28 MB, AAB ≈ 4.16 MB.
+> Ini hasil pengukuran, **bukan** requirement — ukuran dapat berubah dengan tuning
+> R8/resource optimization. Ringan mendukung target RAM PRD §12.
 
 ---
 

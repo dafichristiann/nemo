@@ -122,7 +122,14 @@ fun AnchorNavHost(
                 route = Routes.TASK_DETAIL,
                 arguments = listOf(navArgument(TaskDetailViewModel.ARG_TASK_ID) { type = NavType.StringType }),
             ) {
-                TaskDetailScreen(onBack = { navController.popBackStack() })
+                TaskDetailScreen(
+                    onBack = { navController.popBackStack() },
+                    onStartFocus = {
+                        navController.navigate(TopLevelDestination.FOCUS.route) {
+                            launchSingleTop = true
+                        }
+                    },
+                )
             }
 
             composable(Routes.SETTINGS) {

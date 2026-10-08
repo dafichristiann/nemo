@@ -34,9 +34,6 @@
     <string name="wellbeing_nodata_title">No usage data yet</string>
     <string name="wellbeing_nodata_body">Once you use your phone a little, your screen-time summary will appear here.</string>
 
-    <string name="focus_placeholder_title">Focus</string>
-    <string name="focus_placeholder_body">Focus Setup and the active session arrive in Sprint 5, together with a gentle, always-available emergency exit.</string>
-
     <string name="insights_placeholder_title">Insights</string>
     <string name="insights_placeholder_body">Daily reflection and patterns arrive in Sprint 7. Insights stay rule-based locally unless you opt in to AI.</string>
 
@@ -177,4 +174,38 @@
     <string name="intervention_overlay_title_focus">Start a focus session?</string>
     <string name="intervention_overlay_body">Awareness only — it\'s your call.</string>
     <string name="intervention_overlay_later_hint">We\'ll stay quiet about this one for a while.</string>
+
+    <!-- 05 Focus Setup + 06 Focus Active (07-screens.md §2.9-2.10, PRD §10.5) -->
+    <string name="focus_title">Focus</string>
+    <string name="focus_setup_title">Focus session</string>
+    <string name="focus_task_label">Task</string>
+    <string name="focus_task_none">No task selected</string>
+    <string name="focus_mode_label">Mode</string>
+    <string name="focus_mode_gentle">Gentle</string>
+    <string name="focus_mode_strict">Strict</string>
+    <string name="focus_mode_custom">Custom</string>
+    <string name="focus_mode_gentle_hint">Just reduces interruptions — nothing is blocked.</string>
+    <string name="focus_mode_strict_hint">May pause distraction apps while you focus.</string>
+    <string name="focus_mode_custom_hint">You choose which apps are paused.</string>
+    <string name="focus_duration_label">Duration</string>
+    <string name="focus_duration_min">%1$d min</string>
+    <string name="focus_duration_custom">Custom</string>
+    <string name="focus_begin">Begin Focus</string>
+    <string name="focus_fallback_notice">Blocking isn\'t available, so this session runs in Gentle mode.</string>
+    <string name="focus_none_scheduled">No focus session yet. Set one up to get started.</string>
+
+    <string name="focus_active_tag">FOCUS</string>
+    <string name="focus_active_current_step">Current step</string>
+    <string name="focus_active_pause">Pause</string>
+    <string name="focus_active_resume">Resume</string>
+    <string name="focus_active_finish">Finish</string>
+    <string name="focus_emergency_exit">Emergency exit</string>
+    <string name="focus_finished_toast">Session recorded. Update your progress?</string>
+    <string name="focus_update_progress">Update progress</string>
+    <string name="focus_progress_saved">Progress updated.</string>
+
+    <string name="focus_channel_name">Focus sessions</string>
+    <string name="focus_channel_desc">Shows an ongoing focus session with a way to exit at any time.</string>
+    <string name="focus_service_title">Focus session in progress</string>
+    <string name="focus_service_text">Tap to return. Emergency exit is always available.</string>
 </resources>

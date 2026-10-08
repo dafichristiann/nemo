@@ -6,6 +6,7 @@ import com.anchor.app.core.data.AnchorDatabase
 import com.anchor.app.core.data.dao.AppCategoryDao
 import com.anchor.app.core.data.dao.AppSettingsDao
 import com.anchor.app.core.data.dao.DailyUsageSummaryDao
+import com.anchor.app.core.data.dao.FocusSessionDao
 import com.anchor.app.core.data.dao.InterventionLogDao
 import com.anchor.app.core.data.dao.RescheduleEventDao
 import com.anchor.app.core.data.dao.SubtaskDao
@@ -43,6 +44,7 @@ object DatabaseModule {
             AnchorDatabase.MIGRATION_1_2,
             AnchorDatabase.MIGRATION_2_3,
             AnchorDatabase.MIGRATION_3_4,
+            AnchorDatabase.MIGRATION_4_5,
         )
         .build()
 
@@ -83,4 +85,8 @@ object DatabaseModule {
     @Provides
     fun provideInterventionLogDao(database: AnchorDatabase): InterventionLogDao =
         database.interventionLogDao()
+
+    @Provides
+    fun provideFocusSessionDao(database: AnchorDatabase): FocusSessionDao =
+        database.focusSessionDao()
 }

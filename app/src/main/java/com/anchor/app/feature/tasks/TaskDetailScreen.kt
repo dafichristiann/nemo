@@ -64,6 +64,7 @@ import com.anchor.app.core.domain.model.TaskPriority
 fun TaskDetailScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    onStartFocus: () -> Unit = {},
     viewModel: TaskDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -260,7 +261,7 @@ fun TaskDetailScreen(
             onClick = { viewModel.onComplete() },
         )
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.x2)) {
-            SecondaryAction(stringResource(R.string.detail_action_start_focus)) { /* Sprint 5 */ }
+            SecondaryAction(stringResource(R.string.detail_action_start_focus), onClick = onStartFocus)
             SecondaryAction(stringResource(R.string.detail_action_reschedule)) {
                 showReschedule = true
             }

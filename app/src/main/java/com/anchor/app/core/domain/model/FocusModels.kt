@@ -10,3 +10,20 @@ package com.anchor.app.core.domain.model
  * Used by [com.anchor.app.core.domain.blocking.BlockingStrategy]. Stored as `String` in Room.
  */
 enum class FocusMode { GENTLE, STRICT, CUSTOM }
+
+/** Lifecycle of a focus session (docs 03 §4.1). */
+enum class FocusStatus { ACTIVE, PAUSED, FINISHED, ABORTED }
+
+/** A focus session (docs 03 §4.1, PRD §10.5). */
+data class FocusSession(
+    val id: String,
+    val taskId: String?,
+    val mode: FocusMode,
+    val plannedDurationMin: Int?,
+    val actualDurationMs: Long,
+    val startedAt: Long,
+    val endedAt: Long?,
+    val status: FocusStatus,
+    val blockedApps: List<String>,
+    val fallbackReason: String?,
+)

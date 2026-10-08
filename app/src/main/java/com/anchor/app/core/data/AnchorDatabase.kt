@@ -7,6 +7,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.anchor.app.core.data.dao.AppCategoryDao
 import com.anchor.app.core.data.dao.AppSettingsDao
 import com.anchor.app.core.data.dao.DailyUsageSummaryDao
+import com.anchor.app.core.data.dao.FocusSessionDao
 import com.anchor.app.core.data.dao.InterventionLogDao
 import com.anchor.app.core.data.dao.RescheduleEventDao
 import com.anchor.app.core.data.dao.SubtaskDao
@@ -17,6 +18,7 @@ import com.anchor.app.core.data.dao.WeeklyUsageSummaryDao
 import com.anchor.app.core.data.entity.AppCategoryEntity
 import com.anchor.app.core.data.entity.AppSettingsEntity
 import com.anchor.app.core.data.entity.DailyUsageSummaryEntity
+import com.anchor.app.core.data.entity.FocusSessionEntity
 import com.anchor.app.core.data.entity.InterventionLogEntity
 import com.anchor.app.core.data.entity.RescheduleEventEntity
 import com.anchor.app.core.data.entity.SubtaskEntity
@@ -33,6 +35,7 @@ import com.anchor.app.core.data.entity.WeeklyUsageSummaryEntity
  *  - v2: + `task_definition`, `task_instance`, `subtask`, `reschedule_event` (Sprint 1)
  *  - v3: + `usage_session`, `daily_usage_summary`, `weekly_usage_summary`, `app_category` (Sprint 2)
  *  - v4: + `intervention_log` (Sprint 4)
+ *  - v5: + `focus_session` (Sprint 5)
  *
  * `exportSchema = true` writes JSON schema files to `app/schemas` (KSP `room.schemaLocation`).
  * Migrations are explicit; there is no destructive fallback.
@@ -49,8 +52,9 @@ import com.anchor.app.core.data.entity.WeeklyUsageSummaryEntity
         WeeklyUsageSummaryEntity::class,
         AppCategoryEntity::class,
         InterventionLogEntity::class,
+        FocusSessionEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = true,
 )
 abstract class AnchorDatabase : RoomDatabase() {
@@ -64,6 +68,7 @@ abstract class AnchorDatabase : RoomDatabase() {
     abstract fun weeklyUsageSummaryDao(): WeeklyUsageSummaryDao
     abstract fun appCategoryDao(): AppCategoryDao
     abstract fun interventionLogDao(): InterventionLogDao
+    abstract fun focusSessionDao(): FocusSessionDao
 
     companion object {
         const val NAME = "anchor.db"
@@ -233,6 +238,31 @@ abstract class AnchorDatabase : RoomDatabase() {
                 )
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_intervention_log_shownAt` ON `intervention_log`(`shownAt`)")
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_intervention_log_contextPackage` ON `intervention_log`(`contextPackage`)")
+            }
+        }
+
+        /** v4 → v5: add the Phase-3 focus session table (docs 03 §4.1). */
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `focus_session` (
+                        `id` TEXT NOT NULL,
+                        `taskId` TEXT,
+                        `mode` TEXT NOT NULL,
+                        `plannedDurationMin` INTEGER,
+                        `actualDurationMs` INTEGER NOT NULL,
+                        `startedAt` INTEGER NOT NULL,
+                        `endedAt` INTEGER,
+                        `status` TEXT NOT NULL,
+                        `blockedAppsJson` TEXT,
+                        `fallbackReason` TEXT,
+                        PRIMARY KEY(`id`)
+                    )
+                    """.trimIndent(),
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_focus_session_startedAt` ON `focus_session`(`startedAt`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_focus_session_taskId` ON `focus_session`(`taskId`)")
             }
         }
     }

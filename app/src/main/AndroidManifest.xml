@@ -26,6 +26,16 @@
         android:name="android.permission.POST_NOTIFICATIONS"
         tools:ignore="ProtectedPermissions" />
 
+    <!--
+      Focus foreground service (Phase 3, docs 08-permissions.md §5, PRD §10.5). Runs only while a
+      focus session is active, with a persistent notification + emergency exit. FOREGROUND_SERVICE
+      is required on all versions; FOREGROUND_SERVICE_SPECIAL_USE from Android 14 (API 34).
+    -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"
+        tools:ignore="ProtectedPermissions" />
+
     <application
         android:name=".AnchorApp"
         android:allowBackup="false"
@@ -59,6 +69,19 @@
                 <action android:name="com.anchor.app.INTERVENTION_ACTION" />
             </intent-filter>
         </receiver>
+
+        <!--
+          Keeps a focus session alive with a persistent, transparent notification (FR-F7).
+          `specialUse` matches docs 08 §5; not exported.
+        -->
+        <service
+            android:name=".platform.service.FocusService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Keeps an active focus session running with a visible notification." />
+        </service>
 
         <!--
           WorkManager is initialised via AnchorApp (Configuration.Provider) so @HiltWorker

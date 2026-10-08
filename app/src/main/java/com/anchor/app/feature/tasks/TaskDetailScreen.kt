@@ -68,6 +68,7 @@ fun TaskDetailScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var newSubtask by remember { mutableStateOf("") }
+    var showReschedule by remember { mutableStateOf(false) }
     val task = state.task
 
     Column(
@@ -261,15 +262,26 @@ fun TaskDetailScreen(
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.x2)) {
             SecondaryAction(stringResource(R.string.detail_action_start_focus)) { /* Sprint 5 */ }
             SecondaryAction(stringResource(R.string.detail_action_reschedule)) {
-                // Phase-1 quick reschedule: tomorrow 23:59 (richer picker later, FR-T12).
-                val tomorrowEnd = System.currentTimeMillis() + 24L * 60 * 60 * 1000
-                viewModel.onReschedule(tomorrowEnd)
+                showReschedule = true
             }
             SecondaryAction(stringResource(R.string.detail_action_delete), danger = true) {
                 viewModel.onDelete()
                 onBack()
             }
         }
+    }
+
+    if (showReschedule) {
+        RescheduleSheet(
+            today = state.today,
+            zone = state.zone,
+            currentDeadline = task?.deadline,
+            onDismiss = { showReschedule = false },
+            onConfirm = { newDeadline ->
+                viewModel.onReschedule(newDeadline)
+                showReschedule = false
+            },
+        )
     }
 }
 

@@ -74,6 +74,17 @@
     <string name="add_task_save">Save Task</string>
     <string name="cd_close_sheet">Close</string>
 
+    <!-- Reschedule sheet (07-screens.md §2.5/§2.14, FR-T12) -->
+    <string name="reschedule_title">Reschedule</string>
+    <string name="reschedule_day_label">Day</string>
+    <string name="reschedule_time_label">Time</string>
+    <string name="reschedule_day_today">Today</string>
+    <string name="reschedule_day_tomorrow">Tomorrow</string>
+    <string name="reschedule_day_plus3">+3 Days</string>
+    <string name="reschedule_day_plus7">+7 Days</string>
+    <string name="reschedule_confirm">Move deadline</string>
+    <string name="reschedule_clear">Clear deadline</string>
+
     <!-- 10 Task Detail (07-screens.md §2.14) -->
     <string name="detail_back">Tasks</string>
     <string name="detail_status_in_progress">IN PROGRESS</string>

@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.ZoneId
 import javax.inject.Inject
 
 /** UI state for the Task Detail screen (07-screens.md §2.14). */
@@ -26,6 +28,8 @@ data class TaskDetailUiState(
     val subtasks: List<Subtask> = emptyList(),
     val deadlineLabel: String? = null,
     val estimatedLabel: String? = null,
+    val today: LocalDate = LocalDate.now(),
+    val zone: ZoneId = ZoneId.systemDefault(),
 ) {
     val doneSubtaskCount: Int get() = subtasks.count { it.isDone }
     val progressPercent: Int
@@ -58,6 +62,8 @@ class TaskDetailViewModel @Inject constructor(
             subtasks = subtasks,
             deadlineLabel = task?.deadline?.let { DateTimeFormatter.deadlineLabel(it, now, zone) },
             estimatedLabel = DateTimeFormatter.durationLabel(task?.estimatedDurationMin),
+            today = timeProvider.today(),
+            zone = zone,
         )
     }.stateIn(
         scope = viewModelScope,

@@ -78,6 +78,7 @@ fun TasksScreen(
     var showAddSheet by remember { mutableStateOf(false) }
     var showOverdue by remember { mutableStateOf(false) }
     var bannerDismissed by remember { mutableStateOf(false) }
+    var rescheduling by remember { mutableStateOf<TaskRowUi?>(null) }
 
     Box(modifier = modifier.fillMaxSize().background(AnchorColors.surface)) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -112,11 +113,7 @@ fun TasksScreen(
                             row = row,
                             onComplete = { viewModel.onComplete(row.task.id) },
                             onKeep = { viewModel.onKeepForToday(row.task.id) },
-                            onReschedule = {
-                                // Phase-1 quick action: push to tomorrow 23:59 (FR-T12).
-                                val tomorrowEnd = System.currentTimeMillis() + 24L * 60 * 60 * 1000
-                                viewModel.onReschedule(row.task.id, tomorrowEnd)
-                            },
+                            onReschedule = { rescheduling = row },
                         )
                     }
                 }
@@ -171,6 +168,19 @@ fun TasksScreen(
                     }
                     onDone(result)
                 }
+            },
+        )
+    }
+
+    rescheduling?.let { row ->
+        RescheduleSheet(
+            today = state.today,
+            zone = state.zone,
+            currentDeadline = row.task.deadline,
+            onDismiss = { rescheduling = null },
+            onConfirm = { newDeadline ->
+                viewModel.onReschedule(row.task.id, newDeadline)
+                rescheduling = null
             },
         )
     }

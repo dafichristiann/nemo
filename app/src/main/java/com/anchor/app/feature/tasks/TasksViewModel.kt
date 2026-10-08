@@ -41,6 +41,8 @@ data class TasksUiState(
     val filter: TaskFilter = TaskFilter.TODAY,
     val rows: List<TaskRowUi> = emptyList(),
     val overdueCount: Int = 0,
+    val today: java.time.LocalDate = java.time.LocalDate.now(),
+    val zone: java.time.ZoneId = java.time.ZoneId.systemDefault(),
 )
 
 /**
@@ -75,6 +77,8 @@ class TasksViewModel @Inject constructor(
             filter = currentFilter,
             rows = tasks.map { it.toRowUi(now, zone) },
             overdueCount = overdue.size,
+            today = timeProvider.today(),
+            zone = zone,
         )
     }.stateIn(
         scope = viewModelScope,

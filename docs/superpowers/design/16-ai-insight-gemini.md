@@ -45,13 +45,18 @@ di-retire/overload tidak memaksa fallback.
 
 ## Konfigurasi
 
-`local.properties` (git-ignored, machine-specific):
+Key diresolusi saat build (yang pertama tidak kosong menang):
+
+1. **Env var** `GEMINI_API_KEY` — paling aman (CI/rilis, tidak pernah jadi file).
+2. **Gradle property** `GEMINI_API_KEY` (mis. `~/.gradle/gradle.properties`, di luar repo).
+3. **`local.properties`** (git-ignored, machine-specific) — praktis untuk dev lokal:
 
 ```properties
 GEMINI_API_KEY=<your-key-from-google-ai-studio>
 ```
 
 → `BuildConfig.GEMINI_API_KEY`. Bila kosong → perilaku identik dengan no-AI (offline).
+Ganti key = edit salah satu sumber + **rebuild** (key disuntik saat build, bukan runtime).
 
 ## Verifikasi (device TECNO CN7c, Android 16)
 

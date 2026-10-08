@@ -83,17 +83,37 @@ keytool -genkeypair -v -keystore anchor-release.jks -alias anchor `
 ## 5b. AI Insight (Gemini — opt-in)
 
 AI Personal Insight memakai Gemini REST (lihat `superpowers/design/16-ai-insight-gemini.md`).
-Konfigurasi key di `local.properties` (git-ignored, machine-specific):
+Key dibaca oleh build dengan urutan prioritas (yang pertama tidak kosong menang):
+
+| Urutan | Sumber | Cara pakai | Aman? |
+|---|---|---|---|
+| 1 | **Environment variable** `GEMINI_API_KEY` | `$env:GEMINI_API_KEY="..."` sebelum build | ✅✅ paling aman (CI/rilis) |
+| 2 | **Gradle property** `GEMINI_API_KEY` | di `~/.gradle/gradle.properties` (di luar repo) | ✅ |
+| 3 | **`local.properties`** (root repo, git-ignored) | `GEMINI_API_KEY=...` | ✅ untuk dev lokal |
+
+Contoh cepat — **`local.properties`** (cara paling praktis untuk dev lokal):
 
 ```properties
 GEMINI_API_KEY=<key dari Google AI Studio>
 ```
 
+- Ambil key gratis: https://aistudio.google.com/apikey
 - Bila key **kosong** → AI no-op, insight memakai rule-based lokal, **tanpa egress**.
 - Bila key **ada** & toggle AI di Settings **ON** → `generateContent` mengirim
   **hanya agregat**; gagal/offline → fallback rule-based otomatis.
 - Default toggle AI = **OFF** (privacy).
-- ⚠️ **Jangan commit** `local.properties` / key. Rotasi key bila pernah terekspos.
+
+**Mengganti key (tanpa ubah kode):**
+1. Ambil key baru di https://aistudio.google.com/apikey.
+2. Edit `GEMINI_API_KEY` di salah satu sumber di atas (env var / gradle.properties / local.properties).
+3. Rebuild + reinstall: `.\gradlew.bat :app:assembleDebug` lalu `adb install -r app\build\outputs\apk\debug\app-debug.apk`.
+   > Key disuntik saat **build**, jadi wajib rebuild — tidak bisa diganti saat runtime tanpa build ulang.
+
+**⚠️ Aturan keamanan:**
+- **JANGAN** menaruh key di `strings.xml`, kode Kotlin, atau file yang di-track git.
+- `.gitignore` sudah menutup `local.properties`; verifikasi dengan `git status` (key tidak boleh muncul).
+- **Rotasi key** langsung di AI Studio bila pernah terekspos (mis. ter-paste ke chat/tiket).
+- `local.properties.example` hanya berisi placeholder — aman di-commit.
 
 ---
 

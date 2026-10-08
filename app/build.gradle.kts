@@ -25,7 +25,13 @@ val keystoreProperties = Properties().apply {
 val hasReleaseKeystore = keystoreProperties.getProperty("storeFile") != null
 
 // Optional Gemini API key for the opt-in AI insight (PRD v0.3 §10.8/§13.1).
-// Read from an untracked local.properties (machine-specific) so the key is never committed.
+//
+// Resolution order (first non-blank wins), so the key can live only where it is safe:
+//   1. Environment variable `GEMINI_API_KEY`  — safest (used by CI / release; never a file).
+//   2. Gradle property `GEMINI_API_KEY`        — e.g. in ~/.gradle/gradle.properties (outside repo).
+//   3. Untracked `local.properties` (repo root, git-ignored) — convenient for local dev.
+//
+// The key is NEVER committed (local.properties is git-ignored; env vars never touch the repo).
 // When absent, the AI source is a no-op and insight falls back to rule-based (FR-AI4, FR-AI7).
 val localPropertiesFile = rootProject.file("local.properties")
 val localProperties = Properties().apply {
@@ -33,7 +39,12 @@ val localProperties = Properties().apply {
         localPropertiesFile.inputStream().use { load(it) }
     }
 }
-val geminiApiKey: String = localProperties.getProperty("GEMINI_API_KEY") ?: ""
+val geminiApiKey: String = (
+    System.getenv("GEMINI_API_KEY")
+        ?: (project.findProperty("GEMINI_API_KEY") as String?)
+        ?: localProperties.getProperty("GEMINI_API_KEY")
+        ?: ""
+    ).trim()
 
 android {
     namespace = "com.anchor.app"

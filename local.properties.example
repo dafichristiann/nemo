@@ -5,6 +5,13 @@
 sdk.dir=C\:\\Users\\you\\AppData\\Local\\Android\\Sdk
 
 # Optional: Gemini API key for the opt-in AI insight (PRD v0.3 §10.8/§13.1).
-# Get one free at https://aistudio.google.com/apikey
+#
+# The key can be supplied three ways (first non-blank wins), all safe:
+#   1. Environment variable  GEMINI_API_KEY        (safest — CI/release; never a file)
+#   2. Gradle property       GEMINI_API_KEY        (e.g. ~/.gradle/gradle.properties, outside repo)
+#   3. This file             GEMINI_API_KEY=...    (convenient for local dev, git-ignored)
+#
+# Get a free key at https://aistudio.google.com/apikey
 # Leave empty to keep the app 100% offline (rule-based insight only).
+# NEVER commit a real key. Rotate it in AI Studio if it was ever exposed.
 GEMINI_API_KEY=

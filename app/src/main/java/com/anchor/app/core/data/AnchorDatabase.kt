@@ -13,6 +13,7 @@ import com.anchor.app.core.data.dao.RescheduleEventDao
 import com.anchor.app.core.data.dao.SubtaskDao
 import com.anchor.app.core.data.dao.TaskDao
 import com.anchor.app.core.data.dao.TaskDefinitionDao
+import com.anchor.app.core.data.dao.TaskDependencyDao
 import com.anchor.app.core.data.dao.UsageSessionDao
 import com.anchor.app.core.data.dao.WeeklyUsageSummaryDao
 import com.anchor.app.core.data.entity.AppCategoryEntity
@@ -23,6 +24,7 @@ import com.anchor.app.core.data.entity.InterventionLogEntity
 import com.anchor.app.core.data.entity.RescheduleEventEntity
 import com.anchor.app.core.data.entity.SubtaskEntity
 import com.anchor.app.core.data.entity.TaskDefinitionEntity
+import com.anchor.app.core.data.entity.TaskDependencyEntity
 import com.anchor.app.core.data.entity.TaskEntity
 import com.anchor.app.core.data.entity.UsageSessionEntity
 import com.anchor.app.core.data.entity.WeeklyUsageSummaryEntity
@@ -36,6 +38,7 @@ import com.anchor.app.core.data.entity.WeeklyUsageSummaryEntity
  *  - v3: + `usage_session`, `daily_usage_summary`, `weekly_usage_summary`, `app_category` (Sprint 2)
  *  - v4: + `intervention_log` (Sprint 4)
  *  - v5: + `focus_session` (Sprint 5)
+ *  - v6: + `task_dependency` (Sprint 6)
  *
  * `exportSchema = true` writes JSON schema files to `app/schemas` (KSP `room.schemaLocation`).
  * Migrations are explicit; there is no destructive fallback.
@@ -53,8 +56,9 @@ import com.anchor.app.core.data.entity.WeeklyUsageSummaryEntity
         AppCategoryEntity::class,
         InterventionLogEntity::class,
         FocusSessionEntity::class,
+        TaskDependencyEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = true,
 )
 abstract class AnchorDatabase : RoomDatabase() {
@@ -69,6 +73,7 @@ abstract class AnchorDatabase : RoomDatabase() {
     abstract fun appCategoryDao(): AppCategoryDao
     abstract fun interventionLogDao(): InterventionLogDao
     abstract fun focusSessionDao(): FocusSessionDao
+    abstract fun taskDependencyDao(): TaskDependencyDao
 
     companion object {
         const val NAME = "anchor.db"
@@ -263,6 +268,29 @@ abstract class AnchorDatabase : RoomDatabase() {
                 )
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_focus_session_startedAt` ON `focus_session`(`startedAt`)")
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_focus_session_taskId` ON `focus_session`(`taskId`)")
+            }
+        }
+
+        /** v5 → v6: add the Phase-4 task dependency table (docs 03 §2.5). */
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `task_dependency` (
+                        `id` TEXT NOT NULL,
+                        `fromTaskId` TEXT NOT NULL,
+                        `toTaskId` TEXT NOT NULL,
+                        `type` TEXT NOT NULL,
+                        PRIMARY KEY(`id`),
+                        FOREIGN KEY(`fromTaskId`) REFERENCES `task_instance`(`id`)
+                            ON UPDATE NO ACTION ON DELETE CASCADE,
+                        FOREIGN KEY(`toTaskId`) REFERENCES `task_instance`(`id`)
+                            ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent(),
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_task_dependency_fromTaskId` ON `task_dependency`(`fromTaskId`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_task_dependency_toTaskId` ON `task_dependency`(`toTaskId`)")
             }
         }
     }

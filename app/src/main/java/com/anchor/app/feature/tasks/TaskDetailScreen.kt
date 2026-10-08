@@ -65,6 +65,7 @@ fun TaskDetailScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     onStartFocus: () -> Unit = {},
+    onOpenFutureView: (String) -> Unit = {},
     viewModel: TaskDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -238,12 +239,13 @@ fun TaskDetailScreen(
             }
         }
 
-        // Future View callout (07-screens.md §2.14; screen built in Sprint 6)
+        // Future View callout (07-screens.md §2.14; opens screen 07)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(Radius.card))
                 .background(AnchorColors.surfaceSunken)
+                .clickable { onOpenFutureView(task.id) }
                 .padding(Spacing.x4),
         ) {
             Text(

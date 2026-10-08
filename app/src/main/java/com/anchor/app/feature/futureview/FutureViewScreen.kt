@@ -1,0 +1,272 @@
+package com.anchor.app.feature.futureview
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.anchor.app.R
+import com.anchor.app.core.design.components.PrimaryButton
+import com.anchor.app.core.design.components.SectionHeader
+import com.anchor.app.core.design.theme.AnchorColors
+import com.anchor.app.core.design.theme.InterFamily
+import com.anchor.app.core.design.theme.Radius
+import com.anchor.app.core.design.theme.Spacing
+import com.anchor.app.core.domain.model.DominoEffect
+import com.anchor.app.core.domain.model.FutureScenario
+import com.anchor.app.core.domain.model.FutureView
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+
+/**
+ * Screen 07 — Future View + Domino Effect (docs/superpowers/design/07-screens.md §2.11,
+ * PRD §10.6-10.7).
+ *
+ * Two side-by-side scenarios (start now vs keep delaying) with an honest disclaimer and any
+ * heuristic assumptions clearly marked, plus the dependency chain in estimative language
+ * ("may affect"). The primary action is [Start Focus] (FR-FV4).
+ */
+@Composable
+fun FutureViewScreen(
+    onBack: () -> Unit,
+    onStartFocus: () -> Unit,
+    onOpenTask: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: FutureViewViewModel = hiltViewModel(),
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(AnchorColors.surface)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = Spacing.screenHorizontal)
+            .padding(top = Spacing.x6, bottom = Spacing.x8),
+        verticalArrangement = Arrangement.spacedBy(Spacing.x4),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.x2)) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                contentDescription = null,
+                tint = AnchorColors.textPrimary,
+                modifier = Modifier.clickable(onClick = onBack),
+            )
+            Text(
+                text = stringResource(R.string.detail_back),
+                fontFamily = InterFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp,
+                color = AnchorColors.textPrimary,
+                modifier = Modifier.clickable(onClick = onBack),
+            )
+        }
+
+        Text(
+            text = stringResource(R.string.future_title),
+            fontFamily = InterFamily,
+            fontWeight = FontWeight.Bold,
+            fontSize = 26.sp,
+            color = AnchorColors.textPrimary,
+        )
+        Text(
+            text = stringResource(R.string.future_disclaimer),
+            fontFamily = InterFamily,
+            fontSize = 13.sp,
+            color = AnchorColors.textSecondary,
+        )
+
+        val view = state.futureView
+        if (view != null) {
+            ScenarioCard(
+                label = stringResource(R.string.future_scenario_now),
+                scenario = view.startNow,
+                zone = state.zone,
+            )
+            ScenarioCard(
+                label = stringResource(R.string.future_scenario_delay),
+                scenario = view.delay,
+                zone = state.zone,
+            )
+
+            if (view.usingAssumedDuration || view.usingAssumedDeadline) {
+                Notice(text = stringResource(R.string.future_assumptions))
+            }
+        }
+
+        state.domino?.let { DominoSection(it, onOpenTask) }
+
+        PrimaryButton(
+            label = stringResource(R.string.future_start_focus),
+            onClick = onStartFocus,
+        )
+    }
+}
+
+@Composable
+private fun ScenarioCard(label: String, scenario: FutureScenario, zone: ZoneId) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(Radius.card))
+            .background(AnchorColors.surfaceSunken)
+            .padding(Spacing.x4),
+        verticalArrangement = Arrangement.spacedBy(Spacing.x2),
+    ) {
+        Text(
+            text = label,
+            fontFamily = InterFamily,
+            fontWeight = FontWeight.Bold,
+            fontSize = 14.sp,
+            color = AnchorColors.textPrimary,
+        )
+        Text(
+            text = stringResource(
+                R.string.future_scenario_range,
+                formatTime(scenario.startAt, zone),
+                formatTime(scenario.endAt, zone),
+            ),
+            fontFamily = InterFamily,
+            fontSize = 13.sp,
+            color = AnchorColors.textSecondary,
+        )
+        scenario.deadlineAt?.let {
+            Text(
+                text = stringResource(R.string.future_scenario_deadline, formatTime(it, zone)),
+                fontFamily = InterFamily,
+                fontSize = 12.sp,
+                color = AnchorColors.textFaint,
+            )
+        }
+    }
+}
+
+@Composable
+private fun DominoSection(domino: DominoEffect, onOpenTask: (String) -> Unit) {
+    SectionHeader(title = stringResource(R.string.future_domino_title))
+
+    if (domino.affectedCount == 0) {
+        Text(
+            text = stringResource(R.string.future_domino_empty),
+            fontFamily = InterFamily,
+            fontSize = 13.sp,
+            color = AnchorColors.textFaint,
+        )
+        return
+    }
+
+    // Estimative count — never deterministic (FR-DE4).
+    Text(
+        text = stringResource(R.string.future_domino_count, domino.affectedCount),
+        fontFamily = InterFamily,
+        fontSize = 13.sp,
+        color = AnchorColors.textSecondary,
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(Radius.card))
+            .background(AnchorColors.surfaceSunken)
+            .padding(Spacing.x4),
+        verticalArrangement = Arrangement.spacedBy(Spacing.x2),
+    ) {
+        DominoRow(
+            title = domino.root.title,
+            tag = stringResource(R.string.future_domino_current),
+            onClick = { onOpenTask(domino.root.taskId) },
+        )
+        domino.affected.forEach { node ->
+            Text(
+                text = "↓",
+                fontFamily = InterFamily,
+                fontSize = 14.sp,
+                color = AnchorColors.textFaint,
+                modifier = Modifier.padding(start = Spacing.x2),
+            )
+            DominoRow(
+                title = node.title,
+                tag = null,
+                onClick = { onOpenTask(node.taskId) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun DominoRow(title: String, tag: String?, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(Radius.field))
+            .clickable(onClick = onClick)
+            .padding(horizontal = Spacing.x3, vertical = Spacing.x2),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.x2),
+    ) {
+        Text(
+            text = title,
+            fontFamily = InterFamily,
+            fontWeight = FontWeight.Medium,
+            fontSize = 14.sp,
+            color = AnchorColors.textPrimary,
+            modifier = Modifier.weight(1f),
+        )
+        if (tag != null) {
+            Text(
+                text = tag,
+                fontFamily = InterFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 10.sp,
+                color = AnchorColors.textFaint,
+            )
+        }
+    }
+}
+
+@Composable
+private fun Notice(text: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(Radius.card))
+            .background(AnchorColors.surfaceSunken)
+            .padding(Spacing.x4),
+    ) {
+        Text(
+            text = text,
+            fontFamily = InterFamily,
+            fontWeight = FontWeight.Medium,
+            fontSize = 13.sp,
+            color = AnchorColors.textSecondary,
+        )
+    }
+}
+
+private val TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm")
+
+private fun formatTime(millis: Long, zone: ZoneId): String =
+    Instant.ofEpochMilli(millis).atZone(zone).toLocalTime().format(TIME_FORMAT)

@@ -208,4 +208,19 @@
     <string name="focus_channel_desc">Shows an ongoing focus session with a way to exit at any time.</string>
     <string name="focus_service_title">Focus session in progress</string>
     <string name="focus_service_text">Tap to return. Emergency exit is always available.</string>
+
+    <!-- 07 Future View + Domino (07-screens.md §2.11, PRD §10.6-10.7) -->
+    <string name="future_title">What happens next?</string>
+    <string name="future_disclaimer">Based on your current schedule — a projection, not a prediction.</string>
+    <string name="future_scenario_now">IF I START NOW</string>
+    <string name="future_scenario_delay">IF I KEEP DELAYING</string>
+    <string name="future_scenario_range">%1$s → %2$s</string>
+    <string name="future_scenario_deadline">Deadline %1$s</string>
+    <string name="future_assumptions">Some values use default assumptions (duration or deadline) — marked so you know.</string>
+    <string name="future_domino_title">Domino Effect</string>
+    <string name="future_domino_count" tools:ignore="PluralsCandidate">1 task may affect %1$d upcoming tasks.</string>
+    <string name="future_domino_empty">No linked tasks yet.</string>
+    <string name="future_domino_current">CURRENT</string>
+    <string name="future_start_focus">Start Focus Now</string>
+    <string name="future_cycle_blocked">That link would create a loop, so it wasn\'t saved.</string>
 </resources>

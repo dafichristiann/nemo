@@ -12,6 +12,7 @@ import com.anchor.app.core.data.dao.RescheduleEventDao
 import com.anchor.app.core.data.dao.SubtaskDao
 import com.anchor.app.core.data.dao.TaskDao
 import com.anchor.app.core.data.dao.TaskDefinitionDao
+import com.anchor.app.core.data.dao.TaskDependencyDao
 import com.anchor.app.core.data.dao.UsageSessionDao
 import com.anchor.app.core.data.dao.WeeklyUsageSummaryDao
 import dagger.Module
@@ -45,6 +46,7 @@ object DatabaseModule {
             AnchorDatabase.MIGRATION_2_3,
             AnchorDatabase.MIGRATION_3_4,
             AnchorDatabase.MIGRATION_4_5,
+            AnchorDatabase.MIGRATION_5_6,
         )
         .build()
 
@@ -89,4 +91,8 @@ object DatabaseModule {
     @Provides
     fun provideFocusSessionDao(database: AnchorDatabase): FocusSessionDao =
         database.focusSessionDao()
+
+    @Provides
+    fun provideTaskDependencyDao(database: AnchorDatabase): TaskDependencyDao =
+        database.taskDependencyDao()
 }

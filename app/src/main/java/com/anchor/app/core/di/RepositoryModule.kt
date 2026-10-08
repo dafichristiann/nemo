@@ -4,12 +4,14 @@ import com.anchor.app.core.data.repository.FocusRepositoryImpl
 import com.anchor.app.core.data.repository.InterventionRepositoryImpl
 import com.anchor.app.core.data.repository.SettingsRepositoryImpl
 import com.anchor.app.core.data.repository.TaskDefinitionRepositoryImpl
+import com.anchor.app.core.data.repository.TaskDependencyRepositoryImpl
 import com.anchor.app.core.data.repository.TaskRepositoryImpl
 import com.anchor.app.core.data.repository.UsageRepositoryImpl
 import com.anchor.app.core.domain.repository.FocusRepository
 import com.anchor.app.core.domain.repository.InterventionRepository
 import com.anchor.app.core.domain.repository.SettingsRepository
 import com.anchor.app.core.domain.repository.TaskDefinitionRepository
+import com.anchor.app.core.domain.repository.TaskDependencyRepository
 import com.anchor.app.core.domain.repository.TaskRepository
 import com.anchor.app.core.domain.repository.UsageRepository
 import dagger.Binds
@@ -53,4 +55,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindFocusRepository(impl: FocusRepositoryImpl): FocusRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindTaskDependencyRepository(
+        impl: TaskDependencyRepositoryImpl,
+    ): TaskDependencyRepository
 }

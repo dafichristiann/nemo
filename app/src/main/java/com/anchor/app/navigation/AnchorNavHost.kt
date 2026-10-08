@@ -17,6 +17,8 @@ import androidx.navigation.navArgument
 import com.anchor.app.core.design.components.AnchorNavBar
 import com.anchor.app.core.design.navigation.TopLevelDestination
 import com.anchor.app.feature.focus.FocusScreen
+import com.anchor.app.feature.futureview.FutureViewScreen
+import com.anchor.app.feature.futureview.FutureViewViewModel
 import com.anchor.app.feature.insights.InsightsScreen
 import com.anchor.app.feature.intervention.InterventionOverlay
 import com.anchor.app.feature.onboarding.OnboardingScreen
@@ -34,6 +36,8 @@ object Routes {
     const val SETTINGS = "settings"
     const val TASK_DETAIL = "task/{taskId}"
     fun taskDetail(taskId: String) = "task/$taskId"
+    const val FUTURE_VIEW = "future/{taskId}"
+    fun futureView(taskId: String) = "future/$taskId"
 }
 
 /**
@@ -129,6 +133,20 @@ fun AnchorNavHost(
                             launchSingleTop = true
                         }
                     },
+                    onOpenFutureView = { taskId -> navController.navigate(Routes.futureView(taskId)) },
+                )
+            }
+
+            composable(
+                route = Routes.FUTURE_VIEW,
+                arguments = listOf(navArgument(FutureViewViewModel.ARG_TASK_ID) { type = NavType.StringType }),
+            ) {
+                FutureViewScreen(
+                    onBack = { navController.popBackStack() },
+                    onStartFocus = {
+                        navController.navigate(TopLevelDestination.FOCUS.route) { launchSingleTop = true }
+                    },
+                    onOpenTask = { taskId -> navController.navigate(Routes.taskDetail(taskId)) },
                 )
             }
 

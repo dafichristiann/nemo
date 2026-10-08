@@ -4,9 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.anchor.app.core.common.DispatcherProvider
 import com.anchor.app.core.domain.model.AppSettings
+import com.anchor.app.core.domain.repository.FocusRepository
+import com.anchor.app.core.domain.repository.InsightRepository
+import com.anchor.app.core.domain.repository.InterventionRepository
 import com.anchor.app.core.domain.repository.SettingsRepository
 import com.anchor.app.core.domain.repository.TaskDefinitionRepository
 import com.anchor.app.core.domain.repository.TaskRepository
+import com.anchor.app.core.domain.repository.UsageRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +24,10 @@ class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val taskRepository: TaskRepository,
     private val definitionRepository: TaskDefinitionRepository,
+    private val usageRepository: UsageRepository,
+    private val focusRepository: FocusRepository,
+    private val interventionRepository: InterventionRepository,
+    private val insightRepository: InsightRepository,
     private val dispatchers: DispatcherProvider,
 ) : ViewModel() {
 
@@ -32,10 +40,14 @@ class SettingsViewModel @Inject constructor(
     fun setTrackingEnabled(enabled: Boolean) =
         viewModelScope.launch(dispatchers.io) { settingsRepository.setTrackingEnabled(enabled) }
 
-    /** "Delete all data" — erase user tables then reset settings (PRD §10.10). */
+    /** "Delete all data" — erase every user table then reset settings (PRD §10.10). */
     fun onDeleteAllData() = viewModelScope.launch(dispatchers.io) {
         taskRepository.clear()
         definitionRepository.clear()
+        usageRepository.clearAll()
+        focusRepository.clear()
+        interventionRepository.clear()
+        insightRepository.clear()
         settingsRepository.resetAll()
     }
 }

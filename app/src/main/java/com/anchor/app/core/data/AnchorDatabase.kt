@@ -8,6 +8,7 @@ import com.anchor.app.core.data.dao.AppCategoryDao
 import com.anchor.app.core.data.dao.AppSettingsDao
 import com.anchor.app.core.data.dao.DailyUsageSummaryDao
 import com.anchor.app.core.data.dao.FocusSessionDao
+import com.anchor.app.core.data.dao.InsightDao
 import com.anchor.app.core.data.dao.InterventionLogDao
 import com.anchor.app.core.data.dao.RescheduleEventDao
 import com.anchor.app.core.data.dao.SubtaskDao
@@ -20,6 +21,7 @@ import com.anchor.app.core.data.entity.AppCategoryEntity
 import com.anchor.app.core.data.entity.AppSettingsEntity
 import com.anchor.app.core.data.entity.DailyUsageSummaryEntity
 import com.anchor.app.core.data.entity.FocusSessionEntity
+import com.anchor.app.core.data.entity.InsightEntity
 import com.anchor.app.core.data.entity.InterventionLogEntity
 import com.anchor.app.core.data.entity.RescheduleEventEntity
 import com.anchor.app.core.data.entity.SubtaskEntity
@@ -39,6 +41,7 @@ import com.anchor.app.core.data.entity.WeeklyUsageSummaryEntity
  *  - v4: + `intervention_log` (Sprint 4)
  *  - v5: + `focus_session` (Sprint 5)
  *  - v6: + `task_dependency` (Sprint 6)
+ *  - v7: + `insight` (Sprint 7)
  *
  * `exportSchema = true` writes JSON schema files to `app/schemas` (KSP `room.schemaLocation`).
  * Migrations are explicit; there is no destructive fallback.
@@ -57,8 +60,9 @@ import com.anchor.app.core.data.entity.WeeklyUsageSummaryEntity
         InterventionLogEntity::class,
         FocusSessionEntity::class,
         TaskDependencyEntity::class,
+        InsightEntity::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = true,
 )
 abstract class AnchorDatabase : RoomDatabase() {
@@ -74,6 +78,7 @@ abstract class AnchorDatabase : RoomDatabase() {
     abstract fun interventionLogDao(): InterventionLogDao
     abstract fun focusSessionDao(): FocusSessionDao
     abstract fun taskDependencyDao(): TaskDependencyDao
+    abstract fun insightDao(): InsightDao
 
     companion object {
         const val NAME = "anchor.db"
@@ -291,6 +296,31 @@ abstract class AnchorDatabase : RoomDatabase() {
                 )
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_task_dependency_fromTaskId` ON `task_dependency`(`fromTaskId`)")
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_task_dependency_toTaskId` ON `task_dependency`(`toTaskId`)")
+            }
+        }
+
+        /** v6 → v7: add the Phase-5 insight table (docs 03 §6.1). */
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `insight` (
+                        `id` TEXT NOT NULL,
+                        `type` TEXT NOT NULL,
+                        `dateEpochDay` INTEGER NOT NULL,
+                        `source` TEXT NOT NULL,
+                        `summary` TEXT NOT NULL,
+                        `patternsJson` TEXT NOT NULL,
+                        `riskLevel` TEXT,
+                        `suggestionsJson` TEXT NOT NULL,
+                        `recommendedAction` TEXT,
+                        `createdAt` INTEGER NOT NULL,
+                        PRIMARY KEY(`id`)
+                    )
+                    """.trimIndent(),
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_insight_dateEpochDay` ON `insight`(`dateEpochDay`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_insight_type` ON `insight`(`type`)")
             }
         }
     }

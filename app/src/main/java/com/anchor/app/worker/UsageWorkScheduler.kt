@@ -54,6 +54,14 @@ class UsageWorkScheduler @Inject constructor(
             pruning,
         )
 
+        // Daily reflection: once per day (FR-DR1). Cached per day, so an extra run is harmless.
+        val reflection = PeriodicWorkRequestBuilder<DailyReflectionWorker>(1, TimeUnit.DAYS).build()
+        workManager.enqueueUniquePeriodicWork(
+            DailyReflectionWorker.UNIQUE_NAME,
+            ExistingPeriodicWorkPolicy.KEEP,
+            reflection,
+        )
+
         // Phase-2/3 drift check → intervention cycle (UsageStatsManager has no real-time events).
         val driftCheck = PeriodicWorkRequestBuilder<InterventionCheckWorker>(
             COLLECT_INTERVAL_MINUTES,

@@ -1,6 +1,7 @@
 package com.anchor.app.core.di
 
 import com.anchor.app.core.data.repository.FocusRepositoryImpl
+import com.anchor.app.core.data.repository.InsightRepositoryImpl
 import com.anchor.app.core.data.repository.InterventionRepositoryImpl
 import com.anchor.app.core.data.repository.SettingsRepositoryImpl
 import com.anchor.app.core.data.repository.TaskDefinitionRepositoryImpl
@@ -8,6 +9,7 @@ import com.anchor.app.core.data.repository.TaskDependencyRepositoryImpl
 import com.anchor.app.core.data.repository.TaskRepositoryImpl
 import com.anchor.app.core.data.repository.UsageRepositoryImpl
 import com.anchor.app.core.domain.repository.FocusRepository
+import com.anchor.app.core.domain.repository.InsightRepository
 import com.anchor.app.core.domain.repository.InterventionRepository
 import com.anchor.app.core.domain.repository.SettingsRepository
 import com.anchor.app.core.domain.repository.TaskDefinitionRepository
@@ -61,4 +63,8 @@ abstract class RepositoryModule {
     abstract fun bindTaskDependencyRepository(
         impl: TaskDependencyRepositoryImpl,
     ): TaskDependencyRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindInsightRepository(impl: InsightRepositoryImpl): InsightRepository
 }

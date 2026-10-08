@@ -198,9 +198,41 @@ Semuanya adalah hardening/verification lanjutan yang sengaja ditunda (MVP dikunc
 |---|---|---|---|
 | **F1** | PSS 152–167 MB vs target PRD §12 (< 150 MB). Breakdown didominasi Graphics (GL/EGL ≈ 54 MB) + Code/System (shared); Java heap hanya ~11 MB → tidak ada indikasi leak. Perlu pengukuran multi-skenario sebelum optimasi. | Needs measurement | Open (non-blocking) |
 | **F2** | Recurring task **tanpa deadline** (mis. "Olahraga pagi", DAILY) tidak muncul di tab *Today*, hanya di *All*. Root cause: `TaskDao.observeToday` mensyaratkan `deadline IS NOT NULL` dan mengabaikan `definitionOccurrenceDate`. Overdue tetap ditampilkan via Overdue Banner (sesuai PRD §10.1) — itu by design, bukan bug. | UX improvement | Open (non-blocking) |
-| **F3** | `intervention_log = 0` — engine berjalan (`InterventionCheckWorker SUCCESS`) tetapi belum pernah `fire`. Syarat belum terpenuhi: tidak ada task open HIGH/URGENT (semua task MEDIUM) dan/atau baseline weekly belum terbentuk. Butuh controlled verification. | Verification gap | Open (non-blocking) |
+| **F3** | `intervention_log = 0` — engine berjalan (`InterventionCheckWorker SUCCESS`) tetapi belum pernah `fire`. Syarat belum terpenuhi: tidak ada task open HIGH/URGENT (semua task MEDIUM) dan/atau baseline weekly belum terbentuk. Butuh controlled verification. | Verification gap | **RESOLVED (2026-10-08)** — lihat §12 |
 | **F4** | `POST_NOTIFICATIONS = ignore` → intervensi berjalan via **in-app fallback** (sesuai FR-I3). Channel notifikasi utama belum dites di device nyata. Dapat diverifikasi nanti via `pm grant`. | Verification gap | Open (non-blocking) |
 
 > Semua item di atas dilacak sebagai backlog hardening; **tidak ada** yang mengubah
 > keputusan MVP terkunci.
+
+---
+
+## 12. F3 — Intervention Verification (RESOLVED, 2026-10-08)
+
+Controlled verification di device nyata **TECNO CN7c (Android 16)** menemukan **bug nyata**
+di balik F3, bukan sekadar kondisi uji yang belum terpenuhi.
+
+**Bug:** `AggregateUsageUseCase.invoke()` memanggil `aggregateWeek(week)` **tanpa menyimpan
+hasilnya** — tidak ada `usageRepository.upsertWeeklySummary(...)`. Akibatnya
+`weekly_usage_summary` selalu kosong → `DetectDriftUseCase` selalu `return null`
+(baseline tidak ada) → **intervensi mustahil fire**.
+
+**Fix:** simpan hasil `aggregateWeek` ke `upsertWeeklySummary` (bounded, satu baris).
+Ditambah regression test `aggregate_invokePersistsWeeklySummaryForDriftBaseline`.
+
+**Bukti sesudah fix (device nyata):**
+
+| Langkah | Hasil |
+|---|---|
+| `POST_NOTIFICATIONS` | digrant → `allow` |
+| Task open URGENT | dibuat ("TugasUrgent", TODO, URGENT) |
+| Aggregation | `weekly_usage_summary` = 1 baris (`2026-W41`, baseline 5393 char) |
+| `InterventionCheckWorker` | SUCCESS |
+| `intervention_log` | **1 baris**: level 3 (FUTURE_VIEW), channel **NOTIFICATION**, context `com.github.android`, status EXPIRED |
+| Notifikasi | tampil di shade: title "A moment to plan", text "Starting now could give you some free time later tonight." |
+
+**Kesimpulan:** rantai Phase 3 (collect → aggregate → **baseline** → drift → engine →
+notification) **terbukti bekerja end-to-end** di device nyata. F3 ditutup.
+
+> Bug ini juga menjawab F2-adjacent: sebelumnya drift/insight berbasis baseline tidak akan
+> pernah aktif. Perbaikan ini diperlukan agar Phase 3 berfungsi sesuai PRD §10.3/§10.4.
 

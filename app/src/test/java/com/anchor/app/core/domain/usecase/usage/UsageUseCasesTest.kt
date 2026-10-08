@@ -213,6 +213,27 @@ class UsageUseCasesTest {
         assertNull(repo.dailySummary(LocalDate.of(2026, 10, 5).toEpochDay()))
     }
 
+    @Test
+    fun aggregate_invokePersistsWeeklySummaryForDriftBaseline() = runTest {
+        // Regression: aggregation must persist the weekly summary. Drift detection reads the
+        // weekly baseline; if it is never saved, interventions can never fire (PRD §10.3, FR-D1).
+        val repo = FakeUsageRepository()
+        val time = FakeTimeProvider(fixedNow, utc)
+        repo.insertSessions(
+            listOf(
+                session("com.a", millis(2026, 10, 6, 10), millis(2026, 10, 6, 11)),
+                session("com.a", millis(2026, 10, 7, 10), millis(2026, 10, 7, 11)),
+            ),
+        )
+        val useCase = AggregateUsageUseCase(repo, CategorizeAppsUseCase(repo), time)
+
+        useCase()
+
+        val week = repo.latestWeeklySummary()
+        assertNotNull("weekly summary must be persisted for the baseline", week)
+        assertTrue(week!!.baseline.isNotEmpty())
+    }
+
     // --- PruneUsageUseCase ---
 
     @Test

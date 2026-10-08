@@ -40,10 +40,12 @@ class AggregateUsageUseCase @Inject constructor(
             computed += epochDay
         }
 
-        // Recompute the current week if any day was touched.
+        // Recompute and PERSIST the current week if any day was touched. Persisting is required:
+        // drift detection reads the weekly baseline (PRD §10.3) — without saving it, the baseline
+        // is always empty and interventions can never fire.
         if (computed.isNotEmpty()) {
             val week = timeProvider.isoWeekKey(LocalDate.ofEpochDay(computed.last()))
-            aggregateWeek(week)
+            usageRepository.upsertWeeklySummary(aggregateWeek(week))
         }
         return computed
     }

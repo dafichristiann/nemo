@@ -149,3 +149,58 @@ dijalankan ulang secara lokal untuk konfirmasi.
 manual alur kritis, uji OEM agresif. `connectedDebugAndroidTest` belum dijalankan ulang
 pada verifikasi ini (butuh emulator/device).
 
+---
+
+## 10. Final MVP Closure (2026-10-08)
+
+Quality gate & build rilis dijalankan ulang sebagai penutupan MVP (Phase 1–5).
+
+**Quality gate — PASS**
+
+| Gate | Hasil |
+|---|---|
+| `lintDebug` | PASS (0 error) |
+| `testDebugUnitTest` (`--rerun-tasks`) | PASS — **114 test, 0 failure, 0 error, 0 skip** |
+
+**Release build — PASS**
+
+| Artefak | Hasil | Ukuran aktual |
+|---|---|---|
+| `app-release.apk` | BUILD SUCCESSFUL | 2,395,812 bytes (≈ 2.28 MB) |
+| `app-release.aab` | BUILD SUCCESSFUL | 4,363,690 bytes (≈ 4.16 MB) |
+
+> Ukuran di atas adalah **hasil pengukuran, bukan requirement**; dapat berubah dengan
+> tuning R8/ASO.
+
+**Signing**
+
+⚠️ Tidak ada `keystore.properties` di mesin build → artefak release
+**locally signed with debug key** (`CN=Android Debug`, diverifikasi via
+`apksigner verify --print-certs`). Ini **valid untuk verifikasi lokal**, **bukan**
+artefak distribusi. Distribusi tetap butuh keystore rilis asli (`../RELEASE.md` §3).
+Signing architecture **tidak diubah** dan **tidak ada keystore produksi** yang dibuat.
+
+**Physical Device Validation — PASS**
+
+Diuji di device nyata **TECNO CN7c (Android 16 / API 36)** via ADB. Seluruh Phase 1–5
+berfungsi end-to-end; tidak ada crash/ANR; perilaku privasi (local-first, AI default off,
+raw usage tidak keluar device) terverifikasi. Worker WorkManager (collect/aggregate/
+prune/intervention-check/daily-reflection) berjalan SUCCESS.
+
+---
+
+## 11. Known Follow-ups / Post-MVP Hardening
+
+Temuan berikut **bukan blocker rilis** dan **tidak diimplementasikan** dalam closure ini.
+Semuanya adalah hardening/verification lanjutan yang sengaja ditunda (MVP dikunci).
+
+| ID | Temuan | Klasifikasi | Status |
+|---|---|---|---|
+| **F1** | PSS 152–167 MB vs target PRD §12 (< 150 MB). Breakdown didominasi Graphics (GL/EGL ≈ 54 MB) + Code/System (shared); Java heap hanya ~11 MB → tidak ada indikasi leak. Perlu pengukuran multi-skenario sebelum optimasi. | Needs measurement | Open (non-blocking) |
+| **F2** | Recurring task **tanpa deadline** (mis. "Olahraga pagi", DAILY) tidak muncul di tab *Today*, hanya di *All*. Root cause: `TaskDao.observeToday` mensyaratkan `deadline IS NOT NULL` dan mengabaikan `definitionOccurrenceDate`. Overdue tetap ditampilkan via Overdue Banner (sesuai PRD §10.1) — itu by design, bukan bug. | UX improvement | Open (non-blocking) |
+| **F3** | `intervention_log = 0` — engine berjalan (`InterventionCheckWorker SUCCESS`) tetapi belum pernah `fire`. Syarat belum terpenuhi: tidak ada task open HIGH/URGENT (semua task MEDIUM) dan/atau baseline weekly belum terbentuk. Butuh controlled verification. | Verification gap | Open (non-blocking) |
+| **F4** | `POST_NOTIFICATIONS = ignore` → intervensi berjalan via **in-app fallback** (sesuai FR-I3). Channel notifikasi utama belum dites di device nyata. Dapat diverifikasi nanti via `pm grant`. | Verification gap | Open (non-blocking) |
+
+> Semua item di atas dilacak sebagai backlog hardening; **tidak ada** yang mengubah
+> keputusan MVP terkunci.
+

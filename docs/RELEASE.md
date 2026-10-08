@@ -91,3 +91,36 @@ keytool -genkeypair -v -keystore anchor-release.jks -alias anchor `
    ukur RAM (< 150 MB) & baterai (≤ 2–3%/24 jam), `connectedDebugAndroidTest`,
    regresi alur kritis, uji OEM agresif.
 6. Verifikasi `allowBackup=false`, tanpa log data sensitif, payload AI agregat.
+
+---
+
+## 7. Status MVP Closure (2026-10-08)
+
+MVP Phase 1–5 **ditutup**. Ringkasan verifikasi terakhir:
+
+| Item | Hasil |
+|---|---|
+| `lintDebug` | PASS (0 error) |
+| `testDebugUnitTest` | PASS — 114 test, 0 failure, 0 error, 0 skip |
+| `assembleRelease` | PASS — APK 2,395,812 bytes (≈ 2.28 MB) |
+| `bundleRelease` | PASS — AAB 4,363,690 bytes (≈ 4.16 MB) |
+| Signing | **locally signed with debug key** (`CN=Android Debug`) — verifikasi lokal saja, **bukan** distribusi |
+| Physical device | PASS — TECNO CN7c (Android 16 / API 36), tanpa crash/ANR, privasi terverifikasi |
+| Remote push | NOT DONE (sesuai kebijakan) |
+
+> Ukuran artefak = hasil pengukuran, **bukan** requirement.
+
+**Known Follow-ups / Post-MVP Hardening** (non-blocking — detail di
+`superpowers/design/14-hardening-report.md` §11):
+
+- **F1 RAM** — PSS 152–167 MB vs target < 150 MB; butuh pengukuran multi-skenario
+  sebelum optimasi (dominasi Graphics/Code shared, bukan leak).
+- **F2 Recurring Today** — recurring tanpa deadline tidak muncul di *Today*
+  (overdue via banner = by design).
+- **F3 Intervention verification** — engine sehat, belum pernah fire (butuh task
+  HIGH/URGENT + baseline); perlu controlled verification.
+- **F4 Notification verification** — `POST_NOTIFICATIONS` ditolak → jalur in-app
+  terbukti; channel notifikasi belum dites di device.
+
+Untuk distribusi: isi `keystore.properties` (`§3`) lalu build ulang; itu akan
+menghasilkan artefak release yang benar-benar ter-sign dan tidak lagi memakai debug key.

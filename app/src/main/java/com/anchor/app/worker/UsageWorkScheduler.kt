@@ -54,13 +54,13 @@ class UsageWorkScheduler @Inject constructor(
             pruning,
         )
 
-        // Phase-2 drift check: also periodic (UsageStatsManager has no real-time events).
-        val driftCheck = PeriodicWorkRequestBuilder<DriftCheckWorker>(
+        // Phase-2/3 drift check → intervention cycle (UsageStatsManager has no real-time events).
+        val driftCheck = PeriodicWorkRequestBuilder<InterventionCheckWorker>(
             COLLECT_INTERVAL_MINUTES,
             TimeUnit.MINUTES,
         ).build()
         workManager.enqueueUniquePeriodicWork(
-            DriftCheckWorker.UNIQUE_NAME,
+            InterventionCheckWorker.UNIQUE_NAME,
             ExistingPeriodicWorkPolicy.KEEP,
             driftCheck,
         )

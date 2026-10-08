@@ -18,6 +18,7 @@ import com.anchor.app.core.design.components.AnchorNavBar
 import com.anchor.app.core.design.navigation.TopLevelDestination
 import com.anchor.app.feature.focus.FocusScreen
 import com.anchor.app.feature.insights.InsightsScreen
+import com.anchor.app.feature.intervention.InterventionOverlay
 import com.anchor.app.feature.onboarding.OnboardingScreen
 import com.anchor.app.feature.onboarding.PermissionOnboardingScreen
 import com.anchor.app.feature.settings.SettingsScreen
@@ -128,5 +129,12 @@ fun AnchorNavHost(
                 SettingsScreen(onBack = { navController.popBackStack() })
             }
         }
+
+        // Screen 04: in-app contextual intervention, drawn above the current destination
+        // (docs 07-screens.md §2.8, 04-intervention-engine.md §8). Focus navigation is a
+        // Sprint-5 concern; for now the action just records the outcome and closes the overlay.
+        InterventionOverlay(
+            onNavigateToFocus = { navController.navigate(TopLevelDestination.FOCUS.route) },
+        )
     }
 }

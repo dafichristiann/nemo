@@ -7,6 +7,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.anchor.app.core.data.dao.AppCategoryDao
 import com.anchor.app.core.data.dao.AppSettingsDao
 import com.anchor.app.core.data.dao.DailyUsageSummaryDao
+import com.anchor.app.core.data.dao.InterventionLogDao
 import com.anchor.app.core.data.dao.RescheduleEventDao
 import com.anchor.app.core.data.dao.SubtaskDao
 import com.anchor.app.core.data.dao.TaskDao
@@ -16,6 +17,7 @@ import com.anchor.app.core.data.dao.WeeklyUsageSummaryDao
 import com.anchor.app.core.data.entity.AppCategoryEntity
 import com.anchor.app.core.data.entity.AppSettingsEntity
 import com.anchor.app.core.data.entity.DailyUsageSummaryEntity
+import com.anchor.app.core.data.entity.InterventionLogEntity
 import com.anchor.app.core.data.entity.RescheduleEventEntity
 import com.anchor.app.core.data.entity.SubtaskEntity
 import com.anchor.app.core.data.entity.TaskDefinitionEntity
@@ -30,6 +32,7 @@ import com.anchor.app.core.data.entity.WeeklyUsageSummaryEntity
  *  - v1: `app_settings` (Sprint 0)
  *  - v2: + `task_definition`, `task_instance`, `subtask`, `reschedule_event` (Sprint 1)
  *  - v3: + `usage_session`, `daily_usage_summary`, `weekly_usage_summary`, `app_category` (Sprint 2)
+ *  - v4: + `intervention_log` (Sprint 4)
  *
  * `exportSchema = true` writes JSON schema files to `app/schemas` (KSP `room.schemaLocation`).
  * Migrations are explicit; there is no destructive fallback.
@@ -45,8 +48,9 @@ import com.anchor.app.core.data.entity.WeeklyUsageSummaryEntity
         DailyUsageSummaryEntity::class,
         WeeklyUsageSummaryEntity::class,
         AppCategoryEntity::class,
+        InterventionLogEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
 )
 abstract class AnchorDatabase : RoomDatabase() {
@@ -59,6 +63,7 @@ abstract class AnchorDatabase : RoomDatabase() {
     abstract fun dailyUsageSummaryDao(): DailyUsageSummaryDao
     abstract fun weeklyUsageSummaryDao(): WeeklyUsageSummaryDao
     abstract fun appCategoryDao(): AppCategoryDao
+    abstract fun interventionLogDao(): InterventionLogDao
 
     companion object {
         const val NAME = "anchor.db"
@@ -204,6 +209,30 @@ abstract class AnchorDatabase : RoomDatabase() {
                     )
                     """.trimIndent(),
                 )
+            }
+        }
+
+        /** v3 → v4: add the Phase-3 intervention log (docs 03 §5.1). */
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `intervention_log` (
+                        `id` TEXT NOT NULL,
+                        `level` INTEGER NOT NULL,
+                        `channel` TEXT NOT NULL,
+                        `contextPackage` TEXT,
+                        `relatedTaskId` TEXT,
+                        `status` TEXT NOT NULL,
+                        `shownAt` INTEGER NOT NULL,
+                        `resolvedAt` INTEGER,
+                        `cooldownTriggered` INTEGER NOT NULL DEFAULT 0,
+                        PRIMARY KEY(`id`)
+                    )
+                    """.trimIndent(),
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_intervention_log_shownAt` ON `intervention_log`(`shownAt`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_intervention_log_contextPackage` ON `intervention_log`(`contextPackage`)")
             }
         }
     }

@@ -151,4 +151,30 @@
         <item quantity="one">%1$d task from yesterday is still waiting.</item>
         <item quantity="other">%1$d tasks from yesterday are still waiting.</item>
     </plurals>
+
+    <!-- 04 Contextual Intervention (07-screens.md §2.8, PRD §10.4, docs 04 §3/§6) -->
+    <string name="intervention_channel_name">Gentle check-ins</string>
+    <string name="intervention_channel_desc">Occasional, non-judgemental nudges when you drift from what matters.</string>
+
+    <string name="intervention_notif_title_gentle">A gentle check-in</string>
+    <string name="intervention_notif_title_contextual">Still on your list</string>
+    <string name="intervention_notif_title_future">A moment to plan</string>
+    <string name="intervention_notif_title_focus">Ready to focus?</string>
+
+    <string name="intervention_notif_body_gentle">You\'ve been here a while. No pressure — just noticing.</string>
+    <string name="intervention_notif_body_contextual">A task that matters is still waiting for you.</string>
+    <string name="intervention_notif_body_future">Starting now could give you some free time later tonight.</string>
+    <string name="intervention_notif_body_focus">Here whenever you\'re ready to start a focus session.</string>
+
+    <string name="intervention_action_start_focus">Start Focus</string>
+    <string name="intervention_action_later">Later</string>
+    <string name="intervention_action_dismiss">Not now</string>
+
+    <!-- In-app overlay copy (screen 04) -->
+    <string name="intervention_overlay_title_gentle">You\'ve been here longer than usual.</string>
+    <string name="intervention_overlay_title_contextual">Your task is still unfinished.</string>
+    <string name="intervention_overlay_title_future">Starting now gives you free time later.</string>
+    <string name="intervention_overlay_title_focus">Start a focus session?</string>
+    <string name="intervention_overlay_body">Awareness only — it\'s your call.</string>
+    <string name="intervention_overlay_later_hint">We\'ll stay quiet about this one for a while.</string>
 </resources>

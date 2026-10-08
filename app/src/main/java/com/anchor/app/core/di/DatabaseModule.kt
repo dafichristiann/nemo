@@ -6,6 +6,7 @@ import com.anchor.app.core.data.AnchorDatabase
 import com.anchor.app.core.data.dao.AppCategoryDao
 import com.anchor.app.core.data.dao.AppSettingsDao
 import com.anchor.app.core.data.dao.DailyUsageSummaryDao
+import com.anchor.app.core.data.dao.InterventionLogDao
 import com.anchor.app.core.data.dao.RescheduleEventDao
 import com.anchor.app.core.data.dao.SubtaskDao
 import com.anchor.app.core.data.dao.TaskDao
@@ -38,7 +39,11 @@ object DatabaseModule {
         AnchorDatabase::class.java,
         AnchorDatabase.NAME,
     )
-        .addMigrations(AnchorDatabase.MIGRATION_1_2, AnchorDatabase.MIGRATION_2_3)
+        .addMigrations(
+            AnchorDatabase.MIGRATION_1_2,
+            AnchorDatabase.MIGRATION_2_3,
+            AnchorDatabase.MIGRATION_3_4,
+        )
         .build()
 
     @Provides
@@ -74,4 +79,8 @@ object DatabaseModule {
     @Provides
     fun provideAppCategoryDao(database: AnchorDatabase): AppCategoryDao =
         database.appCategoryDao()
+
+    @Provides
+    fun provideInterventionLogDao(database: AnchorDatabase): InterventionLogDao =
+        database.interventionLogDao()
 }

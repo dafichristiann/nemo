@@ -17,6 +17,15 @@
         android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
 
+    <!--
+      Interventions (Phase 3, docs 08-permissions.md, PRD §10.4). POST_NOTIFICATIONS is a
+      runtime permission on Android 13+; when denied, the engine falls back to the in-app
+      channel (FR-I3). Declared with maxSdkVersion-less form so it is requestable on 33+.
+    -->
+    <uses-permission
+        android:name="android.permission.POST_NOTIFICATIONS"
+        tools:ignore="ProtectedPermissions" />
+
     <application
         android:name=".AnchorApp"
         android:allowBackup="false"
@@ -38,6 +47,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!--
+          Handles the intervention notification's [Start Focus] / [Later] actions (FR-I7).
+          Not exported: only Anchor itself posts these notifications.
+        -->
+        <receiver
+            android:name=".platform.notification.InterventionActionReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.anchor.app.INTERVENTION_ACTION" />
+            </intent-filter>
+        </receiver>
 
         <!--
           WorkManager is initialised via AnchorApp (Configuration.Provider) so @HiltWorker

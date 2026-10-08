@@ -1,9 +1,11 @@
 package com.anchor.app.core.di
 
+import com.anchor.app.core.data.repository.InterventionRepositoryImpl
 import com.anchor.app.core.data.repository.SettingsRepositoryImpl
 import com.anchor.app.core.data.repository.TaskDefinitionRepositoryImpl
 import com.anchor.app.core.data.repository.TaskRepositoryImpl
 import com.anchor.app.core.data.repository.UsageRepositoryImpl
+import com.anchor.app.core.domain.repository.InterventionRepository
 import com.anchor.app.core.domain.repository.SettingsRepository
 import com.anchor.app.core.domain.repository.TaskDefinitionRepository
 import com.anchor.app.core.domain.repository.TaskRepository
@@ -39,4 +41,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindUsageRepository(impl: UsageRepositoryImpl): UsageRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindInterventionRepository(
+        impl: InterventionRepositoryImpl,
+    ): InterventionRepository
 }

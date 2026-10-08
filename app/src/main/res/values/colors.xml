@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Colors used only by the XML window theme (06-design-system.md §2).
+  The Compose color tokens live in core/design/theme/Color.kt.
+-->
+<resources>
+    <color name="surface">#FFFFFF</color>
+</resources>

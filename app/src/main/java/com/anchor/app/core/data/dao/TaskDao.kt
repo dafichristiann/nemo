@@ -1,0 +1,127 @@
+package com.anchor.app.core.data.dao
+
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Update
+import androidx.room.Upsert
+import com.anchor.app.core.data.entity.TaskEntity
+import kotlinx.coroutines.flow.Flow
+
+/**
+ * DAO for [TaskEntity] (docs/superpowers/design/03-database-schema.md §2.2).
+ *
+ * Reads are exposed as [Flow] for reactive UI (PRD FR-T10: All/Today/Upcoming/Completed).
+ * "Done" covers both DONE and ARCHIVED; open tasks are TODO/IN_PROGRESS.
+ */
+@Dao
+interface TaskDao {
+
+    /** All non-archived tasks, most urgent first (All view). */
+    @Query(
+        """
+        SELECT * FROM task_instance
+        WHERE status != 'ARCHIVED'
+        ORDER BY
+            CASE status WHEN 'DONE' THEN 2 ELSE 1 END,
+            priority DESC,
+            deadline IS NULL,
+            deadline ASC,
+            createdAt DESC
+        """,
+    )
+    fun observeAll(): Flow<List<TaskEntity>>
+
+    /** Tasks with a deadline within [startOfDay, endOfDay] and not done (Today view). */
+    @Query(
+        """
+        SELECT * FROM task_instance
+        WHERE status IN ('TODO','IN_PROGRESS')
+          AND deadline IS NOT NULL
+          AND deadline >= :startOfDay
+          AND deadline < :endOfDay
+        ORDER BY priority DESC, deadline ASC, createdAt DESC
+        """,
+    )
+    fun observeToday(startOfDay: Long, endOfDay: Long): Flow<List<TaskEntity>>
+
+    /** Open tasks with a deadline after [endOfDay] (Upcoming view). */
+    @Query(
+        """
+        SELECT * FROM task_instance
+        WHERE status IN ('TODO','IN_PROGRESS')
+          AND deadline IS NOT NULL
+          AND deadline >= :endOfDay
+        ORDER BY deadline ASC, priority DESC, createdAt DESC
+        """,
+    )
+    fun observeUpcoming(endOfDay: Long): Flow<List<TaskEntity>>
+
+    /** Completed tasks, newest completion first (Completed view). */
+    @Query(
+        """
+        SELECT * FROM task_instance
+        WHERE status = 'DONE'
+        ORDER BY completedAt DESC, createdAt DESC
+        """,
+    )
+    fun observeCompleted(): Flow<List<TaskEntity>>
+
+    /**
+     * Overdue open tasks: deadline strictly before [now] and not done (PRD FR-T11).
+     * Deadline in the past is a soft signal only.
+     */
+    @Query(
+        """
+        SELECT * FROM task_instance
+        WHERE status IN ('TODO','IN_PROGRESS')
+          AND deadline IS NOT NULL
+          AND deadline < :now
+        ORDER BY deadline ASC
+        """,
+    )
+    fun observeOverdue(now: Long): Flow<List<TaskEntity>>
+
+    @Query("SELECT * FROM task_instance WHERE id = :id")
+    fun observeById(id: String): Flow<TaskEntity?>
+
+    @Query("SELECT * FROM task_instance WHERE id = :id")
+    suspend fun getById(id: String): TaskEntity?
+
+    @Query("SELECT COUNT(*) FROM task_instance WHERE status = 'DONE'")
+    fun observeCompletedCount(): Flow<Int>
+
+    @Query(
+        """
+        SELECT COUNT(*) FROM task_instance
+        WHERE status IN ('TODO','IN_PROGRESS')
+        """,
+    )
+    fun observeOpenCount(): Flow<Int>
+
+    /** Idempotency guard for recurring generation (PRD §10.1, AC "no double instance"). */
+    @Query(
+        """
+        SELECT COUNT(*) FROM task_instance
+        WHERE definitionId = :definitionId
+          AND definitionOccurrenceDate = :occurrenceDate
+        """,
+    )
+    suspend fun countForDefinitionOnDate(definitionId: String, occurrenceDate: Long): Int
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insert(task: TaskEntity)
+
+    @Update
+    suspend fun update(task: TaskEntity)
+
+    @Upsert
+    suspend fun upsert(task: TaskEntity)
+
+    @Query("DELETE FROM task_instance WHERE id = :id")
+    suspend fun deleteById(id: String)
+
+    @Query("DELETE FROM task_instance")
+    suspend fun clear()
+}

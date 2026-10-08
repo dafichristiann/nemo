@@ -1,11 +1,10 @@
 # PRD — Anchor (Personal Focus Assistant)
 
-> **Status:** Draft untuk review · **Version:** 0.1
+> **Status:** Approved / Locked for Architecture · **Version:** 0.2
 > **Tanggal:** 2026-10-07
 > **Dokumen terkait:** `00-product-brief.md`
-> **Catatan:** PRD ini fokus pada *apa* dan *mengapa*. Struktur teknis detail
-> (DB schema, API spec, AI architecture, Android architecture) ada di dokumen
-> terpisah yang mengalir dari PRD ini.
+> **Catatan:** PRD ini mendefinisikan aturan perilaku (*behavioral rules*) v0.2 yang telah dikunci (locked).
+> Dokumentasi teknis detail (Architecture, DB Schema, Intervention Engine) menyusul mengalir dari PRD ini.
 
 ---
 
@@ -146,18 +145,24 @@ Semua ini **configurable** dan **dipelajari dari data aktual**, bukan diasumsika
 penting, berapa lama.
 
 **User Story:**
-> Sebagai mahasiswa, aku ingin membuat task dengan deadline & prioritas, memecahnya
-> jadi langkah kecil, dan melihat apa yang harus kukerjakan hari ini — supaya aku
-> tahu harus mulai dari mana.
+> Sebagai mahasiswa, aku ingin membuat task (termasuk task berulang harian/mingguan seperti jadwal kuliah)
+> dengan deadline & prioritas, memecahnya jadi langkah kecil, dan melihat apa yang harus kukerjakan hari ini
+> — supaya aku tahu harus mulai dari mana.
 
-**Task Model (field awal — final di dokumen Database):**
+**Task Architecture (Definition vs Instance) [LOCKED v0.2]:**
+Untuk mendukung recurring task tanpa mengacaukan riwayat & progress, model dipisahkan menjadi:
+1. **Task Definition / Template:** Menyimpan konfigurasi dasar dan aturan keberulangan (`recurrenceRule`: `NONE / DAILY / WEEKLY`).
+2. **Task Instance:** Subjek task konkret harian/mingguan yang dikerjakan user (`dueDate`, `status`, `completedAt`, `definitionId`).
+
+**Task Instance Model (field awal — final di dokumen Database):**
 
 | Field | Tipe | Nullable | Catatan |
 |---|---|---|---|
-| `id` | Long/UUID | no | PK |
+| `id` | Long/UUID | no | PK Instance |
+| `definitionId` | Long/UUID | yes | FK ke Task Definition (jika dari recurring) |
 | `title` | String | no | Judul task |
 | `description` | String | yes | Detail opsional |
-| `deadline` | Epoch millis | yes | Jika relevant |
+| `deadline` | Epoch millis | yes | Tanggal/jam jatuh tempo |
 | `priority` | Enum | no | `LOW / MEDIUM / HIGH / URGENT` (default `MEDIUM`) |
 | `estimatedDurationMin` | Int | yes | Estimasi durasi (menit) |
 | `category` | String/Enum | yes | Kategori user |
@@ -165,7 +170,6 @@ penting, berapa lama.
 | `createdAt` | Epoch millis | no | Waktu dibuat |
 | `completedAt` | Epoch millis | yes | Waktu selesai |
 | `progressPercent` | Int | no | Dihitung dari subtask / manual (default 0) |
-| `recurrenceRule` | String | yes | `[DECISION REQUIRED]` lihat §10.1.9 |
 | `parentTaskId` | Long | yes | Untuk dependency/hierarki dasar |
 
 **Subtask model:**
@@ -181,16 +185,16 @@ penting, berapa lama.
 **Functional Requirements:**
 1. FR-T1: Buat/edit/hapus task dengan semua field di atas.
 2. FR-T2: Set priority dari 4 level.
-3. FR-T3: Set deadline (tanggal & jam opsional).
+3. FR-T3: Set deadline/dueDate (tanggal & jam opsional).
 4. FR-T4: Set estimasi durasi dalam menit.
 5. FR-T5: Set kategori (dari daftar kategori, bisa custom).
 6. FR-T6: Tambah/hapus/check/uncheck subtask, atur urutan.
-7. FR-T7: Tandai task selesai (status → DONE, catat `completedAt`).
-8. FR-T8: Progress dihitung dari subtask jika ada, jika tidak = 0/100.
-9. FR-T9: View: **All / Today / Upcoming / Completed**.
-10. FR-T10: Overdue task ditandai (lihat 10.1.6).
-11. FR-T11: Reschedule deadline (lihat 10.1.7).
-12. FR-T12 (dormant): Model dependency disiapkan, UI di Phase 4.
+7. FR-T7: Support Recurring Task: **Daily** dan **Weekly** aktif sejak Phase 1 via pemisahan Task Definition & Task Instance.
+8. FR-T8: Tandai task selesai (status → DONE, catat `completedAt`).
+9. FR-T9: Progress dihitung dari subtask jika ada, jika tidak = 0/100.
+10. FR-T10: View: **All / Today / Upcoming / Completed**.
+11. FR-T11: Overdue task handling via non-blocking UI (lihat Overdue Behavior).
+12. FR-T12: Reschedule deadline (mencatat riwayat reschedule untuk insight).
 
 **UX Behavior:**
 - Task list padat & tenang; priority ditandai warna halus (bukan mencolok).
@@ -199,17 +203,24 @@ penting, berapa lama.
 
 **Edge Cases:**
 - Deadline di masa lalu saat dibuat → tetap boleh, langsung bertanda overdue.
-- Estimated duration = 0/null → Future View memakai default asumsi internal.
+- Estimated duration = 0/null → Future View memakai default domain heuristic.
 - Subtask selesai semua → task boleh auto-suggest DONE (tidak paksa).
 - Judul kosong → tidak bisa disimpan.
-- Task dengan recurring `[OPEN]` → lihat 10.1.9.
 
-**Overdue Behavior (FR-T10):** `[DECISION REQUIRED — OQ3]`
-> Usulan default: **tenang, tidak menghakimi.** Tandai visual halus + sediakan
-> aksi "Reschedule". **Tidak** mengirim notifikasi "kamu gagal".
+**Overdue Behavior (FR-T11) [LOCKED v0.2]:**
+- **Non-blocking Card/Banner di UI:** Saat app dibuka, tampilkan card halus yang tenang:
+  ```
+  ┌──────────────────────────────┐
+  │  3 tasks from yesterday      │
+  │  are still waiting.          │
+  │                              │
+  │  [Review & Reschedule]       │
+  └──────────────────────────────┘
+  ```
+- **Prinsip Autonomy:** Task overdue **TIDAK** otomatis dipindahkan menjadi Today. User memiliki kontrol penuh untuk memilih aksi: *Reschedule*, *Complete*, *Keep for Today*, atau *Dismiss*.
+- **Tanpa Notifikasi Menghakimi:** Tidak ada modal pop-up mengganggu atau notifikasi yang menghujat penundaan.
 
-**Reschedule (FR-T11):** User dapat memindah deadline; Anchor mencatat kejadian
-reschedule (untuk insight pola penundaan).
+**Reschedule (FR-T12):** User dapat memindah deadline; Anchor mencatat kejadian reschedule (untuk insight pola penundaan).
 
 **Task States:**
 ```
@@ -221,11 +232,10 @@ TODO ──► IN_PROGRESS ──► DONE ──► ARCHIVED
 - `DONE`: selesai (`completedAt` diisi)
 - `ARCHIVED`: disembunyikan tanpa dihapus
 
-**Recurring Task (FR-T12/T7):** `[DECISION REQUIRED — OQ1/A3]`
-> Usulan: **model data `recurrenceRule` disiapkan di Phase 1 (dormant), mesin
-> eksekusi (spawning task berulang) diimplementasi di phase lanjut.** Menghindari
-> migrasi besar & bug dini. Alternatif: recurring sederhana (harian/mingguan) di
-> Phase 1.
+**Recurring Task Architecture [LOCKED v0.2]:**
+- Supported rules: **DAILY** dan **WEEKLY**.
+- Task Definition menerbitkan Task Instance baru saat hari/minggu jatuh tempo.
+- Menyimpan riwayat penyelesaian tiap instance tanpa menimpa template utama.
 
 **Acceptance Criteria:**
 ```
@@ -246,7 +256,7 @@ Then   completedAt dicatat, task muncul di "Completed", progress = 100%
 
 ---
 
-### 10.2 Digital Wellbeing
+### 10.2 Digital Wellbeing & Retention Policy
 
 **Purpose:** Mengumpulkan & menampilkan pola penggunaan perangkat **secara lokal**
 sebagai basis deteksi drift — tanpa mengirim data mentah ke mana pun.
@@ -256,27 +266,37 @@ sebagai basis deteksi drift — tanpa mengirim data mentah ke mana pun.
 > supaya aku punya gambaran objektif perilakuku.
 
 **Definisi:**
-- **Session:** satu periode kontinu memakai sebuah app (start → end).
-- **Screen time:** total durasi device aktif dalam periode.
-- **App usage:** total durasi per app.
-- **Daily summary:** agregat per hari.
-- **Weekly trend:** agregat per 7 hari.
-- **Category:** pengelompokan app (lihat 10.2.x).
-- **Baseline:** statistik personal (mis. rata-rata durasi sesi per app).
+- **Session (`UsageSession`):** satu periode kontinu memakai sebuah app (start → end).
+- **Daily Summary (`DailyUsageSummary`):** agregat harian (screen time, top apps, category breakdown, distraction ratio).
+- **Weekly Summary (`WeeklyUsageSummary`):** agregat 7 hari untuk tren & baseline.
+
+**Retention & Aggregation Policy [LOCKED v0.2]:**
+```
+Raw UsageSession (mentah)
+       │
+       │ Pruning otomatis (14–30 hari)
+       ▼
+DailyUsageSummary (agregat harian)
+       │
+       ▼
+WeeklyUsageSummary (agregat mingguan)
+```
+- Raw `UsageSession` disimpan selama **14–30 hari** untuk analisis baseline mendalam, lalu **dihapus otomatis (pruning)**.
+- Data dikonsolidasi menjadi `DailyUsageSummary` dan `WeeklyUsageSummary`.
+- Keuntungan: Menghemat kapasitas DB, menjaga performa query, melindungi privasi, hemat baterai, dan mereduksi token AI.
 
 **Sumber data:** `UsageStatsManager` (bukan Accessibility) untuk wellbeing murni.
 
 **Keterbatasan Android (WAJIB dipahami & didokumentasikan di UI bila relevan):**
 - `PACKAGE_USAGE_STATS` adalah **special permission** — user harus mengaktifkan manual di Settings.
 - Sebagian OEM membatasi granularitas / tidak menyediakan data sesi detail.
-- Data bisa ter-sampling; akurasi **tidak dijamin** → `[EXPERIMENT REQUIRED]` Spike A.
-- Tidak dapat diandalkan untuk realtime; gunakan agregasi periodik.
+- Data ter-agregasi periodik; `UsageStatsManager` tidak menyediakan event real-time.
 
 **Functional Requirements:**
 1. FR-W1: Cek status izin `PACKAGE_USAGE_STATS`; jika belum, tampilkan permission state yang jelas.
 2. FR-W2: Query usage harian per app (durasi, jumlah sesi).
-3. FR-W3: Query usage 7 hari terakhir untuk tren.
-4. FR-W4: Agregasi lokal → simpan ke Room (`UsageSnapshot`, `UsageSession`).
+3. FR-W3: Agregasi lokal berjenjang → simpan ke Room (`UsageSession` → `DailyUsageSummary` → `WeeklyUsageSummary`).
+4. FR-W4: Jalankan pruning otomatis data `UsageSession` yang berusia > 30 hari via WorkManager.
 5. FR-W5: Hitung baseline personal per app (rata-rata durasi sesi, rolling window).
 6. FR-W6: Tampilkan: total screen time, top apps, kategori, tren.
 7. FR-W7: Semua angka bersumber dari Android API — **tidak** dari AI.
@@ -302,19 +322,26 @@ Given  izin usage diberikan & data tersedia 7 hari
 When   user membuka Wellbeing
 Then   Anchor menampilkan total screen time, top apps, dan tren mingguan
        yang dihitung dari data lokal (bukan AI, bukan fake data)
-
-Given  device/OEM tidak menyediakan data sesi detail
-When   user membuka Wellbeing
-Then   Anchor menampilkan apa yang tersedia & menjelaskan keterbatasannya
-       dengan jujur, tanpa mengarang angka
 ```
 
 ---
 
-### 10.3 Drift Detection
+### 10.3 Drift Detection Architecture
 
 **Purpose:** Menyadari ketika perilaku user menyimpang dari **baseline personal-nya**,
 sebagai langkah sebelum intervensi.
+
+**Pemisahan Arsitektur Deteksi Drift [LOCKED v0.2]:**
+```
+Phase 2: Periodic Drift Detection
+UsageStatsManager ──► WorkManager (Periodic Task) ──► Historical / Baseline Analysis
+
+Phase 3: Real-Time Contextual Detection
+AccessibilityService (Eksperimental) ──► Instant Signal ──► Intervention Engine
+```
+
+1. **Phase 2 (Periodic Observation):** `UsageStatsManager` **tidak** memiliki Callback/Event real-time. Oleh karena itu, Phase 2 menggunakan `WorkManager` yang berjalan secara periodik (misal tiap 15 menit saat layar aktif) untuk mengevaluasi akumulasi durasi penggunaan.
+2. **Phase 3 (Real-time Contextual Signal):** Menggunakan `AccessibilityService` (opsional/eksperimental) untuk mendeteksi momen transisi perpindahan aplikasi secara instan saat user mulai terdistraksi.
 
 **Prinsip keras:**
 - ❌ JANGAN pakai aturan universal ("lebih dari 30 menit = buruk").
@@ -322,50 +349,28 @@ sebagai langkah sebelum intervensi.
 - ❌ JANGAN mendiagnosis ("You are addicted").
 - ✅ Nyatakan secara netral ("You've been scrolling longer than usual").
 
-**Contoh (persis dari brief):**
-```
-Baseline: rata-rata sesi TikTok user = 18 menit
-Sesi saat ini: 47 menit
-Deviasi: +161%
-Output: "You've been scrolling longer than usual."
-```
-
 **Functional Requirements:**
-1. FR-D1: Hitung baseline per app (rata-rata & deviasi sesi) dari data nyata.
-2. FR-D2: Hitung deviasi sesi aktif terhadap baseline.
-3. FR-D3: Tandai "drift" jika deviasi melewati threshold **DAN** memenuhi syarat lain
-   (mis. ada task berprioritas belum selesai) — lihat `[ASSUMPTION] D4`.
+1. FR-D1: Hitung baseline per app (rata-rata & deviasi sesi) dari data `DailyUsageSummary` / `UsageSession`.
+2. FR-D2: Hitung deviasi sesi aktif terhadap baseline personal.
+3. FR-D3: Tandai "drift" jika deviasi melewati threshold **DAN** ada task berprioritas yang belum selesai.
 4. FR-D4: Hasilkan sinyal drift (untuk dikonsumsi Intervention Engine).
 5. FR-D5: Jangan diagnosis; hasilkan pesan netral.
-6. FR-D6: Baseline butuh cukup data; jika belum → jangan klaim apa pun.
-
-**Threshold:** `[DECISION REQUIRED]` — usulan awal `+100%` atau P95 historis user,
-dikonfigurasi & dikalibrasi setelah Spike A + pemakaian nyata. **Jangan dikunci sekarang.**
-
-**Edge Cases:**
-- Baseline belum cukup data (< N hari) → tidak ada drift, tidak ada intervensi.
-- App baru (belum pernah dipakai) → tidak ada baseline → jangan intervensi dulu.
-- Sesi sangat singkat → bukan drift.
-- User memang sedang sengaja santai → "Later" dihormati (lihat 10.4).
-
-**Acceptance Criteria:**
-```
-Given  baseline sesi TikTok user = 18 menit (≥ window data terpenuhi)
-When   user membuka TikTok selama 47 menit
-Then   Anchor menghasilkan sinyal drift dengan deviasi positif signifikan,
-       TANPA kata diagnostik seperti "addicted"
-
-Given  data baseline belum cukup
-When   user memakai app apa pun
-Then   Anchor TIDAK menghasilkan sinyal drift (mencegah klaim tanpa dasar)
-```
+6. FR-D6: Baseline butuh cukup data; jika belum → jangan klaim/eksekusi drift.
 
 ---
 
-### 10.4 Contextual Intervention
+### 10.4 Contextual Intervention Engine
 
 **Purpose:** Menyampaikan kesadaran (awareness) secara kontekstual, pada momen yang
 tepat, dengan pilihan — bukan perintah.
+
+**Aturan Kuota & Cooldown [LOCKED v0.2]:**
+1. **Aturan Quota:** Maksimal **3 intervensi bermakna per hari**.
+2. **Pemisahan Konsep:** *Detection Event ≠ Intervention Attempt*. Deteksi internal yang menahan notifikasi (karena cooldown/kuota habis) **TIDAK** mengurangi kuota harian.
+3. **Penghitungan Kuota:**
+   - User **Interacted** (misal menekan *Start Focus*) ➔ Mengurangi 1 kuota harian.
+   - User **Dismissed** (misal swipe away notifikasi) ➔ Mengurangi 1 kuota harian.
+4. **Aturan Cooldown:** Aksi **"Later"** memicu **cooldown selama 2 jam** untuk aplikasi/konteks distraksi yang sama.
 
 **Levels:**
 
@@ -381,24 +386,13 @@ tepat, dengan pilihan — bukan perintah.
 2. **In-app intervention** (kedua)
 3. **Fullscreen** (hanya kondisi benar-benar relevan — jarang)
 
-**Batas & aturan:**
-- Max **~3 intervensi bermakna/hari**.
-- **Cooldown** wajib setelah user memilih "Later".
-- Harus **bisa dismiss** dengan mudah.
-- **JANGAN spam.**
-- Trigger **berbasis konteks**, bukan timer semata.
-
-**Contoh baik:** *"You've been scrolling for 40 minutes, while your high-priority
-task is still unfinished."*
-**Contoh buruk:** *"STOP USING YOUR PHONE!"*
-
 **Functional Requirements:**
-1. FR-I1: Terima sinyal drift → evaluasi relevansi (ada task tertunda? sudah < 3 hari ini?).
+1. FR-I1: Evaluasi sinyal drift terhadap sisa kuota harian (< 3) dan status cooldown.
 2. FR-I2: Tentukan level intervensi yang sesuai (naik bertahap, tidak langsung Level 4).
 3. FR-I3: Pilih channel paling sesuai (default notification).
-4. FR-I4: Hormati "Later" → set cooldown, jangan langsung intervensi lagi.
-5. FR-I5: Catat setiap intervensi di DB (`Intervention`) untuk metrik & insight.
-6. FR-I6: Batasi total harian; reset tiap hari lokal baru.
+4. FR-I4: Hormati "Later" → set cooldown 2 jam untuk konteks/app tersebut, jangan langsung intervensi lagi.
+5. FR-I5: Catat setiap intervensi di DB (`InterventionLog`) dengan status `INTERACTED`, `DISMISSED`, atau `EXPIRED`.
+6. FR-I6: Batasi total harian max 3 intervensi; reset tiap hari lokal baru.
 7. FR-I7: Aksi utama: **[Start Focus]** / **[Later]** (+ opsi lihat Future View).
 
 **Edge Cases:**
@@ -522,7 +516,7 @@ IF I CONTINUE DELAYING
 5. FR-FV5: Jika data kurang (tak ada estimasi/deadline) → jelaskan, jangan mengarang.
 
 **Edge Cases:**
-- Tidak ada estimasi durasi → pakai default & tandai sebagai asumsi.
+- Tidak ada estimasi durasi / deadline → Gunakan domain heuristics (`DEFAULT_TASK_DURATION = 60m`, `DEFAULT_SAME_DAY_DEADLINE = 23:59`) dan MENANDAI asumsi dengan jelas di UI (*"Based on current schedule assumptions"*).
 - Deadline malam & waktu sudah lewat → tunjukkan skenario realistis tanpa panik.
 - Task tidak ada dependensi → Domino Effect kosong (bukan error).
 
@@ -535,7 +529,7 @@ Then   Anchor menampilkan dua skenario (mulai sekarang vs menunda)
 
 Given  task tidak punya estimasi durasi
 When   user membuka Future View
-Then   Anchor memakai default internal dan MENANDAI asumsi dengan jelas
+Then   Anchor memakai default internal (heuristics) dan MENANDAI asumsi dengan jelas
        (bukan menyajikan angka seolah pasti)
 ```
 
@@ -625,7 +619,7 @@ yang didukung data — dengan fallback lokal.
 - Hanya **aggregated data** yang dikirim; **raw usage tidak**.
 
 **Functional Requirements:**
-1. FR-AI1: Susun payload agregat (bukan raw) dari data lokal.
+1. FR-AI1: Susun payload agregat (`DailyUsageSummary`, bukan raw) dari data lokal.
 2. FR-AI2: Kirim ke Gemini **hanya jika** diaktifkan & tersedia.
 3. FR-AI3: Terapkan cache & batching (mis. maks 1x/hari + on-demand).
 4. FR-AI4: Fallback otomatis ke `RuleBasedInsightSource` bila gagal/offline/quota habis.
@@ -730,7 +724,7 @@ Then   Anchor menyembunyikan bagian screen time (bukan menampilkan 0 menyesatkan
 2. FR-S2: Toggle AI on/off; jelaskan sederhana apa yang dikirim.
 3. FR-S3: Kelola kategori & override per app.
 4. FR-S4: Kelola daftar app yang diblokir.
-5. FR-S5: Atur retensi data & tombol hapus semua data.
+5. FR-S5: Atur retensi data (pruning 14–30 hari) & tombol hapus semua data.
 6. FR-S6: Semua default = privacy-preserving (tracking & AI off sampai di-opt-in).
 
 **Acceptance Criteria:**
@@ -750,26 +744,26 @@ Then   semua data lokal terhapus (kecuali yang user pilih untuk dipertahankan)
 
 | Phase | Nama | Isi utama | Status |
 |---|---|---|---|
-| **1** | Smart Todo | Task CRUD, deadline, priority, estimasi, kategori, subtask, status, Today/Upcoming/Completed, model data dependency & recurring (dormant) | MVP |
-| **2** | Digital Wellbeing | UsageStats, screen time, app usage, sesi, tren, baseline personal, kategori | MVP |
-| **3** | Intervention + Focus | Deteksi drift, contextual notification, Focus Setup/Session, Gentle/Strict/Custom, eksperimen blocking, emergency exit | MVP |
-| **4** | Future View + Domino | "If I start now" vs "If I delay", consequence, dependency UI, schedule impact | MVP |
-| **5** | AI Personal Insight | Daily reflection, patterns, recommendations, rule-based fallback | MVP |
+| **1** | Smart Todo | Task Definition vs Instance, Daily/Weekly Recurring, Overdue Banner, Subtask, Priority, Today/Upcoming/Completed | MVP (Locked v0.2) |
+| **2** | Digital Wellbeing | UsageStats, screen time, app usage, sesi, tren, baseline personal, pruning 14–30 hari, WorkManager Periodic Drift Check | MVP (Locked v0.2) |
+| **3** | Intervention + Focus | Quota (max 3/day), 2h Cooldown, Dismiss tracking, Focus Setup/Session, Gentle/Strict/Custom, Accessibility Experiment | MVP (Locked v0.2) |
+| **4** | Future View + Domino | "If I start now" vs "If I delay", consequence, dependency UI, Heuristic defaults (60m/23:59) | MVP (Locked v0.2) |
+| **5** | AI Personal Insight | Daily reflection, patterns, recommendations, rule-based fallback, aggregated Gemini insights | MVP (Locked v0.2) |
 | **6** | Advanced Blocking + Sync | Blocking lanjutan, cloud sync, backup, akun (opsional) | Post-MVP |
 
 **Definition of Done utama:** Phase 1–5 berjalan baik di real device.
 
 ---
 
-## 12. Non-Functional Requirements
+## 12. Non-Functional Requirements & Benchmark Targets
 
-| Kategori | Requirement |
+| Kategori | Target Requirement [LOCKED v0.2] |
 |---|---|
-| **Performance** | Lancar di RAM 3–4 GB; hindari recomposition berlebih; animasi ringan |
-| **Battery** | Tidak polling terus-menerus; agregasi batch; foreground service hanya saat Focus |
-| **Offline** | Berfungsi penuh tanpa internet; AI opsional; rule-based selalu ada |
+| **Performance (RAM)** | Target penggunaan RAM aktif **< 150 MB** pada skenario penggunaan normal |
+| **Battery Consumption** | Target penggunaan baterai background **≤ 2–3% tambahan per 24 jam** pada kondisi uji terstandar |
+| **Offline First** | Berfungsi penuh 100% tanpa jaringan internet; AI bersifat opsional |
 | **Localization** | Semua teks via string resources; default English; siap Bahasa Indonesia |
-| **Privacy** | Raw usage tidak meninggalkan device; AI hanya dapat agregat; default opt-in |
+| **Privacy & Storage** | Raw usage tidak meninggalkan device; Pruning otomatis `UsageSession` berusia > 30 hari |
 | **Lifecycle** | Semua background work lifecycle-aware; izin selalu grace |
 | **Reliability** | Tidak crash saat izin ditolak / OEM membatasi / migrasi DB gagal |
 
@@ -780,9 +774,9 @@ Then   semua data lokal terhapus (kecuali yang user pilih untuk dipertahankan)
 ```
 Raw Usage Data (device-only)
       ↓
-Local Aggregation
+Local Aggregation (DailySummary & WeeklySummary)
       ↓
-Daily / Session Statistics (local DB)
+[Pruned 14-30 days] (Raw deleted)
       ↓
 [Aggregated, structured] ──► AI (opsional)
 ```
@@ -824,17 +818,16 @@ Daily / Session Statistics (local DB)
 
 ---
 
-## 16. Asumsi & Open Questions (ringkas)
+## 16. Asumsi & Open Questions (LOCKED v0.2)
 
-**`[ASSUMPTION]`** (perlu koreksi):
-D1 intervensi bermakna punya action · D2 Future View rule-based · D3 baseline rolling window ·
-D4 drift = deviasi + ada task tertunda · D5 satu HP OEM menentukan Spike · D6 tanpa usage tetap berguna ·
-D7 AI maks 1x/hari · D8 raw usage tak keluar device · D9 single-user, tanpa onboarding multi-user.
-
-**`[OPEN QUESTION]`** (butuh keputusan — lihat PART C):
-OQ1 dependency/recurring model di Phase 1 · OQ2 letak paket `data` · OQ3 overdue behavior ·
-OQ4 reminder waktu vs konteks · OQ5 seed kategori default · OQ6 mockup image vs ASCII ·
-OQ7 lokasi dokumen · OQ8 struktur file docs · OQ9 batching gate · OQ10 istilah English dalam dokumen ID.
+**Keputusan yang telah dikunci (Locked Decisions v0.2):**
+- **OQ1 (Recurring Task):** Phase 1 mendukung Daily & Weekly dengan pemisahan `TaskDefinition` vs `TaskInstance`.
+- **OQ3 (Overdue Behavior):** Non-blocking UI Card/Banner, menjaga otonomi user (*Awareness > Control*), tanpa auto-move ke Today.
+- **Drift Architecture:** Phase 2 menggunakan `WorkManager` (periodic), Phase 3 menggunakan `AccessibilityService` (real-time/eksperimental).
+- **Data Retention:** `UsageSession` mentah di-pruning setelah 14–30 hari; diagregasi ke `DailyUsageSummary`.
+- **Intervention Rules:** Max 3 intervensi/hari, action *Interacted* & *Dismissed* menghabiskan kuota, *Later* memicu cooldown 2 jam per konteks.
+- **Future View:** Default duration 60m & deadline 23:59 sebagai heuristic domain logic.
+- **Performance Targets:** Baterai ≤ 2–3%/24h dan RAM < 150MB ditetapkan sebagai *benchmark targets*.
 
 ---
 
@@ -884,7 +877,7 @@ sebelum mengunci desain Phase 2–3.
 ---
 
 > **CATATAN AKHIR DOKUMEN:**
-> PRD ini adalah **draft**. Beberapa keputusan ditandai `[DECISION REQUIRED]`
-> dan **belum final** sampai user menyetujui. Dokumentasi teknis detail
-> (Architecture, Database, AI, Privacy) menyusul di batch berikutnya setelah
-> PRD ini disetujui.
+> PRD v0.2 ini telah **disetujui (Approved / Locked for Architecture)**.
+> Aturan perilaku (*behavioral rules*) di atas digunakan sebagai fondasi tetap untuk menyusun
+> dokumentasi teknis lanjutan (`02-architecture.md`, `03-database-schema.md`, `04-intervention-engine.md`).
+

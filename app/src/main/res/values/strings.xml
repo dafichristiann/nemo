@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Default locale = English (PRD §12 "Localization"). All user-facing text must go
+  through string resources — never hardcode. Ready for a values-id/ translation.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">Anchor</string>
+
+    <!-- Navigation / bottom bar (07-screens.md §2, PRD §12: labels stay English) -->
+    <string name="nav_tasks">Tasks</string>
+    <string name="nav_wellbeing">Wellbeing</string>
+    <string name="nav_focus">Focus</string>
+    <string name="nav_insights">Insights</string>
+
+    <!-- Sprint-0 placeholder screens -->
+    <string name="placeholder_sprint_label">Sprint %1$s</string>
+
+    <string name="wellbeing_placeholder_title">Wellbeing</string>
+    <string name="wellbeing_placeholder_body">Local screen-time insights and personal baseline arrive in Sprint 2–3. Your usage data never leaves the device.</string>
+
+    <string name="focus_placeholder_title">Focus</string>
+    <string name="focus_placeholder_body">Focus Setup and the active session arrive in Sprint 5, together with a gentle, always-available emergency exit.</string>
+
+    <string name="insights_placeholder_title">Insights</string>
+    <string name="insights_placeholder_body">Daily reflection and patterns arrive in Sprint 7. Insights stay rule-based locally unless you opt in to AI.</string>
+
+    <!-- 01 Home · Smart Todo (07-screens.md §2.5) -->
+    <string name="home_greeting_morning">Good morning</string>
+    <string name="home_greeting_afternoon">Good afternoon</string>
+    <string name="home_greeting_evening">Good evening</string>
+    <string name="home_progress_title">Today\'s progress</string>
+    <string name="home_progress_count" tools:ignore="PluralsCandidate">%1$d of %2$d tasks completed</string>
+    <string name="home_progress_percent">%1$d%%</string>
+    <string name="task_filter_all">All</string>
+    <string name="task_filter_today">Today</string>
+    <string name="task_filter_upcoming">Upcoming</string>
+    <string name="task_filter_completed">Completed</string>
+
+    <string name="home_empty_title">No tasks yet — plan your day.</string>
+    <string name="home_empty_body">Tap + to add your first task.</string>
+
+    <string name="task_priority_low">LOW</string>
+    <string name="task_priority_medium">MEDIUM</string>
+    <string name="task_priority_high">HIGH</string>
+    <string name="task_priority_urgent">URGENT</string>
+
+    <string name="cd_add_task">Add task</string>
+
+    <!-- Overdue banner (07-screens §2.5 / 06-design-system §7.12, FR-T11) -->
+    <string name="overdue_banner_review">Review &amp; Reschedule</string>
+    <string name="overdue_action_reschedule">Reschedule</string>
+    <string name="overdue_action_complete">Complete</string>
+    <string name="overdue_action_keep">Keep for Today</string>
+    <string name="overdue_action_dismiss">Dismiss</string>
+
+    <!-- 02 Add Task sheet (07-screens.md §2.6) -->
+    <string name="add_task_title">New Task</string>
+    <string name="add_task_field_title_hint">Task title…</string>
+    <string name="add_task_field_description_hint">Description (optional)</string>
+    <string name="add_task_priority_label">Priority</string>
+    <string name="add_task_deadline_label">Deadline</string>
+    <string name="add_task_deadline_hint">No deadline</string>
+    <string name="add_task_duration_label">Est. duration (min)</string>
+    <string name="add_task_duration_hint">e.g. 120</string>
+    <string name="add_task_category_label">Category (optional)</string>
+    <string name="add_task_category_hint">e.g. Study</string>
+    <string name="add_task_subtasks_label">Subtasks (%1$d)</string>
+    <string name="add_task_subtask_hint">Add a step…</string>
+    <string name="add_task_subtask_add">Add step</string>
+    <string name="add_task_recurrence_label">Repeat</string>
+    <string name="recurrence_none">None</string>
+    <string name="recurrence_daily">Daily</string>
+    <string name="recurrence_weekly">Weekly</string>
+    <string name="add_task_save">Save Task</string>
+    <string name="cd_close_sheet">Close</string>
+
+    <!-- 10 Task Detail (07-screens.md §2.14) -->
+    <string name="detail_back">Tasks</string>
+    <string name="detail_status_in_progress">IN PROGRESS</string>
+    <string name="detail_meta_estimated">Estimated: %1$s</string>
+    <string name="detail_meta_progress" tools:ignore="PluralsCandidate">Progress: %1$d%% (%2$d of %3$d steps)</string>
+    <string name="detail_subtasks_title">Steps</string>
+    <string name="detail_no_subtasks">No steps yet.</string>
+    <string name="detail_action_start_focus">Start Focus Session</string>
+    <string name="detail_action_reschedule">Reschedule</string>
+    <string name="detail_action_complete">Mark as Done</string>
+    <string name="detail_action_delete">Delete Task</string>
+    <string name="detail_future_callout">See what happens if you delay</string>
+    <string name="detail_add_subtask">Add step</string>
+
+    <!-- 09 Settings & Privacy (07-screens.md §2.13) -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_open">Settings</string>
+    <string name="settings_section_privacy">Privacy &amp; AI</string>
+    <string name="settings_section_data">Data controls</string>
+    <string name="settings_ai_title">AI Personal Insights</string>
+    <string name="settings_ai_subtitle">Only aggregated summaries are sent, never raw usage.</string>
+    <string name="settings_tracking_title">Usage tracking</string>
+    <string name="settings_tracking_subtitle">Collect local screen-time to power Wellbeing.</string>
+    <string name="settings_retention_label" tools:ignore="PluralsCandidate">Data retention — keep at most %1$d days</string>
+    <string name="settings_delete_all">Delete all data</string>
+    <string name="settings_assurance">Raw usage data never leaves your phone.</string>
+
+    <!-- 00 / 00b Onboarding (§2.3–2.4, §10.10) -->
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_title_line1">Stay anchored</string>
+    <string name="onboarding_title_line2">to what matters.</string>
+    <string name="onboarding_subtitle">Anchor notices when you drift away from what matters — and gently helps you return, without judging.</string>
+    <string name="onboarding_get_started">Get started</string>
+    <string name="onboarding_perm_step">Setup %1$d of %2$d</string>
+    <string name="onboarding_perm_headline">Smart Todo works right away.</string>
+    <string name="onboarding_perm_sub">These permissions are optional — unlock Anchor\'s full features whenever you\'re ready.</string>
+    <string name="onboarding_perm_usage_title">Usage access</string>
+    <string name="onboarding_perm_usage_sub">For Wellbeing &amp; drift detection</string>
+    <string name="onboarding_perm_notif_title">Notifications</string>
+    <string name="onboarding_perm_notif_sub">Gentle interventions &amp; focus sessions</string>
+    <string name="onboarding_perm_optional">Optional</string>
+    <string name="onboarding_privacy_card">All data is stored locally on your phone.</string>
+    <string name="onboarding_continue">Continue</string>
+    <string name="onboarding_skip_for_now">Skip for now</string>
+
+    <!-- Plurals -->
+    <plurals name="overdue_banner_title">
+        <item quantity="one">%1$d task from yesterday is still waiting.</item>
+        <item quantity="other">%1$d tasks from yesterday are still waiting.</item>
+    </plurals>
+</resources>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Window theme. The in-app look is fully driven by Compose (AnchorTheme).
+  This XML theme only controls the pre-Compose window background so there is no
+  color flash: light-first, monochrome (06-design-system.md §2).
+-->
+<resources>
+    <style name="Theme.Anchor" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/surface</item>
+        <item name="android:statusBarColor">@color/surface</item>
+        <item name="android:navigationBarColor">@color/surface</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>

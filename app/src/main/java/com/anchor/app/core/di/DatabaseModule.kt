@@ -1,0 +1,57 @@
+package com.anchor.app.core.di
+
+import android.content.Context
+import androidx.room.Room
+import com.anchor.app.core.data.AnchorDatabase
+import com.anchor.app.core.data.dao.AppSettingsDao
+import com.anchor.app.core.data.dao.RescheduleEventDao
+import com.anchor.app.core.data.dao.SubtaskDao
+import com.anchor.app.core.data.dao.TaskDao
+import com.anchor.app.core.data.dao.TaskDefinitionDao
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
+
+/**
+ * Room wiring (docs 02-architecture.md §2, docs 03-database-schema.md).
+ *
+ * Migrations are registered explicitly; no destructive fallback (docs 03 §9).
+ * `exportSchema = true` writes schema JSON to `app/schemas`.
+ */
+@Module
+@InstallIn(SingletonComponent::class)
+object DatabaseModule {
+
+    @Provides
+    @Singleton
+    fun provideAnchorDatabase(
+        @ApplicationContext context: Context,
+    ): AnchorDatabase = Room.databaseBuilder(
+        context,
+        AnchorDatabase::class.java,
+        AnchorDatabase.NAME,
+    )
+        .addMigrations(AnchorDatabase.MIGRATION_1_2)
+        .build()
+
+    @Provides
+    fun provideAppSettingsDao(database: AnchorDatabase): AppSettingsDao =
+        database.appSettingsDao()
+
+    @Provides
+    fun provideTaskDao(database: AnchorDatabase): TaskDao = database.taskDao()
+
+    @Provides
+    fun provideTaskDefinitionDao(database: AnchorDatabase): TaskDefinitionDao =
+        database.taskDefinitionDao()
+
+    @Provides
+    fun provideSubtaskDao(database: AnchorDatabase): SubtaskDao = database.subtaskDao()
+
+    @Provides
+    fun provideRescheduleEventDao(database: AnchorDatabase): RescheduleEventDao =
+        database.rescheduleEventDao()
+}

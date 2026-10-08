@@ -42,14 +42,7 @@ object DatabaseModule {
         AnchorDatabase::class.java,
         AnchorDatabase.NAME,
     )
-        .addMigrations(
-            AnchorDatabase.MIGRATION_1_2,
-            AnchorDatabase.MIGRATION_2_3,
-            AnchorDatabase.MIGRATION_3_4,
-            AnchorDatabase.MIGRATION_4_5,
-            AnchorDatabase.MIGRATION_5_6,
-            AnchorDatabase.MIGRATION_6_7,
-        )
+        .addMigrations(*AnchorDatabase.ALL_MIGRATIONS)
         .build()
 
     @Provides

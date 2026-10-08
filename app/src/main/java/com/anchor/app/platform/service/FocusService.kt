@@ -101,11 +101,8 @@ class FocusService : Service() {
         fun start(context: Context) {
             runCatching {
                 val intent = Intent(context, FocusService::class.java).setAction(ACTION_START)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    context.startForegroundService(intent)
-                } else {
-                    context.startService(intent)
-                }
+                // minSdk is 26, so startForegroundService is always available.
+                context.startForegroundService(intent)
             }
         }
 

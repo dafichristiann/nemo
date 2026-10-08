@@ -1,12 +1,16 @@
 package com.anchor.app.platform.notification
 
+import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import com.anchor.app.MainActivity
 import com.anchor.app.R
 import com.anchor.app.core.domain.model.InterventionAction
@@ -69,6 +73,14 @@ class InterventionNotifier @Inject constructor(
                 actionIntent(logId, InterventionAction.LATER, relatedTaskId),
             )
 
+        // Guard the POST_NOTIFICATIONS requirement at the call site (Android 13+) so the lint
+        // dataflow and the runtime both see an explicit check before notifying (FR-I3).
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
         manager.notify(logId.hashCode(), builder.build())
     }
 

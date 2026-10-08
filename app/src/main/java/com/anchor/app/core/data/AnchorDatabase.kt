@@ -83,6 +83,13 @@ abstract class AnchorDatabase : RoomDatabase() {
     companion object {
         const val NAME = "anchor.db"
 
+        /** Current schema version (mirrors the `@Database(version = ...)` above). */
+        const val VERSION = 7
+
+        /** All migration steps, in order — used by tests and by [DatabaseModule]. */
+        val ALL_MIGRATIONS: Array<Migration>
+            get() = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+
         /** v1 → v2: add the Phase-1 task tables (docs 03 §2). */
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {

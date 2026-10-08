@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Lint configuration (docs/superpowers/design/11-testing-strategy.md §3, §6: "Lulus lint tanpa error").
+
+  Errors remain errors. A few informational checks are tuned so genuine intent is not flagged:
+  - ObsoleteSdkInt on mipmap-anydpi-v26: adaptive icons require the -v26 qualifier even though
+    minSdk is 26; merging into mipmap-anydpi breaks resource linking, so this is a false positive.
+  - GradleDependency / AndroidGradlePluginVersion / OldTargetApi: "a newer version exists" hints,
+    not defects in this personal, offline-first project.
+-->
+<lint>
+    <issue id="ObsoleteSdkInt">
+        <ignore path="src/main/res/mipmap-anydpi-v26" />
+    </issue>
+    <issue id="GradleDependency" severity="informational" />
+    <issue id="AndroidGradlePluginVersion" severity="informational" />
+    <issue id="OldTargetApi" severity="informational" />
+</lint>

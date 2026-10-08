@@ -4,16 +4,24 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.anchor.app.core.data.dao.AppCategoryDao
 import com.anchor.app.core.data.dao.AppSettingsDao
+import com.anchor.app.core.data.dao.DailyUsageSummaryDao
 import com.anchor.app.core.data.dao.RescheduleEventDao
 import com.anchor.app.core.data.dao.SubtaskDao
 import com.anchor.app.core.data.dao.TaskDao
 import com.anchor.app.core.data.dao.TaskDefinitionDao
+import com.anchor.app.core.data.dao.UsageSessionDao
+import com.anchor.app.core.data.dao.WeeklyUsageSummaryDao
+import com.anchor.app.core.data.entity.AppCategoryEntity
 import com.anchor.app.core.data.entity.AppSettingsEntity
+import com.anchor.app.core.data.entity.DailyUsageSummaryEntity
 import com.anchor.app.core.data.entity.RescheduleEventEntity
 import com.anchor.app.core.data.entity.SubtaskEntity
 import com.anchor.app.core.data.entity.TaskDefinitionEntity
 import com.anchor.app.core.data.entity.TaskEntity
+import com.anchor.app.core.data.entity.UsageSessionEntity
+import com.anchor.app.core.data.entity.WeeklyUsageSummaryEntity
 
 /**
  * Anchor's Room database — the single source of truth (docs 02-architecture.md §0).
@@ -21,6 +29,7 @@ import com.anchor.app.core.data.entity.TaskEntity
  * Schema versioning (docs 03-database-schema.md §9):
  *  - v1: `app_settings` (Sprint 0)
  *  - v2: + `task_definition`, `task_instance`, `subtask`, `reschedule_event` (Sprint 1)
+ *  - v3: + `usage_session`, `daily_usage_summary`, `weekly_usage_summary`, `app_category` (Sprint 2)
  *
  * `exportSchema = true` writes JSON schema files to `app/schemas` (KSP `room.schemaLocation`).
  * Migrations are explicit; there is no destructive fallback.
@@ -32,8 +41,12 @@ import com.anchor.app.core.data.entity.TaskEntity
         TaskEntity::class,
         SubtaskEntity::class,
         RescheduleEventEntity::class,
+        UsageSessionEntity::class,
+        DailyUsageSummaryEntity::class,
+        WeeklyUsageSummaryEntity::class,
+        AppCategoryEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 abstract class AnchorDatabase : RoomDatabase() {
@@ -42,6 +55,10 @@ abstract class AnchorDatabase : RoomDatabase() {
     abstract fun taskDao(): TaskDao
     abstract fun subtaskDao(): SubtaskDao
     abstract fun rescheduleEventDao(): RescheduleEventDao
+    abstract fun usageSessionDao(): UsageSessionDao
+    abstract fun dailyUsageSummaryDao(): DailyUsageSummaryDao
+    abstract fun weeklyUsageSummaryDao(): WeeklyUsageSummaryDao
+    abstract fun appCategoryDao(): AppCategoryDao
 
     companion object {
         const val NAME = "anchor.db"
@@ -125,6 +142,68 @@ abstract class AnchorDatabase : RoomDatabase() {
                     """.trimIndent(),
                 )
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_reschedule_event_taskId` ON `reschedule_event`(`taskId`)")
+            }
+        }
+
+        /** v2 → v3: add the Phase-2 usage/wellbeing tables (docs 03 §3). */
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `usage_session` (
+                        `id` TEXT NOT NULL,
+                        `packageName` TEXT NOT NULL,
+                        `startTime` INTEGER NOT NULL,
+                        `endTime` INTEGER NOT NULL,
+                        `durationMs` INTEGER NOT NULL,
+                        `collectedAt` INTEGER NOT NULL,
+                        PRIMARY KEY(`id`)
+                    )
+                    """.trimIndent(),
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_usage_session_startTime` ON `usage_session`(`startTime`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_usage_session_packageName` ON `usage_session`(`packageName`)")
+
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `daily_usage_summary` (
+                        `dateEpochDay` INTEGER NOT NULL,
+                        `totalScreenTimeMs` INTEGER NOT NULL,
+                        `distractionRatio` REAL,
+                        `topAppsJson` TEXT NOT NULL,
+                        `categoryBreakdownJson` TEXT NOT NULL,
+                        `sessionCount` INTEGER NOT NULL,
+                        `computedAt` INTEGER NOT NULL,
+                        PRIMARY KEY(`dateEpochDay`)
+                    )
+                    """.trimIndent(),
+                )
+
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `weekly_usage_summary` (
+                        `isoWeek` TEXT NOT NULL,
+                        `totalScreenTimeMs` INTEGER NOT NULL,
+                        `dailyAvgMs` INTEGER NOT NULL,
+                        `baselineJson` TEXT NOT NULL,
+                        `trendJson` TEXT NOT NULL,
+                        `computedAt` INTEGER NOT NULL,
+                        PRIMARY KEY(`isoWeek`)
+                    )
+                    """.trimIndent(),
+                )
+
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `app_category` (
+                        `packageName` TEXT NOT NULL,
+                        `category` TEXT NOT NULL,
+                        `isDistraction` INTEGER NOT NULL,
+                        `overrideSource` TEXT NOT NULL,
+                        PRIMARY KEY(`packageName`)
+                    )
+                    """.trimIndent(),
+                )
             }
         }
     }

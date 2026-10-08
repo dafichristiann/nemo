@@ -3,11 +3,15 @@ package com.anchor.app.core.di
 import android.content.Context
 import androidx.room.Room
 import com.anchor.app.core.data.AnchorDatabase
+import com.anchor.app.core.data.dao.AppCategoryDao
 import com.anchor.app.core.data.dao.AppSettingsDao
+import com.anchor.app.core.data.dao.DailyUsageSummaryDao
 import com.anchor.app.core.data.dao.RescheduleEventDao
 import com.anchor.app.core.data.dao.SubtaskDao
 import com.anchor.app.core.data.dao.TaskDao
 import com.anchor.app.core.data.dao.TaskDefinitionDao
+import com.anchor.app.core.data.dao.UsageSessionDao
+import com.anchor.app.core.data.dao.WeeklyUsageSummaryDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -34,7 +38,7 @@ object DatabaseModule {
         AnchorDatabase::class.java,
         AnchorDatabase.NAME,
     )
-        .addMigrations(AnchorDatabase.MIGRATION_1_2)
+        .addMigrations(AnchorDatabase.MIGRATION_1_2, AnchorDatabase.MIGRATION_2_3)
         .build()
 
     @Provides
@@ -54,4 +58,20 @@ object DatabaseModule {
     @Provides
     fun provideRescheduleEventDao(database: AnchorDatabase): RescheduleEventDao =
         database.rescheduleEventDao()
+
+    @Provides
+    fun provideUsageSessionDao(database: AnchorDatabase): UsageSessionDao =
+        database.usageSessionDao()
+
+    @Provides
+    fun provideDailyUsageSummaryDao(database: AnchorDatabase): DailyUsageSummaryDao =
+        database.dailyUsageSummaryDao()
+
+    @Provides
+    fun provideWeeklyUsageSummaryDao(database: AnchorDatabase): WeeklyUsageSummaryDao =
+        database.weeklyUsageSummaryDao()
+
+    @Provides
+    fun provideAppCategoryDao(database: AnchorDatabase): AppCategoryDao =
+        database.appCategoryDao()
 }

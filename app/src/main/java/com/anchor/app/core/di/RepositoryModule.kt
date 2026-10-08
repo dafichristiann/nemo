@@ -3,9 +3,11 @@ package com.anchor.app.core.di
 import com.anchor.app.core.data.repository.SettingsRepositoryImpl
 import com.anchor.app.core.data.repository.TaskDefinitionRepositoryImpl
 import com.anchor.app.core.data.repository.TaskRepositoryImpl
+import com.anchor.app.core.data.repository.UsageRepositoryImpl
 import com.anchor.app.core.domain.repository.SettingsRepository
 import com.anchor.app.core.domain.repository.TaskDefinitionRepository
 import com.anchor.app.core.domain.repository.TaskRepository
+import com.anchor.app.core.domain.repository.UsageRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -33,4 +35,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindSettingsRepository(impl: SettingsRepositoryImpl): SettingsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindUsageRepository(impl: UsageRepositoryImpl): UsageRepository
 }

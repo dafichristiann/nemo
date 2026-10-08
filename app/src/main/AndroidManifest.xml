@@ -8,6 +8,15 @@
       No network permissions are declared (local-first, no AI in Sprint 0).
     -->
 
+    <!--
+      Digital Wellbeing (Phase 2, docs 08-permissions.md §?). PACKAGE_USAGE_STATS is a
+      special access permission: it cannot be granted at runtime, the user enables it in
+      Settings. The app stays fully functional as a Smart Todo without it (PRD §14).
+    -->
+    <uses-permission
+        android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
+
     <application
         android:name=".AnchorApp"
         android:allowBackup="false"
@@ -29,6 +38,21 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!--
+          WorkManager is initialised via AnchorApp (Configuration.Provider) so @HiltWorker
+          factories can be injected; disable the default initializer to avoid two configs.
+        -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
 
     </application>
 

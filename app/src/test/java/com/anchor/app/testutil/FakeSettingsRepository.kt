@@ -31,6 +31,14 @@ class FakeSettingsRepository(
         state.value = state.value.copy(onboardingCompleted = completed)
     }
 
+    override suspend fun setBlockedApps(packages: Set<String>) {
+        state.value = state.value.copy(blockedApps = packages)
+    }
+
+    override suspend fun setFocusBlockingEnabled(enabled: Boolean) {
+        state.value = state.value.copy(focusBlockingEnabled = enabled)
+    }
+
     override suspend fun resetAll() {
         state.value = AppSettings()
     }

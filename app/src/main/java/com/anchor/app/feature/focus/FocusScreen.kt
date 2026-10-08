@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,6 +28,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.anchor.app.R
 import com.anchor.app.core.design.components.Divider
@@ -51,14 +55,33 @@ import com.anchor.app.core.domain.model.FocusMode
 @Composable
 fun FocusScreen(
     modifier: Modifier = Modifier,
+    onManageBlockedApps: () -> Unit = {},
+    onOpenAccessibilitySettings: () -> Unit = {},
     viewModel: FocusViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
+    // Re-check the OS Accessibility status whenever we return to this screen (FR-F8): the user may
+    // have just enabled the service in Settings.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) viewModel.refreshBlockingStatus()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     if (state.isRunning) {
         FocusActiveContent(state = state, viewModel = viewModel, modifier = modifier)
     } else {
-        FocusSetupContent(state = state, viewModel = viewModel, modifier = modifier)
+        FocusSetupContent(
+            state = state,
+            viewModel = viewModel,
+            onManageBlockedApps = onManageBlockedApps,
+            onOpenAccessibilitySettings = onOpenAccessibilitySettings,
+            modifier = modifier,
+        )
     }
 }
 
@@ -66,6 +89,8 @@ fun FocusScreen(
 private fun FocusSetupContent(
     state: FocusUiState,
     viewModel: FocusViewModel,
+    onManageBlockedApps: () -> Unit,
+    onOpenAccessibilitySettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -131,6 +156,45 @@ private fun FocusSetupContent(
                 selected = state.selectedMode == FocusMode.CUSTOM,
                 onClick = { viewModel.onSelectMode(FocusMode.CUSTOM) },
             )
+        }
+
+        // Blocked-apps summary for Strict/Custom (FR-S4): pre-filled from Settings. When empty,
+        // offer a calm CTA instead of blocking the user — the engine falls back to Gentle (FR-F8).
+        if (state.selectedMode == FocusMode.STRICT || state.selectedMode == FocusMode.CUSTOM) {
+            if (state.blockedApps.isNotEmpty()) {
+                Notice(text = stringResource(R.string.focus_blocked_summary, state.blockedApps.size))
+            } else {
+                Notice(text = stringResource(R.string.focus_blocked_empty))
+                Text(
+                    text = stringResource(R.string.focus_blocked_manage),
+                    fontFamily = InterFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 13.sp,
+                    color = AnchorColors.textPrimary,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onManageBlockedApps)
+                        .padding(vertical = Spacing.x1),
+                )
+            }
+
+            // Blocking readiness (FR-F4/F8, PRD v0.4 §10.5): the OS Accessibility service must be
+            // enabled for Strict/Custom to actually pause apps. Explain, then offer to enable it —
+            // if the user declines, the session simply runs as Gentle (handled by StartFocusUseCase).
+            if (!state.blockingReady) {
+                Notice(text = stringResource(R.string.focus_blocking_setup_body))
+                Text(
+                    text = stringResource(R.string.focus_blocking_setup_cta),
+                    fontFamily = InterFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 13.sp,
+                    color = AnchorColors.textPrimary,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onOpenAccessibilitySettings)
+                        .padding(vertical = Spacing.x1),
+                )
+            }
         }
 
         // Duration chips

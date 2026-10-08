@@ -117,6 +117,48 @@
     <string name="settings_delete_all">Delete all data</string>
     <string name="settings_assurance">Raw usage data never leaves your phone.</string>
 
+    <!-- Settings · Permissions (FR-S1, PRD §14) -->
+    <string name="settings_section_permissions">Permissions</string>
+    <string name="settings_perm_usage_title">Usage access</string>
+    <string name="settings_perm_usage_desc">Lets Anchor read screen-time locally for Wellbeing &amp; drift detection.</string>
+    <string name="settings_perm_notif_title">Notifications</string>
+    <string name="settings_perm_notif_desc">Gentle check-ins and an ongoing focus notification.</string>
+    <string name="settings_perm_accessibility_title">App blocking</string>
+    <string name="settings_perm_accessibility_desc">Lets Anchor pause chosen apps during Strict/Custom focus. Read from Settings → Accessibility.</string>
+    <string name="settings_perm_granted">On</string>
+    <string name="settings_perm_denied">Off</string>
+    <string name="settings_perm_enable">Enable</string>
+
+    <!-- Settings · App categories (FR-S3) -->
+    <string name="settings_section_categories">App categories</string>
+    <string name="settings_categories_empty">No apps categorized yet. They appear once usage is collected.</string>
+    <string name="settings_category_distraction">Treat as distraction</string>
+    <string name="settings_category_name_hint">Category</string>
+    <string name="settings_category_save">Save</string>
+    <string name="settings_manage">Manage</string>
+    <string name="settings_categories_summary" tools:ignore="PluralsCandidate">%1$d apps categorized</string>
+    <string name="settings_categories_search_hint">Search apps…</string>
+    <string name="categories_title">App categories</string>
+
+    <!-- Settings · Blocked apps (FR-S4) -->
+    <string name="settings_section_blocked">Blocked apps</string>
+    <string name="settings_section_focus_blocking">Focus blocking</string>
+    <string name="settings_focus_blocking_title">Pause blocked apps (experimental)</string>
+    <string name="settings_focus_blocking_subtitle">Requires App blocking access above. Off by default; sessions fall back to Gentle when unavailable.</string>
+    <string name="settings_blocked_desc">Apps to pause during Strict or Custom focus sessions.</string>
+    <string name="settings_blocked_empty">No apps blocked yet.</string>
+    <string name="settings_blocked_add_hint">Package name (e.g. com.tiktok)</string>
+    <string name="settings_blocked_add">Add</string>
+    <string name="settings_blocked_remove">Remove</string>
+    <string name="settings_blocked_choose">Choose an app to block</string>
+    <string name="settings_blocked_search_hint">Search apps…</string>
+    <string name="settings_blocked_no_apps">No installed apps found.</string>
+    <string name="settings_blocked_blocked_tag">Blocked</string>
+    <string name="settings_blocked_all_installed">Installed apps</string>
+    <string name="settings_blocked_summary" tools:ignore="PluralsCandidate">%1$d apps paused during focus</string>
+    <string name="settings_blocked_summary_none">No apps paused yet</string>
+    <string name="blocked_title">Blocked apps</string>
+
     <!-- 00 / 00b Onboarding (§2.3–2.4, §10.10) -->
     <string name="onboarding_skip">Skip</string>
     <string name="onboarding_title_line1">Stay anchored</string>
@@ -131,6 +173,8 @@
     <string name="onboarding_perm_notif_title">Notifications</string>
     <string name="onboarding_perm_notif_sub">Gentle interventions &amp; focus sessions</string>
     <string name="onboarding_perm_optional">Optional</string>
+    <string name="onboarding_perm_enable">Enable</string>
+    <string name="onboarding_perm_enabled">Enabled</string>
     <string name="onboarding_privacy_card">All data is stored locally on your phone.</string>
     <string name="onboarding_continue">Continue</string>
     <string name="onboarding_skip_for_now">Skip for now</string>
@@ -183,6 +227,19 @@
     <string name="focus_begin">Begin Focus</string>
     <string name="focus_fallback_notice">Blocking isn\'t available, so this session runs in Gentle mode.</string>
     <string name="focus_none_scheduled">No focus session yet. Set one up to get started.</string>
+    <string name="focus_blocked_summary">%1$d app(s) will be paused during this session.</string>
+    <string name="focus_blocked_empty">No apps selected yet. Add some in Settings to pause them.</string>
+    <string name="focus_blocked_manage">Choose apps in Settings</string>
+
+    <!-- Strict/Custom blocking via AccessibilityService (PRD v0.4 §10.5, FR-F4/F8) -->
+    <string name="focus_blocking_setup_body">To pause apps during Strict or Custom focus, allow Anchor under Settings → Accessibility. Otherwise the session runs in Gentle mode.</string>
+    <string name="focus_blocking_setup_cta">Enable app blocking in Settings</string>
+    <string name="accessibility_service_summary">Pauses chosen distraction apps during Strict or Custom focus sessions.</string>
+    <string name="accessibility_service_description">Anchor uses accessibility only to notice when you open an app you chose to pause during a focus session. It reads no screen content and sends nothing off your device.</string>
+    <string name="focus_block_overlay_title">Back to focus?</string>
+    <string name="focus_block_overlay_body">You asked to pause this app during a focus session. Anchor is just reminding you — the choice is yours.</string>
+    <string name="focus_block_overlay_exit_hint">You can always end the session from the focus screen or its notification.</string>
+    <string name="focus_block_overlay_back">Back to focus</string>
 
     <string name="focus_active_tag">FOCUS</string>
     <string name="focus_active_current_step">Current step</string>
@@ -211,6 +268,11 @@
     <string name="future_domino_empty">No linked tasks yet.</string>
     <string name="future_domino_current">CURRENT</string>
     <string name="future_start_focus">Start Focus Now</string>
+    <string name="future_domino_add_label">Link a task that this one affects</string>
+    <string name="future_domino_pick_hint">Tap a task to link it</string>
+    <string name="future_domino_add_button">Link task</string>
+    <string name="future_domino_cycle_warning">That would create a circular link, so it wasn\'t added.</string>
+    <string name="future_domino_none_available">No other tasks to link yet.</string>
 
     <!-- 08 Insights - Daily Reflection (07-screens.md §2.12, PRD §10.8-10.9) -->
     <string name="insights_title">Insights</string>

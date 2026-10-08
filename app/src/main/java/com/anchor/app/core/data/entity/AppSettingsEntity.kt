@@ -24,6 +24,10 @@ data class AppSettingsEntity(
     val cooldownHours: Int = 2,
     val onboardingCompleted: Boolean = false,
     val locale: String = "en",
+    /** JSON array of blocked package names (FR-S4). Null/empty = none. */
+    val blockedAppsJson: String? = null,
+    /** Opt-in: master switch for Strict/Custom app blocking (FR-F4/F8, PRD v0.4 §10.5). Default OFF. */
+    val focusBlockingEnabled: Boolean = false,
 ) {
     companion object {
         const val SINGLETON_ID = 1

@@ -5,6 +5,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -23,17 +24,22 @@ import com.anchor.app.feature.insights.InsightsScreen
 import com.anchor.app.feature.intervention.InterventionOverlay
 import com.anchor.app.feature.onboarding.OnboardingScreen
 import com.anchor.app.feature.onboarding.PermissionOnboardingScreen
+import com.anchor.app.feature.settings.AppCategoriesScreen
+import com.anchor.app.feature.settings.BlockedAppsScreen
 import com.anchor.app.feature.settings.SettingsScreen
 import com.anchor.app.feature.tasks.TaskDetailScreen
 import com.anchor.app.feature.tasks.TaskDetailViewModel
 import com.anchor.app.feature.tasks.TasksScreen
 import com.anchor.app.feature.wellbeing.WellbeingScreen
+import com.anchor.app.platform.accessibility.AccessibilityStatus
 
 /** All routes (docs 07-screens.md §1: "Detail & modal as separate routes"). */
 object Routes {
     const val ONBOARDING = "onboarding"
     const val PERMISSION_ONBOARDING = "onboarding/permissions"
     const val SETTINGS = "settings"
+    const val SETTINGS_CATEGORIES = "settings/categories"
+    const val SETTINGS_BLOCKED = "settings/blocked"
     const val TASK_DETAIL = "task/{taskId}"
     fun taskDetail(taskId: String) = "task/$taskId"
     const val FUTURE_VIEW = "future/{taskId}"
@@ -51,15 +57,18 @@ object Routes {
 fun AnchorNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
+    initialRoute: String? = null,
     appViewModel: AppViewModel = hiltViewModel(),
 ) {
     val onboardingCompleted by appViewModel.onboardingCompleted.collectAsStateWithLifecycle()
 
-    // Wait until we know whether onboarding is done (avoids a wrong-jump flash).
+    // Wait until we know whether onboarding is done (avoids a wrong-jump flash). When onboarding
+    // is complete and a deep-linked [initialRoute] is a valid top-level tab, land there.
+    val deepLink = initialRoute?.takeIf { r -> TopLevelDestination.entries.any { it.route == r } }
     val startDestination = when (onboardingCompleted) {
         null -> null
         false -> Routes.ONBOARDING
-        true -> TopLevelDestination.TASKS.route
+        true -> deepLink ?: TopLevelDestination.TASKS.route
     }
 
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -119,7 +128,13 @@ fun AnchorNavHost(
             composable(TopLevelDestination.WELLBEING.route) {
                 WellbeingScreen(onOpenSettings = { navController.navigate(Routes.SETTINGS) })
             }
-            composable(TopLevelDestination.FOCUS.route) { FocusScreen() }
+            composable(TopLevelDestination.FOCUS.route) {
+                val context = LocalContext.current
+                FocusScreen(
+                    onManageBlockedApps = { navController.navigate(Routes.SETTINGS_BLOCKED) },
+                    onOpenAccessibilitySettings = { AccessibilityStatus().open(context) },
+                )
+            }
             composable(TopLevelDestination.INSIGHTS.route) { InsightsScreen() }
 
             composable(
@@ -151,7 +166,17 @@ fun AnchorNavHost(
             }
 
             composable(Routes.SETTINGS) {
-                SettingsScreen(onBack = { navController.popBackStack() })
+                SettingsScreen(
+                    onBack = { navController.popBackStack() },
+                    onManageCategories = { navController.navigate(Routes.SETTINGS_CATEGORIES) },
+                    onManageBlocked = { navController.navigate(Routes.SETTINGS_BLOCKED) },
+                )
+            }
+            composable(Routes.SETTINGS_CATEGORIES) {
+                AppCategoriesScreen(onBack = { navController.popBackStack() })
+            }
+            composable(Routes.SETTINGS_BLOCKED) {
+                BlockedAppsScreen(onBack = { navController.popBackStack() })
             }
         }
 

@@ -443,9 +443,10 @@ Then   Anchor menahan intervensi tambahan (maksimum harian dihormati)
   dan (c) izin `AccessibilityService` aktif di OS. Bila salah satu tidak terpenuhi → sesi berjalan
   sebagai **Gentle** + user diberi tahu (FR-F8). **Tidak pernah gagal keras.**
 - **Semantik non-paksa.** Saat user membuka app yang diblokir selama sesi, Anchor menampilkan
-  **layar perantara "kembali fokus"** (bukan memaksa keluar tanpa penjelasan) — konsisten dengan
-  prinsip *Awareness > Control* (§4). User tetap dapat menutupnya dan lanjut; tidak ada mekanisme
-  kunci yang tidak bisa dilewati.
+  **overlay "kembali fokus"** (bukan memaksa keluar tanpa penjelasan) — konsisten dengan
+  prinsip *Awareness > Control* (§4). Overlay muncul **setiap kali** user masuk kembali ke app
+  terblokir. User tetap dapat menutupnya dan lanjut; tidak ada mekanisme kunci yang tidak bisa
+  dilewati. Tombolnya mengarahkan kembali ke tab Focus aplikasi.
 - **Privasi.** `AccessibilityService` **tidak** membaca konten layar (`canRetrieveWindowContent=false`);
   hanya nama package dari event perpindahan window. Tidak ada data yang dikirim keluar (docs 09).
 - **Emergency exit selalu tersedia** (FR-F5) dan seketika menghentikan pemblokiran.

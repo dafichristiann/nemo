@@ -45,6 +45,18 @@
         android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"
         tools:ignore="ProtectedPermissions" />
 
+    <!--
+      Targeted package visibility (PRD docs 08-permissions.md §7): we deliberately avoid
+      QUERY_ALL_PACKAGES. This <queries> entry lets Anchor see only apps with a launcher entry
+      so the user can pick which apps to pause during Strict/Custom focus (FR-S4).
+    -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
     <application
         android:name=".AnchorApp"
         android:allowBackup="false"
@@ -90,6 +102,25 @@
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Keeps an active focus session running with a visible notification." />
+        </service>
+
+        <!--
+          Strict/Custom app blocking (FR-F4/F8, PRD v0.4 §10.5). Experimental, feature-flagged,
+          opt-in. Requires the special BIND_ACCESSIBILITY_SERVICE permission and an explicit user
+          grant in Settings → Accessibility. Reads only the window-change package name
+          (canRetrieveWindowContent=false). Not exported.
+        -->
+        <service
+            android:name=".platform.accessibility.AnchorAccessibilityService"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/anchor_accessibility_config" />
         </service>
 
         <!--

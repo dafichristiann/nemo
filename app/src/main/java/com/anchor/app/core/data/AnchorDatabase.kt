@@ -42,6 +42,8 @@ import com.anchor.app.core.data.entity.WeeklyUsageSummaryEntity
  *  - v5: + `focus_session` (Sprint 5)
  *  - v6: + `task_dependency` (Sprint 6)
  *  - v7: + `insight` (Sprint 7)
+ *  - v8: + `app_settings.blockedAppsJson` (FR-S4)
+ *  - v9: + `app_settings.focusBlockingEnabled` (FR-F4/F8, PRD v0.4 §10.5)
  *
  * `exportSchema = true` writes JSON schema files to `app/schemas` (KSP `room.schemaLocation`).
  * Migrations are explicit; there is no destructive fallback.
@@ -62,7 +64,7 @@ import com.anchor.app.core.data.entity.WeeklyUsageSummaryEntity
         TaskDependencyEntity::class,
         InsightEntity::class,
     ],
-    version = 7,
+    version = 9,
     exportSchema = true,
 )
 abstract class AnchorDatabase : RoomDatabase() {
@@ -84,11 +86,11 @@ abstract class AnchorDatabase : RoomDatabase() {
         const val NAME = "anchor.db"
 
         /** Current schema version (mirrors the `@Database(version = ...)` above). */
-        const val VERSION = 7
+        const val VERSION = 9
 
         /** All migration steps, in order — used by tests and by [DatabaseModule]. */
         val ALL_MIGRATIONS: Array<Migration>
-            get() = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+            get() = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
 
         /** v1 → v2: add the Phase-1 task tables (docs 03 §2). */
         val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -328,6 +330,20 @@ abstract class AnchorDatabase : RoomDatabase() {
                 )
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_insight_dateEpochDay` ON `insight`(`dateEpochDay`)")
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_insight_type` ON `insight`(`type`)")
+            }
+        }
+
+        /** v7 → v8: add `blockedAppsJson` to `app_settings` for FR-S4 (Sprint 8). */
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `app_settings` ADD COLUMN `blockedAppsJson` TEXT")
+            }
+        }
+
+        /** v8 → v9: opt-in toggle for Strict/Custom blocking (FR-F4/F8). Default OFF. */
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `app_settings` ADD COLUMN `focusBlockingEnabled` INTEGER NOT NULL DEFAULT 0")
             }
         }
     }

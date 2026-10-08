@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.anchor.app.core.common.DispatcherProvider
 import com.anchor.app.core.common.TimeProvider
+import com.anchor.app.core.domain.model.AppSettings
 import com.anchor.app.core.domain.model.FocusMode
 import com.anchor.app.core.domain.model.FocusSession
 import com.anchor.app.core.domain.model.FocusStatus
@@ -12,10 +13,13 @@ import com.anchor.app.core.domain.model.Subtask
 import com.anchor.app.core.domain.model.Task
 import com.anchor.app.core.domain.model.TaskStatus
 import com.anchor.app.core.domain.repository.FocusRepository
+import com.anchor.app.core.domain.repository.SettingsRepository
 import com.anchor.app.core.domain.repository.TaskRepository
 import com.anchor.app.core.domain.usecase.focus.FinishFocusUseCase
 import com.anchor.app.core.domain.usecase.focus.PauseFocusUseCase
 import com.anchor.app.core.domain.usecase.focus.StartFocusUseCase
+import com.anchor.app.BuildConfig
+import com.anchor.app.platform.accessibility.AccessibilityStatus
 import com.anchor.app.platform.service.FocusService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -32,8 +36,25 @@ import javax.inject.Inject
 /** Duration choices offered on Focus Setup (07-screens.md §2.9: 25/45/60 + custom). */
 val FOCUS_DURATIONS_MIN = listOf(25, 45, 60)
 
+/**
+ * Which apps a session should pause, given the chosen [mode] and the user's blocked set (FR-S4).
+ *
+ * Strict/Custom pause the user's blocked apps; Gentle never blocks anything (PRD §10.5), so it
+ * always yields an empty set regardless of what Settings holds.
+ */
+internal fun effectiveBlockedApps(mode: FocusMode, blockedApps: Set<String>): Set<String> =
+    if (mode == FocusMode.GENTLE) emptySet() else blockedApps
+
 /** One selectable task row on Focus Setup. */
 data class FocusTaskOption(val id: String, val title: String)
+
+/** Internal bundle of the Focus Setup selections, combined into [FocusUiState]. */
+private data class SetupSelection(
+    val taskId: String?,
+    val mode: FocusMode,
+    val duration: Int,
+    val serviceEnabled: Boolean,
+)
 
 /** UI state for screens 05 (Setup) and 06 (Active). */
 data class FocusUiState(
@@ -44,6 +65,13 @@ data class FocusUiState(
     val active: ActiveFocus? = null,
     val lastFallbackReason: String? = null,
     val lastFinishedTaskId: String? = null,
+    /** Apps the user chose to pause (FR-S4). Pre-filled into Strict/Custom sessions. */
+    val blockedApps: Set<String> = emptySet(),
+    /**
+     * True when Strict/Custom blocking can actually engage: build flag, persisted opt-in, and the
+     * OS Accessibility service all active (FR-F4/F8, PRD v0.4 §10.5). Drives the setup-screen card.
+     */
+    val blockingReady: Boolean = false,
 ) {
     val isRunning: Boolean get() = active != null
 }
@@ -81,9 +109,11 @@ class FocusViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val taskRepository: TaskRepository,
     private val focusRepository: FocusRepository,
+    private val settingsRepository: SettingsRepository,
     private val startFocus: StartFocusUseCase,
     private val pauseFocus: PauseFocusUseCase,
     private val finishFocus: FinishFocusUseCase,
+    private val accessibilityStatus: AccessibilityStatus,
     private val timeProvider: TimeProvider,
     private val dispatchers: DispatcherProvider,
 ) : ViewModel() {
@@ -94,15 +124,23 @@ class FocusViewModel @Inject constructor(
     private val elapsedMs = MutableStateFlow(0L)
     private val fallbackReason = MutableStateFlow<String?>(null)
     private val lastFinishedTaskId = MutableStateFlow<String?>(null)
+    private val serviceEnabled = MutableStateFlow(false)
     private var startedAt: Long = 0L
 
     val uiState: StateFlow<FocusUiState> = combine(
         taskRepository.observeAll(),
         focusRepository.observeCurrent(),
-        combine(selectedTaskId, selectedMode, selectedDurationMin) { id, mode, dur -> Triple(id, mode, dur) },
+        combine(
+            selectedTaskId,
+            selectedMode,
+            selectedDurationMin,
+            serviceEnabled,
+            ::SetupSelection,
+        ),
         elapsedMs,
-    ) { tasks, current, selection, elapsed ->
-        buildState(tasks, current, selection.first, selection.second, selection.third, elapsed)
+        settingsRepository.observe(),
+    ) { tasks, current, selection, elapsed, settings ->
+        buildState(tasks, current, selection, elapsed, settings)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -123,15 +161,34 @@ class FocusViewModel @Inject constructor(
                 }
             }
         }
+        // Adopt a session that is already running (e.g. after the screen was recreated by the
+        // focus-block overlay's "Back to focus"): keep the clock counting from its real start
+        // instead of resetting to zero.
+        viewModelScope.launch {
+            focusRepository.observeCurrent().collect { session ->
+                if (session != null && session.status == FocusStatus.ACTIVE) {
+                    val anchor = session.startedAt + session.actualDurationMs
+                    if (startedAt != anchor) startTicking(anchor)
+                }
+            }
+        }
+        refreshBlockingStatus()
     }
+
+    /** Refresh the OS Accessibility status; call on resume after returning from Settings (FR-F8). */
+    fun refreshBlockingStatus() = viewModelScope.launch(dispatchers.io) {
+        serviceEnabled.value = accessibilityStatus.isEnabled(context)
+    }
+
+    /** Opens the OS Accessibility settings so the user can enable the blocking service. */
+    fun onOpenAccessibilitySettings() = accessibilityStatus.open(context)
 
     private fun buildState(
         tasks: List<Task>,
         current: FocusSession?,
-        taskId: String?,
-        mode: FocusMode,
-        duration: Int,
+        selection: SetupSelection,
         elapsed: Long,
+        settings: AppSettings,
     ): FocusUiState {
         val options = tasks
             .filter { it.status == TaskStatus.TODO || it.status == TaskStatus.IN_PROGRESS }
@@ -153,12 +210,16 @@ class FocusViewModel @Inject constructor(
         }
         return FocusUiState(
             taskOptions = options,
-            selectedTaskId = taskId ?: options.firstOrNull()?.id,
-            selectedMode = mode,
-            selectedDurationMin = duration,
+            selectedTaskId = selection.taskId ?: options.firstOrNull()?.id,
+            selectedMode = selection.mode,
+            selectedDurationMin = selection.duration,
             active = active,
             lastFallbackReason = fallbackReason.value,
             lastFinishedTaskId = lastFinishedTaskId.value,
+            blockedApps = settings.blockedApps,
+            blockingReady = BuildConfig.FOCUS_BLOCKING_ENABLED &&
+                settings.focusBlockingEnabled &&
+                selection.serviceEnabled,
         )
     }
 
@@ -170,10 +231,12 @@ class FocusViewModel @Inject constructor(
 
     /** Begins a session (FR-F1, FR-F2). Records the session and starts the foreground service. */
     fun onBegin() = viewModelScope.launch(dispatchers.io) {
+        val mode = selectedMode.value
         val result = startFocus(
             taskId = selectedTaskId.value,
-            mode = selectedMode.value,
+            mode = mode,
             plannedDurationMin = selectedDurationMin.value,
+            blockedApps = effectiveBlockedApps(mode, uiState.value.blockedApps),
         )
         fallbackReason.value = result.fallbackReason
         lastFinishedTaskId.value = null
@@ -188,8 +251,8 @@ class FocusViewModel @Inject constructor(
             pauseFocus(session.id, currentElapsed())
             stopTicking()
         } else {
-            // Resume: keep the accumulated duration, restart the clock from "now".
-            startedAt = timeProvider.nowMillis() - session.actualDurationMs
+            // Resume: keep the accumulated duration, restart the clock anchored so elapsed continues.
+            val anchor = timeProvider.nowMillis() - session.actualDurationMs
             focusRepository.updateState(
                 id = session.id,
                 status = FocusStatus.ACTIVE,
@@ -197,7 +260,7 @@ class FocusViewModel @Inject constructor(
                 endedAt = null,
                 fallbackReason = session.fallbackReason,
             )
-            startTicking()
+            startTicking(anchor)
         }
     }
 
@@ -235,9 +298,9 @@ class FocusViewModel @Inject constructor(
 
     private var tickJob: kotlinx.coroutines.Job? = null
 
-    private fun startTicking() {
+    private fun startTicking(anchorStartMillis: Long = timeProvider.nowMillis()) {
         if (tickJob?.isActive == true) return
-        startedAt = timeProvider.nowMillis()
+        startedAt = anchorStartMillis
         tickJob = viewModelScope.launch {
             while (true) {
                 elapsedMs.value = (timeProvider.nowMillis() - startedAt).coerceAtLeast(0L)

@@ -25,15 +25,22 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // Optional deep-link from the focus-block overlay ("Back to focus" → Focus tab).
+        val initialRoute = intent?.getStringExtra(EXTRA_OPEN_ROUTE)
         setContent {
             AnchorTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = AnchorColors.surface,
                 ) {
-                    AnchorNavHost()
+                    AnchorNavHost(initialRoute = initialRoute)
                 }
             }
         }
+    }
+
+    companion object {
+        /** Extra carrying a top-level route to open on launch (e.g. "focus"). */
+        const val EXTRA_OPEN_ROUTE = "com.anchor.app.extra.OPEN_ROUTE"
     }
 }

@@ -236,3 +236,77 @@ notification) **terbukti bekerja end-to-end** di device nyata. F3 ditutup.
 > Bug ini juga menjawab F2-adjacent: sebelumnya drift/insight berbasis baseline tidak akan
 > pernah aktif. Perbaikan ini diperlukan agar Phase 3 berfungsi sesuai PRD §10.3/§10.4.
 
+---
+
+## 13. Follow-up Closure (2026-10-08, lanjutan)
+
+Menutup temuan §11 F2/F4 dan gap UI yang teridentifikasi dari penelusuran PRD ↔ kode.
+Semua perubahan **tidak mengubah** keputusan MVP terkunci.
+
+| Item | Perubahan | FR/AC |
+|---|---|---|
+| **Domino UI** | `FutureViewScreen` kini punya pemilih task untuk **menambah dependensi** (memanggil `onAddDependency`), plus notice siklus. Sebelumnya infra ada tetapi UI-nya hilang → Domino selalu kosong. | FR-DE1..DE5, AC §10.7 |
+| **Settings (FR-S1)** | Section **Permissions** baru: status Usage access & Notifications (live) + tombol aktifkan/pintasan Settings. Refresh di `onResume`. | FR-S1, §14 |
+| **Settings (FR-S3)** | Section **App categories**: rename kategori + toggle "distraction" per app (via `AppCategory`). | FR-S3 |
+| **Settings (FR-S4)** | Section **Blocked apps**: **picker daftar aplikasi terpasang di HP** (label + package, search, tap untuk block/unblock dengan badge "Blocked"), disimpan persisten (kolom baru `app_settings.blockedAppsJson`, migrasi **v7→v8**). Pakai `<queries>` bertarget MAIN/LAUNCHER — **bukan** `QUERY_ALL_PACKAGES` (sesuai docs 08 §7). Dikelola penuh di UI; tanpa efek blocking aktif (Strict/Custom dikecualikan dari scope ini). | FR-S4 |
+| **Notifikasi runtime** | Alur "minta notifikasi lalu arahkan ke permission" (pola umum app): launcher `POST_NOTIFICATIONS` di Onboarding 00b & Settings; bila ditolak → buka `ACTION_APP_NOTIFICATION_SETTINGS` (fallback ke app details). Menutup §11 **F4**. | FR-I3, §14 |
+| **Onboarding izin** | Kartu Usage → buka Usage access; kartu Notifications → request runtime. Tetap opsional (skip aman). | FR-S1, §14 |
+| **Recurring background** | `RecurringTaskWorker` (periodik harian) dijadwalkan dari `AppViewModel` **terlepas** dari `trackingEnabled` — instance recurring muncul walau tab Tasks tidak dibuka. | FR-T7 |
+| **F2** | `TaskDao.observeToday` kini juga menyertakan instance recurring hari ini (`definitionOccurrenceDate == today`) walau tanpa deadline. Menutup §11 **F2**. | FR-T10, §10.1 |
+
+**Verifikasi (lokal, hijau):**
+- `testDebugUnitTest` (`--rerun-tasks`) — PASS.
+- `lintDebug` — PASS (0 error).
+- `connectedDebugAndroidTest` — **24 test PASS** di device nyata **TECNO CN7c (Android 16)** **dan** emulator **Pixel_7 (API 17/preview)**, termasuk migrasi **v7→v8** (`migrate7ToLatest_addsBlockedAppsColumn_preservesSettings`) dan `observeToday` (recurring tanpa deadline).
+- `compileReleaseKotlin` — PASS.
+
+**Sengaja tetap di luar scope** (sesuai keputusan): ~~Strict/Custom blocking & `AccessibilityService`
+(FR-F4/F8) — masih `GentleBlockingStrategy` (no-op)~~ — **kini terimplementasi** (lihat §15);
+F1 (RAM < 150 MB) menunggu pengukuran device.
+
+---
+
+## 14. Settings UI Redesign (2026-10-08, lanjutan)
+
+Menanggapi feedback: daftar app yang sangat panjang (100+ terinstal) membuat layar Settings
+kurang nyaman. Diubah jadi **ringkas + sub-halaman terpisah** (pola Digital Wellbeing).
+
+| Perubahan | Detail |
+|---|---|
+| **Settings ringkas** | `App categories` & `Blocked apps` kini hanya menampilkan **ringkasan** ("108 apps categorized" / "2 apps paused during focus") + tombol **Manage**. Tidak ada lagi daftar panjang di Settings. |
+| **Sub-halaman Blocked apps** (`BlockedAppsScreen`) | Route `settings/blocked`. Search, **ikon aplikasi**, label + package sebagai sub-teks, **toggle** block/unblock. App yang diblokir naik ke atas. |
+| **Sub-halaman App categories** (`AppCategoriesScreen`) | Route `settings/categories`. Search, ikon, rename kategori, toggle "treat as distraction". |
+| **Ikon aplikasi** | `InstalledAppsSource` kini memuat `Drawable` ikon via `PackageManager`; komponen reusable `AppIcon` (dengan fallback inisial). |
+
+**Verifikasi di device nyata (TECNO CN7c) + emulator (Pixel_7):**
+- Settings ringkas tampil benar (ringkasan + Manage).
+- Sub-halaman Blocked apps menampilkan app terinstal dengan ikon & toggle.
+- Onboarding 00b: tombol **Enable** Notifications → dialog runtime **"Allow Anchor to send you notifications?"** → Allow → kartu berubah **"Enabled"**; tombol Enable Usage access → membuka **system Settings** (Usage access).
+- `lintDebug` / `testDebugUnitTest` / `assembleDebugAndroidTest` — PASS.
+
+---
+
+## 15. Focus Strict/Custom Blocking via AccessibilityService (2026-10-08)
+
+Menuntaskan FR-F4/F8 yang selama ini no-op (`GentleBlockingStrategy`). Spec:
+`specs/2026-10-08-focus-strict-custom-blocking-design.md`; plan:
+`plans/2026-10-08-focus-strict-custom-blocking-plan.md`; PRD v0.4 §10.5/§14/§16.
+
+| Aspek | Implementasi |
+|---|---|
+| **Gerbang 3 lapis** | `BlockingGate` (`ProductionBlockingGate`): build flag `FOCUS_BLOCKING_ENABLED` + toggle Settings `focusBlockingEnabled` + izin OS. `AccessibilityBlockingStrategy.isAvailable()` mengecek ketiganya. |
+| **State live** | `BlockingState` (`@Singleton`, in-memory `StateFlow<BlockingSnapshot>`); di-`engage`/`release` oleh strategy, dibaca service. |
+| **Enforcement** | `AnchorAccessibilityService` (BIND_ACCESSIBILITY_SERVICE, `canRetrieveWindowContent=false`) memantau `TYPE_WINDOW_STATE_CHANGED`; app terblokir → overlay. |
+| **Overlay** | `BlockOverlayWindow` via `TYPE_ACCESSIBILITY_OVERLAY` (bukan Activity — menghindari background-activity-start restriction pada Android 10+). Non-paksa; tombol "Back to focus" membuka Anchor di tab Focus. **Muncul ulang setiap kali masuk** ke app terblokir (re-arm saat keluar). |
+| **Fallback (FR-F8)** | Setiap kegagalan → sesi dicatat sebagai Gentle + `fallbackReason` (jalur `StartFocusUseCase` yang sudah ada). `onInterrupt`/`onUnbind` mengosongkan `BlockingState`. |
+| **Persistence** | Room **v8→v9** (`app_settings.focusBlockingEnabled`, default OFF) + `MigrationTest.migrate8ToLatest_addsFocusBlockingColumn_defaultOff`. |
+| **Timer** | `FocusViewModel` mengadopsi sesi yang sedang berjalan saat di-recreate → timer tidak reset setelah kembali dari overlay. |
+| **Privasi** | Tidak membaca konten layar; hanya nama package dari event window-change (docs 09). |
+
+**Test:** `BlockingStateTest` (4) + `AccessibilityBlockingStrategyTest` (8) + migrasi instrumented — PASS.
+**Verifikasi manual:** di TECNO CN7c (dan emulator Pixel_7) — Strict dengan app terblokir → overlay muncul; tombol kembali ke tab Focus; timer lanjut; overlay muncul ulang tiap masuk kembali.
+
+> **Catatan OEM:** service hanya mulai menerima event setelah izin diberikan **lewat Settings → Accessibility**
+> (set via adb `settings put` tidak selalu mengikat service). Karena itu UI mengarahkan user ke Settings (FR-F8).
+
+

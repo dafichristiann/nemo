@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Anchor Accessibility service config (FR-F4/F8, PRD v0.4 §10.5, docs 08 §4).
+
+  Privacy: canRetrieveWindowContent="false" — we only read the *package name* of the window
+  transition event to know which app was opened. We never read on-screen content, and nothing
+  leaves the device (docs 09).
+
+  Scope: only TYPE_WINDOW_STATE_CHANGED is subscribed — the cheapest event that tells us the
+  foreground app changed. No polling, battery-friendly.
+-->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeWindowStateChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagDefault"
+    android:canRetrieveWindowContent="false"
+    android:description="@string/accessibility_service_description"
+    android:notificationTimeout="100"
+    android:summary="@string/accessibility_service_summary" />

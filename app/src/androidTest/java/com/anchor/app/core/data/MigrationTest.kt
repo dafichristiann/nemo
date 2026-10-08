@@ -104,4 +104,52 @@ class MigrationTest {
         assertTrue("task_dependency" in tables)
         assertTrue("insight" in tables)
     }
+
+    @Test
+    fun migrate7ToLatest_addsBlockedAppsColumn_preservesSettings() {
+        // v7 settings row should survive and gain a null blockedAppsJson (FR-S4).
+        helper.createDatabase(testDb, 7).use { db ->
+            db.execSQL(
+                "INSERT INTO app_settings (id, trackingEnabled, aiEnabled, notificationsEnabled, " +
+                    "usageRetentionDays, defaultFocusMode, dailyInterventionQuota, cooldownHours, " +
+                    "onboardingCompleted, locale) " +
+                    "VALUES (1, 1, 1, 1, 30, 'GENTLE', 3, 2, 1, 'en')",
+            )
+        }
+        val db = helper.runMigrationsAndValidate(
+            testDb,
+            AnchorDatabase.VERSION,
+            true,
+            *AnchorDatabase.ALL_MIGRATIONS,
+        )
+        db.query("SELECT onboardingCompleted, blockedAppsJson FROM app_settings WHERE id=1").use { c ->
+            assertTrue(c.moveToFirst())
+            assertEquals(1, c.getInt(0))
+            assertTrue("blockedAppsJson should be null after migration", c.isNull(1))
+        }
+    }
+
+    @Test
+    fun migrate8ToLatest_addsFocusBlockingColumn_defaultOff() {
+        // v8 settings row should survive and gain focusBlockingEnabled defaulting to 0 (OFF).
+        helper.createDatabase(testDb, 8).use { db ->
+            db.execSQL(
+                "INSERT INTO app_settings (id, trackingEnabled, aiEnabled, notificationsEnabled, " +
+                    "usageRetentionDays, defaultFocusMode, dailyInterventionQuota, cooldownHours, " +
+                    "onboardingCompleted, locale, blockedAppsJson) " +
+                    "VALUES (1, 1, 1, 1, 30, 'GENTLE', 3, 2, 1, 'en', '[\"com.tiktok\"]')",
+            )
+        }
+        val db = helper.runMigrationsAndValidate(
+            testDb,
+            AnchorDatabase.VERSION,
+            true,
+            *AnchorDatabase.ALL_MIGRATIONS,
+        )
+        db.query("SELECT blockedAppsJson, focusBlockingEnabled FROM app_settings WHERE id=1").use { c ->
+            assertTrue(c.moveToFirst())
+            assertEquals("[\"com.tiktok\"]", c.getString(0))
+            assertEquals("focusBlockingEnabled should default OFF", 0, c.getInt(1))
+        }
+    }
 }

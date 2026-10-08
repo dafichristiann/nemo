@@ -64,6 +64,13 @@ android {
 
         // Expose the opt-in AI key to code without committing it (FR-AI7). Empty when unset.
         buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
+
+        // Build-level master switch for Strict/Custom app blocking (FR-F4/F8, PRD v0.4 §10.5).
+        // Overridable with -PfocusBlockingEnabled=false. Runtime opt-in (Settings toggle +
+        // OS Accessibility permission) still gates actual blocking even when this is true.
+        val focusBlockingEnabled = (project.findProperty("focusBlockingEnabled") as String?)
+            ?.toBooleanStrictOrNull() ?: true
+        buildConfigField("boolean", "FOCUS_BLOCKING_ENABLED", focusBlockingEnabled.toString())
     }
 
     signingConfigs {

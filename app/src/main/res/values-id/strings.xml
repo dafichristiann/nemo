@@ -118,6 +118,48 @@
     <string name="settings_delete_all">Hapus semua data</string>
     <string name="settings_assurance">Data penggunaan mentah tidak pernah meninggalkan ponselmu.</string>
 
+    <!-- Settings · Izin (FR-S1, PRD 14) -->
+    <string name="settings_section_permissions">Izin</string>
+    <string name="settings_perm_usage_title">Akses penggunaan</string>
+    <string name="settings_perm_usage_desc">Memungkinkan Anchor membaca waktu layar secara lokal untuk Kesejahteraan &lt;&amp; deteksi drift.</string>
+    <string name="settings_perm_notif_title">Notifikasi</string>
+    <string name="settings_perm_notif_desc">Pengingat lembut dan notifikasi fokus yang berjalan.</string>
+    <string name="settings_perm_accessibility_title">Pemblokiran aplikasi</string>
+    <string name="settings_perm_accessibility_desc">Memungkinkan Anchor menjeda aplikasi pilihan selama fokus Ketat/Kustom. Dibaca dari Settings → Aksesibilitas.</string>
+    <string name="settings_perm_granted">Aktif</string>
+    <string name="settings_perm_denied">Nonaktif</string>
+    <string name="settings_perm_enable">Aktifkan</string>
+
+    <!-- Settings · Kategori aplikasi (FR-S3) -->
+    <string name="settings_section_categories">Kategori aplikasi</string>
+    <string name="settings_categories_empty">Belum ada aplikasi yang dikategorikan. Muncul setelah data penggunaan terkumpul.</string>
+    <string name="settings_category_distraction">Anggap sebagai distraksi</string>
+    <string name="settings_category_name_hint">Kategori</string>
+    <string name="settings_category_save">Simpan</string>
+    <string name="settings_manage">Kelola</string>
+    <string name="settings_categories_summary" tools:ignore="PluralsCandidate">%1$d aplikasi dikategorikan</string>
+    <string name="settings_categories_search_hint">Cari aplikasi…</string>
+    <string name="categories_title">Kategori aplikasi</string>
+
+    <!-- Settings · Aplikasi diblokir (FR-S4) -->
+    <string name="settings_section_blocked">Aplikasi diblokir</string>
+    <string name="settings_section_focus_blocking">Pemblokiran fokus</string>
+    <string name="settings_focus_blocking_title">Jeda aplikasi diblokir (eksperimental)</string>
+    <string name="settings_focus_blocking_subtitle">Perlu akses Pemblokiran aplikasi di atas. Default nonaktif; sesi turun ke Lembut bila tak tersedia.</string>
+    <string name="settings_blocked_desc">Aplikasi yang dijeda selama sesi fokus Strict atau Custom.</string>
+    <string name="settings_blocked_empty">Belum ada aplikasi yang diblokir.</string>
+    <string name="settings_blocked_add_hint">Nama paket (mis. com.tiktok)</string>
+    <string name="settings_blocked_add">Tambah</string>
+    <string name="settings_blocked_remove">Hapus</string>
+    <string name="settings_blocked_choose">Pilih aplikasi untuk diblokir</string>
+    <string name="settings_blocked_search_hint">Cari aplikasi…</string>
+    <string name="settings_blocked_no_apps">Tidak ada aplikasi terpasang yang ditemukan.</string>
+    <string name="settings_blocked_blocked_tag">Diblokir</string>
+    <string name="settings_blocked_all_installed">Aplikasi terpasang</string>
+    <string name="settings_blocked_summary" tools:ignore="PluralsCandidate">%1$d aplikasi dijeda saat fokus</string>
+    <string name="settings_blocked_summary_none">Belum ada aplikasi yang dijeda</string>
+    <string name="blocked_title">Aplikasi diblokir</string>
+
     <!-- 00 / 00b Onboarding (2.3–2.4, 10.10) -->
     <string name="onboarding_skip">Lewati</string>
     <string name="onboarding_title_line1">Tetap berlabuh</string>
@@ -132,6 +174,8 @@
     <string name="onboarding_perm_notif_title">Notifikasi</string>
     <string name="onboarding_perm_notif_sub">Intervensi lembut &amp; sesi fokus</string>
     <string name="onboarding_perm_optional">Opsional</string>
+    <string name="onboarding_perm_enable">Aktifkan</string>
+    <string name="onboarding_perm_enabled">Aktif</string>
     <string name="onboarding_privacy_card">Semua data tersimpan lokal di ponselmu.</string>
     <string name="onboarding_continue">Lanjutkan</string>
     <string name="onboarding_skip_for_now">Lewati dulu</string>
@@ -184,6 +228,19 @@
     <string name="focus_begin">Mulai Fokus</string>
     <string name="focus_fallback_notice">Pemblokiran tidak tersedia, jadi sesi ini berjalan dalam mode Lembut.</string>
     <string name="focus_none_scheduled">Belum ada sesi fokus. Atur satu untuk memulai.</string>
+    <string name="focus_blocked_summary">%1$d aplikasi akan dijeda selama sesi ini.</string>
+    <string name="focus_blocked_empty">Belum ada aplikasi dipilih. Tambahkan di Settings untuk menjeda.</string>
+    <string name="focus_blocked_manage">Pilih aplikasi di Settings</string>
+
+    <!-- Strict/Custom blocking via AccessibilityService (PRD v0.4 §10.5, FR-F4/F8) -->
+    <string name="focus_blocking_setup_body">Untuk menjeda aplikasi selama fokus Ketat atau Kustom, izinkan Anchor di Settings → Aksesibilitas. Bila tidak, sesi berjalan dalam mode Lembut.</string>
+    <string name="focus_blocking_setup_cta">Aktifkan pemblokiran aplikasi di Settings</string>
+    <string name="accessibility_service_summary">Menjeda aplikasi pengganggu pilihan selama sesi fokus Ketat atau Kustom.</string>
+    <string name="accessibility_service_description">Anchor memakai aksesibilitas hanya untuk mengetahui saat kamu membuka aplikasi yang kamu pilih untuk dijeda selama sesi fokus. Tidak ada konten layar yang dibaca dan tidak ada data yang dikirim keluar dari perangkatmu.</string>
+    <string name="focus_block_overlay_title">Kembali fokus?</string>
+    <string name="focus_block_overlay_body">Kamu memilih untuk menjeda aplikasi ini selama sesi fokus. Anchor hanya mengingatkan — keputusan tetap milikmu.</string>
+    <string name="focus_block_overlay_exit_hint">Kamu selalu bisa mengakhiri sesi dari layar fokus atau notifikasinya.</string>
+    <string name="focus_block_overlay_back">Kembali fokus</string>
 
     <string name="focus_active_tag">FOKUS</string>
     <string name="focus_active_current_step">Langkah saat ini</string>
@@ -212,6 +269,11 @@
     <string name="future_domino_empty">Belum ada tugas terkait.</string>
     <string name="future_domino_current">SAAT INI</string>
     <string name="future_start_focus">Mulai Fokus Sekarang</string>
+    <string name="future_domino_add_label">Tautkan tugas yang terpengaruh oleh ini</string>
+    <string name="future_domino_pick_hint">Ketuk tugas untuk menautkannya</string>
+    <string name="future_domino_add_button">Tautkan tugas</string>
+    <string name="future_domino_cycle_warning">Itu akan membuat tautan melingkar, jadi tidak ditambahkan.</string>
+    <string name="future_domino_none_available">Belum ada tugas lain untuk ditautkan.</string>
 
     <!-- 08 Insights - Daily Reflection (07-screens.md 2.12, PRD 10.8-10.9) -->
     <string name="insights_title">Wawasan</string>

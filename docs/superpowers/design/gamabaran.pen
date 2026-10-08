@@ -34,7 +34,8 @@
           "fill": "#777777",
           "content": "Black & White Minimalist - 3D Depth System - Android Mobile - PRD v0.1",
           "fontFamily": "Inter",
-          "fontSize": 12
+          "fontSize": 12,
+          "fontWeight": "normal"
         }
       ]
     },
@@ -42,7 +43,7 @@
       "type": "frame",
       "id": "gTqTI",
       "x": 0,
-      "y": 100,
+      "y": 140,
       "name": "3D Hero Showcase",
       "clip": true,
       "width": 1680,
@@ -73,7 +74,8 @@
           "content": "Stay anchored to\nwhat matters.",
           "lineHeight": 1.3,
           "fontFamily": "Inter",
-          "fontSize": 28
+          "fontSize": 28,
+          "fontWeight": "normal"
         },
         {
           "type": "text",
@@ -84,7 +86,8 @@
           "fill": "#555555",
           "content": "Personal Focus Assistant - Android - Local-first & Privacy-preserving",
           "fontFamily": "Inter",
-          "fontSize": 14
+          "fontSize": 14,
+          "fontWeight": "normal"
         },
         {
           "type": "rectangle",
@@ -653,7 +656,8 @@
           "fill": "#777777",
           "content": "Due today - 2h est.",
           "fontFamily": "Inter",
-          "fontSize": 9
+          "fontSize": 9,
+          "fontWeight": "normal"
         },
         {
           "type": "rectangle",
@@ -708,7 +712,8 @@
           "fill": "#AAAAAA",
           "content": "Read Chapter 3",
           "fontFamily": "Inter",
-          "fontSize": 11
+          "fontSize": 11,
+          "fontWeight": "normal"
         },
         {
           "type": "rectangle",
@@ -776,7 +781,8 @@
           "fill": "#777777",
           "content": "Due tomorrow - 45m",
           "fontFamily": "Inter",
-          "fontSize": 9
+          "fontSize": 9,
+          "fontWeight": "normal"
         },
         {
           "type": "rectangle",
@@ -840,7 +846,7 @@
       "type": "frame",
       "id": "WCFeF",
       "x": 0,
-      "y": 720,
+      "y": 780,
       "name": "00 - Splash & Onboarding",
       "clip": true,
       "width": 375,
@@ -916,11 +922,11 @@
         {
           "type": "icon",
           "id": "Qbt3K",
-          "x": 140,
-          "y": 215,
+          "x": 128,
+          "y": 188,
           "name": "Icon Anchor",
-          "width": 72,
-          "height": 72,
+          "width": 119,
+          "height": 115,
           "icon": "anchor",
           "library": "Material Symbols Rounded",
           "fill": "#0A0A0A"
@@ -959,7 +965,8 @@
           "content": "Anchor menyadari ketika kamu menjauh dari tugas\nyang penting - dan membantu kamu kembali,\ntanpa menghakimi.",
           "lineHeight": 1.5,
           "fontFamily": "Inter",
-          "fontSize": 14
+          "fontSize": 14,
+          "fontWeight": "normal"
         },
         {
           "type": "rectangle",
@@ -1010,8 +1017,8 @@
     {
       "type": "frame",
       "id": "r4bPS8",
-      "x": 420,
-      "y": 720,
+      "x": 435,
+      "y": 780,
       "name": "00b - Permission Onboarding",
       "clip": true,
       "width": 375,
@@ -1098,7 +1105,8 @@
           "content": "Izin ini opsional - buka fitur lengkap Anchor\nkapan pun kamu siap.",
           "lineHeight": 1.4,
           "fontFamily": "Inter",
-          "fontSize": 14
+          "fontSize": 14,
+          "fontWeight": "normal"
         },
         {
           "type": "rectangle",
@@ -1165,7 +1173,8 @@
           "fill": "#777777",
           "content": "Untuk Wellbeing & deteksi drift",
           "fontFamily": "Inter",
-          "fontSize": 13
+          "fontSize": 13,
+          "fontWeight": "normal"
         },
         {
           "type": "text",
@@ -1244,7 +1253,8 @@
           "fill": "#777777",
           "content": "Intervensi lembut & sesi fokus",
           "fontFamily": "Inter",
-          "fontSize": 13
+          "fontSize": 13,
+          "fontWeight": "normal"
         },
         {
           "type": "text",
@@ -1367,15 +1377,16 @@
           "fill": "#888888",
           "content": "Lewati dulu",
           "fontFamily": "Inter",
-          "fontSize": 14
+          "fontSize": 14,
+          "fontWeight": "normal"
         }
       ]
     },
     {
       "type": "frame",
       "id": "c5CvlE",
-      "x": 840,
-      "y": 720,
+      "x": 870,
+      "y": 780,
       "name": "01 - Home - Smart Todo",
       "clip": true,
       "width": 375,
@@ -1633,7 +1644,8 @@
           "fill": "#777777",
           "content": "Due today 23:59 - 2h est. - 3 subtasks",
           "fontFamily": "Inter",
-          "fontSize": 12
+          "fontSize": 12,
+          "fontWeight": "normal"
         },
         {
           "type": "rectangle",
@@ -1788,7 +1800,8 @@
           "fill": "#BBBBBB",
           "content": "Completed 10:32",
           "fontFamily": "Inter",
-          "fontSize": 12
+          "fontSize": 12,
+          "fontWeight": "normal"
         },
         {
           "type": "rectangle",
@@ -1856,7 +1869,8 @@
           "fill": "#777777",
           "content": "Due tomorrow - 45 min est.",
           "fontFamily": "Inter",
-          "fontSize": 12
+          "fontSize": 12,
+          "fontWeight": "normal"
         },
         {
           "type": "rectangle",
@@ -1966,7 +1980,8 @@
           "fill": "#AAAAAA",
           "content": "Wellbeing",
           "fontFamily": "Inter",
-          "fontSize": 12
+          "fontSize": 12,
+          "fontWeight": "normal"
         },
         {
           "type": "text",
@@ -1977,7 +1992,8 @@
           "fill": "#AAAAAA",
           "content": "Focus",
           "fontFamily": "Inter",
-          "fontSize": 12
+          "fontSize": 12,
+          "fontWeight": "normal"
         },
         {
           "type": "text",
@@ -1988,15 +2004,16 @@
           "fill": "#AAAAAA",
           "content": "Insights",
           "fontFamily": "Inter",
-          "fontSize": 12
+          "fontSize": 12,
+          "fontWeight": "normal"
         }
       ]
     },
     {
       "type": "frame",
       "id": "vrE9D",
-      "x": 1260,
-      "y": 720,
+      "x": 1305,
+      "y": 780,
       "name": "02 - Add Task Sheet",
       "clip": true,
       "width": 375,
@@ -2125,7 +2142,8 @@
           "fill": "#AAAAAA",
           "content": "Task title...",
           "fontFamily": "Inter",
-          "fontSize": 15
+          "fontSize": 15,
+          "fontWeight": "normal"
         },
         {
           "type": "text",
@@ -2354,7 +2372,8 @@
           "fill": "#888888",
           "content": "Research references",
           "fontFamily": "Inter",
-          "fontSize": 12
+          "fontSize": 12,
+          "fontWeight": "normal"
         },
         {
           "type": "rectangle",
@@ -2399,7 +2418,8 @@
           "fill": "#666666",
           "content": "Add conclusion",
           "fontFamily": "Inter",
-          "fontSize": 12
+          "fontSize": 12,
+          "fontWeight": "normal"
         },
         {
           "type": "rectangle",
@@ -2451,7 +2471,7 @@
       "type": "frame",
       "id": "rJJfb",
       "x": 0,
-      "y": 1600,
+      "y": 1652,
       "name": "03 - Digital Wellbeing",
       "clip": true,
       "width": 375,
@@ -2491,7 +2511,8 @@
           "fill": "#888888",
           "content": "Today - Wednesday, Oct 7",
           "fontFamily": "Inter",
-          "fontSize": 13
+          "fontSize": 13,
+          "fontWeight": "normal"
         },
         {
           "type": "rectangle",
@@ -2558,7 +2579,8 @@
           "fill": "#888888",
           "content": "+42m vs personal baseline",
           "fontFamily": "Inter",
-          "fontSize": 12
+          "fontSize": 12,
+          "fontWeight": "normal"
         },
         {
           "type": "text",
@@ -2648,7 +2670,8 @@
           "fill": "#666666",
           "content": "7 sessions - Drift detected",
           "fontFamily": "Inter",
-          "fontSize": 12
+          "fontSize": 12,
+          "fontWeight": "normal"
         },
         {
           "type": "text",
@@ -2738,7 +2761,8 @@
           "fill": "#888888",
           "content": "4 sessions - Within baseline",
           "fontFamily": "Inter",
-          "fontSize": 12
+          "fontSize": 12,
+          "fontWeight": "normal"
         },
         {
           "type": "text",
@@ -3001,7 +3025,8 @@
           "fill": "#AAAAAA",
           "content": "Tasks",
           "fontFamily": "Inter",
-          "fontSize": 12
+          "fontSize": 12,
+          "fontWeight": "normal"
         },
         {
           "type": "text",
@@ -3024,7 +3049,8 @@
           "fill": "#AAAAAA",
           "content": "Focus",
           "fontFamily": "Inter",
-          "fontSize": 12
+          "fontSize": 12,
+          "fontWeight": "normal"
         },
         {
           "type": "text",
@@ -3035,15 +3061,16 @@
           "fill": "#AAAAAA",
           "content": "Insights",
           "fontFamily": "Inter",
-          "fontSize": 12
+          "fontSize": 12,
+          "fontWeight": "normal"
         }
       ]
     },
     {
       "type": "frame",
       "id": "X1FPg9",
-      "x": 420,
-      "y": 1600,
+      "x": 435,
+      "y": 1652,
       "name": "04 - Contextual Intervention",
       "clip": true,
       "width": 375,
@@ -3168,7 +3195,8 @@
           "lineHeight": 1.5,
           "textAlign": "center",
           "fontFamily": "Inter",
-          "fontSize": 14
+          "fontSize": 14,
+          "fontWeight": "normal"
         },
         {
           "type": "rectangle",
@@ -3235,15 +3263,16 @@
           "fill": "#999999",
           "content": "Nanti saja",
           "fontFamily": "Inter",
-          "fontSize": 13
+          "fontSize": 13,
+          "fontWeight": "normal"
         }
       ]
     },
     {
       "type": "frame",
       "id": "S6kYG",
-      "x": 840,
-      "y": 1600,
+      "x": 870,
+      "y": 1652,
       "name": "05 - Focus Setup",
       "clip": true,
       "width": 375,
@@ -3295,7 +3324,8 @@
           "fill": "#777777",
           "content": "Pilih task dan mode fokus kamu.",
           "fontFamily": "Inter",
-          "fontSize": 14
+          "fontSize": 14,
+          "fontWeight": "normal"
         },
         {
           "type": "text",
@@ -3362,7 +3392,8 @@
           "fill": "#AAAAAA",
           "content": "Due today 23:59 - HIGH priority",
           "fontFamily": "Inter",
-          "fontSize": 12
+          "fontSize": 12,
+          "fontWeight": "normal"
         },
         {
           "type": "icon",
@@ -3453,7 +3484,8 @@
           "fill": "#AAAAAA",
           "content": "Awareness",
           "fontFamily": "Inter",
-          "fontSize": 10
+          "fontSize": 10,
+          "fontWeight": "normal"
         },
         {
           "type": "rectangle",
@@ -3520,7 +3552,8 @@
           "fill": "#777777",
           "content": "App block",
           "fontFamily": "Inter",
-          "fontSize": 10
+          "fontSize": 10,
+          "fontWeight": "normal"
         },
         {
           "type": "rectangle",
@@ -3587,7 +3620,8 @@
           "fill": "#777777",
           "content": "Custom rule",
           "fontFamily": "Inter",
-          "fontSize": 10
+          "fontSize": 10,
+          "fontWeight": "normal"
         },
         {
           "type": "text",
@@ -3763,8 +3797,8 @@
     {
       "type": "frame",
       "id": "IreKr",
-      "x": 1260,
-      "y": 1600,
+      "x": 1305,
+      "y": 1652,
       "name": "06 - Focus Mode - Active",
       "clip": true,
       "width": 375,
@@ -3817,7 +3851,8 @@
           "fill": "#AAAAAA",
           "content": "Current: Write the report body",
           "fontFamily": "Inter",
-          "fontSize": 14
+          "fontSize": 14,
+          "fontWeight": "normal"
         },
         {
           "type": "ellipse",
@@ -3891,7 +3926,8 @@
           "fill": "#777777",
           "content": "remaining",
           "fontFamily": "Inter",
-          "fontSize": 13
+          "fontSize": 13,
+          "fontWeight": "normal"
         },
         {
           "type": "text",
@@ -3937,7 +3973,8 @@
           "fill": "#777777",
           "content": "Research references",
           "fontFamily": "Inter",
-          "fontSize": 13
+          "fontSize": 13,
+          "fontWeight": "normal"
         },
         {
           "type": "rectangle",
@@ -4029,7 +4066,8 @@
           "fill": "#555555",
           "content": "Add conclusion",
           "fontFamily": "Inter",
-          "fontSize": 13
+          "fontSize": 13,
+          "fontWeight": "normal"
         },
         {
           "type": "rectangle",
@@ -4128,7 +4166,8 @@
           "fill": "#666666",
           "content": "Emergency exit",
           "fontFamily": "Inter",
-          "fontSize": 12
+          "fontSize": 12,
+          "fontWeight": "normal"
         }
       ]
     },
@@ -4136,7 +4175,7 @@
       "type": "frame",
       "id": "rpge7",
       "x": 0,
-      "y": 2480,
+      "y": 2524,
       "name": "07 - Future View",
       "clip": true,
       "width": 375,
@@ -4189,7 +4228,8 @@
           "content": "Berdasarkan jadwalmu saat ini - proyeksi,\nbukan ramalan pasti.",
           "lineHeight": 1.4,
           "fontFamily": "Inter",
-          "fontSize": 13
+          "fontSize": 13,
+          "fontWeight": "normal"
         },
         {
           "type": "rectangle",
@@ -4246,7 +4286,8 @@
           "content": "15:10\nStart right now\n\n15:10-17:10\nFocus session\n\n17:10\nTask done \n\nEvening\nFree",
           "lineHeight": 1.6,
           "fontFamily": "Inter",
-          "fontSize": 12
+          "fontSize": 12,
+          "fontWeight": "normal"
         },
         {
           "type": "rectangle",
@@ -4303,7 +4344,8 @@
           "content": "20:00\nStart late\n\n20:00-22:00\nWork at night\n\n22:00+\nLess free time\n\n23:59\nDeadline",
           "lineHeight": 1.6,
           "fontFamily": "Inter",
-          "fontSize": 12
+          "fontSize": 12,
+          "fontWeight": "normal"
         },
         {
           "type": "text",
@@ -4326,7 +4368,8 @@
           "fill": "#777777",
           "content": "1 task may affect 3 upcoming tasks.",
           "fontFamily": "Inter",
-          "fontSize": 13
+          "fontSize": 13,
+          "fontWeight": "normal"
         },
         {
           "type": "rectangle",
@@ -4425,7 +4468,8 @@
           "fill": "#555555",
           "content": "Peer review submission",
           "fontFamily": "Inter",
-          "fontSize": 13
+          "fontSize": 13,
+          "fontWeight": "normal"
         },
         {
           "type": "icon",
@@ -4480,7 +4524,8 @@
           "fill": "#555555",
           "content": "Final presentation",
           "fontFamily": "Inter",
-          "fontSize": 13
+          "fontSize": 13,
+          "fontWeight": "normal"
         },
         {
           "type": "rectangle",
@@ -4531,8 +4576,8 @@
     {
       "type": "frame",
       "id": "C24qs",
-      "x": 420,
-      "y": 2480,
+      "x": 435,
+      "y": 2524,
       "name": "08 - Insights - Daily Reflection",
       "clip": true,
       "width": 375,
@@ -4572,7 +4617,8 @@
           "fill": "#777777",
           "content": "October 7 - Daily Reflection",
           "fontFamily": "Inter",
-          "fontSize": 14
+          "fontSize": 14,
+          "fontWeight": "normal"
         },
         {
           "type": "rectangle",
@@ -4879,7 +4925,8 @@
           "fill": "#AAAAAA",
           "content": "Generated by Anchor Local AI",
           "fontFamily": "Inter",
-          "fontSize": 11
+          "fontSize": 11,
+          "fontWeight": "normal"
         },
         {
           "type": "text",
@@ -4988,7 +5035,8 @@
           "fill": "#AAAAAA",
           "content": "Tasks",
           "fontFamily": "Inter",
-          "fontSize": 12
+          "fontSize": 12,
+          "fontWeight": "normal"
         },
         {
           "type": "text",
@@ -4999,7 +5047,8 @@
           "fill": "#AAAAAA",
           "content": "Wellbeing",
           "fontFamily": "Inter",
-          "fontSize": 12
+          "fontSize": 12,
+          "fontWeight": "normal"
         },
         {
           "type": "text",
@@ -5010,7 +5059,8 @@
           "fill": "#AAAAAA",
           "content": "Focus",
           "fontFamily": "Inter",
-          "fontSize": 12
+          "fontSize": 12,
+          "fontWeight": "normal"
         },
         {
           "type": "text",
@@ -5029,8 +5079,8 @@
     {
       "type": "frame",
       "id": "SEvye",
-      "x": 840,
-      "y": 2480,
+      "x": 870,
+      "y": 2524,
       "name": "09 - Settings & Privacy",
       "clip": true,
       "width": 375,
@@ -5128,7 +5178,8 @@
           "fill": "#555555",
           "content": "Granted",
           "fontFamily": "Inter",
-          "fontSize": 12
+          "fontSize": 12,
+          "fontWeight": "normal"
         },
         {
           "type": "ellipse",
@@ -5192,7 +5243,8 @@
           "fill": "#999999",
           "content": "Belum aktif - ketuk untuk izinkan",
           "fontFamily": "Inter",
-          "fontSize": 12
+          "fontSize": 12,
+          "fontWeight": "normal"
         },
         {
           "type": "ellipse",
@@ -5259,7 +5311,8 @@
           "fill": "#777777",
           "content": "Hanya kirim ringkasan agregat",
           "fontFamily": "Inter",
-          "fontSize": 12
+          "fontSize": 12,
+          "fontWeight": "normal"
         },
         {
           "type": "rectangle",
@@ -5345,9 +5398,10 @@
           "y": 450,
           "name": "Ret Sub",
           "fill": "#777777",
-          "content": "Simpan maksimal 30 hari",
+          "content": "Simpan maksimal 90 hari",
           "fontFamily": "Inter",
-          "fontSize": 12
+          "fontSize": 12,
+          "fontWeight": "normal"
         },
         {
           "type": "icon",
@@ -5436,15 +5490,16 @@
           "content": "Raw usage data tidak pernah meninggalkan HP.\nAI hanya menerima data agregat.",
           "lineHeight": 1.5,
           "fontFamily": "Inter",
-          "fontSize": 12
+          "fontSize": 12,
+          "fontWeight": "normal"
         }
       ]
     },
     {
       "type": "frame",
       "id": "H7IHC",
-      "x": 1260,
-      "y": 2480,
+      "x": 1305,
+      "y": 2524,
       "name": "10 - Task Detail",
       "clip": true,
       "width": 375,
@@ -5720,7 +5775,8 @@
           "fill": "#888888",
           "content": "Research references",
           "fontFamily": "Inter",
-          "fontSize": 13
+          "fontSize": 13,
+          "fontWeight": "normal"
         },
         {
           "type": "rectangle",
@@ -5824,7 +5880,8 @@
           "fill": "#777777",
           "content": "Add conclusion",
           "fontFamily": "Inter",
-          "fontSize": 13
+          "fontSize": 13,
+          "fontWeight": "normal"
         },
         {
           "type": "rectangle",

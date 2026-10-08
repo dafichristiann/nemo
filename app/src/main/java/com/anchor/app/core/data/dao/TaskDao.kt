@@ -33,18 +33,24 @@ interface TaskDao {
     )
     fun observeAll(): Flow<List<TaskEntity>>
 
-    /** Tasks with a deadline within [startOfDay, endOfDay] and not done (Today view). */
+    /**
+     * Tasks shown in the Today view: open tasks whose deadline falls within
+     * [startOfDay, endOfDay), PLUS a recurring instance issued for today
+     * (`definitionOccurrenceDate == :todayEpochDay`) even when it carries no deadline
+     * (e.g. "Morning run", DAILY) — PRD FR-T7/FR-T10, hardening F2.
+     */
     @Query(
         """
         SELECT * FROM task_instance
         WHERE status IN ('TODO','IN_PROGRESS')
-          AND deadline IS NOT NULL
-          AND deadline >= :startOfDay
-          AND deadline < :endOfDay
-        ORDER BY priority DESC, deadline ASC, createdAt DESC
+          AND (
+                (deadline IS NOT NULL AND deadline >= :startOfDay AND deadline < :endOfDay)
+                OR definitionOccurrenceDate = :todayEpochDay
+              )
+        ORDER BY priority DESC, deadline IS NULL, deadline ASC, createdAt DESC
         """,
     )
-    fun observeToday(startOfDay: Long, endOfDay: Long): Flow<List<TaskEntity>>
+    fun observeToday(startOfDay: Long, endOfDay: Long, todayEpochDay: Long): Flow<List<TaskEntity>>
 
     /** Open tasks with a deadline after [endOfDay] (Upcoming view). */
     @Query(

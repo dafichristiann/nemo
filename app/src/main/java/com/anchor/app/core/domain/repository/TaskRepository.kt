@@ -1,5 +1,6 @@
 package com.anchor.app.core.domain.repository
 
+import com.anchor.app.core.domain.model.CompletionSource
 import com.anchor.app.core.domain.model.Subtask
 import com.anchor.app.core.domain.model.Task
 import kotlinx.coroutines.flow.Flow
@@ -15,7 +16,7 @@ interface TaskRepository {
 
     fun observeAll(): Flow<List<Task>>
 
-    fun observeToday(startOfDay: Long, endOfDay: Long): Flow<List<Task>>
+    fun observeToday(startOfDay: Long, endOfDay: Long, todayEpochDay: Long): Flow<List<Task>>
 
     fun observeUpcoming(endOfDay: Long): Flow<List<Task>>
 
@@ -37,8 +38,12 @@ interface TaskRepository {
 
     suspend fun delete(id: String)
 
-    /** Marks a task DONE and records `completedAt` (FR-T8). */
-    suspend fun markDone(id: String, completedAt: Long)
+    /** Marks a task DONE and records `completedAt` + how it was completed (FR-T8, PRD v0.5 §10.1). */
+    suspend fun markDone(
+        id: String,
+        completedAt: Long,
+        source: CompletionSource = CompletionSource.MANUAL,
+    )
 
     suspend fun setStatus(id: String, status: com.anchor.app.core.domain.model.TaskStatus)
 

@@ -4,6 +4,7 @@ import com.anchor.app.core.data.dao.SubtaskDao
 import com.anchor.app.core.data.dao.TaskDao
 import com.anchor.app.core.data.mapper.toDomain
 import com.anchor.app.core.data.mapper.toEntity
+import com.anchor.app.core.domain.model.CompletionSource
 import com.anchor.app.core.domain.model.Subtask
 import com.anchor.app.core.domain.model.Task
 import com.anchor.app.core.domain.model.TaskStatus
@@ -23,8 +24,8 @@ class TaskRepositoryImpl @Inject constructor(
     override fun observeAll(): Flow<List<Task>> =
         taskDao.observeAll().map { list -> list.map { it.toDomain() } }
 
-    override fun observeToday(startOfDay: Long, endOfDay: Long): Flow<List<Task>> =
-        taskDao.observeToday(startOfDay, endOfDay).map { list -> list.map { it.toDomain() } }
+    override fun observeToday(startOfDay: Long, endOfDay: Long, todayEpochDay: Long): Flow<List<Task>> =
+        taskDao.observeToday(startOfDay, endOfDay, todayEpochDay).map { list -> list.map { it.toDomain() } }
 
     override fun observeUpcoming(endOfDay: Long): Flow<List<Task>> =
         taskDao.observeUpcoming(endOfDay).map { list -> list.map { it.toDomain() } }
@@ -50,13 +51,14 @@ class TaskRepositoryImpl @Inject constructor(
 
     override suspend fun delete(id: String) = taskDao.deleteById(id)
 
-    override suspend fun markDone(id: String, completedAt: Long) {
+    override suspend fun markDone(id: String, completedAt: Long, source: CompletionSource) {
         val current = taskDao.getById(id) ?: return
         taskDao.update(
             current.copy(
                 status = TaskStatus.DONE.name,
                 completedAt = completedAt,
                 progressPercent = 100,
+                completionSource = source.name,
             ),
         )
     }

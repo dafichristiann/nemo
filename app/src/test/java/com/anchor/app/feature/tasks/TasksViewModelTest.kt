@@ -4,7 +4,6 @@ import com.anchor.app.core.common.FakeIdProvider
 import com.anchor.app.core.common.FakeTimeProvider
 import com.anchor.app.core.domain.model.TaskPriority
 import com.anchor.app.core.domain.model.TaskStatus
-import com.anchor.app.core.domain.usecase.task.CompleteTaskUseCase
 import com.anchor.app.core.domain.usecase.task.CreateTaskUseCase
 import com.anchor.app.core.domain.usecase.task.GenerateRecurringTasksUseCase
 import com.anchor.app.core.domain.usecase.task.ObserveOverdueTasksUseCase
@@ -65,7 +64,6 @@ class TasksViewModelTest {
         observeTasks = ObserveTasksUseCase(tasks, time),
         observeOverdue = ObserveOverdueTasksUseCase(tasks, time),
         createTask = CreateTaskUseCase(tasks, defs, FakeIdProvider(), time),
-        completeTask = CompleteTaskUseCase(tasks, time),
         rescheduleTask = RescheduleTaskUseCase(tasks, defs, FakeIdProvider("res"), time),
         generateRecurring = GenerateRecurringTasksUseCase(tasks, defs, FakeIdProvider("gen"), time),
         timeProvider = time,
@@ -162,19 +160,6 @@ class TasksViewModelTest {
         assertTrue(result is com.anchor.app.core.domain.usecase.task.CreateTaskResult.Success)
         assertEquals(1, tasks.tasks.value.size)
         assertEquals("Belajar matematika", tasks.tasks.value.single().title)
-    }
-
-    @Test
-    fun onComplete_marksTaskDone() = runTest(dispatcher) {
-        tasks.tasks.value = listOf(task("t1", fixedNow + 3_600_000))
-        val vm = viewModel()
-        keepCollecting(vm)
-        advanceUntilIdle()
-
-        vm.onComplete("t1")
-        advanceUntilIdle()
-
-        assertEquals(TaskStatus.DONE, tasks.tasks.value.single { it.id == "t1" }.status)
     }
 
     @Test

@@ -32,6 +32,9 @@ class AppViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     init {
+        // Recurring tasks are core (Phase 1) and must run even without tracking (FR-T7).
+        usageWorkScheduler.scheduleRecurringTasks()
+
         // React to opt-in/opt-out of usage tracking. Enqueue is idempotent (KEEP).
         viewModelScope.launch {
             settingsRepository.observe()

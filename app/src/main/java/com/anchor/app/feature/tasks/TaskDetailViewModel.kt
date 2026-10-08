@@ -9,7 +9,6 @@ import com.anchor.app.core.common.TimeProvider
 import com.anchor.app.core.domain.model.Subtask
 import com.anchor.app.core.domain.model.Task
 import com.anchor.app.core.domain.repository.TaskRepository
-import com.anchor.app.core.domain.usecase.task.CompleteTaskUseCase
 import com.anchor.app.core.domain.usecase.task.ManageSubtasksUseCase
 import com.anchor.app.core.domain.usecase.task.RescheduleTaskUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -42,7 +41,6 @@ data class TaskDetailUiState(
 class TaskDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val taskRepository: TaskRepository,
-    private val completeTask: CompleteTaskUseCase,
     private val rescheduleTask: RescheduleTaskUseCase,
     private val manageSubtasks: ManageSubtasksUseCase,
     private val timeProvider: TimeProvider,
@@ -70,8 +68,6 @@ class TaskDetailViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = TaskDetailUiState(),
     )
-
-    fun onComplete() = viewModelScope.launch(dispatchers.io) { completeTask(taskId) }
 
     fun onAddSubtask(title: String) =
         viewModelScope.launch(dispatchers.io) { manageSubtasks.add(taskId, title) }

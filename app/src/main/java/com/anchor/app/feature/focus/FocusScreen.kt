@@ -293,21 +293,27 @@ private fun FocusActiveContent(
                 .padding(vertical = Spacing.x3),
         )
 
-        // Post-session progress offer (FR-F6)
-        if (state.lastFinishedTaskId != null) {
-            Notice(text = stringResource(R.string.focus_finished_toast))
-            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.x2)) {
-                PrimaryButton(
-                    label = stringResource(R.string.focus_update_progress),
-                    onClick = { viewModel.onUpdateProgress(active.doneSteps.coerceAtLeast(1) * 10) },
-                    modifier = Modifier.weight(1f),
-                )
-                PrimaryButton(
-                    label = stringResource(R.string.overdue_action_dismiss),
-                    onClick = viewModel::onDismissProgressOffer,
-                    modifier = Modifier.weight(1f),
-                )
-            }
+        // Post-session feedback (PRD v0.5 §10.1): a full session completed the task; a partial
+        // one did not. Tone stays calm and non-judgmental in both cases.
+        state.lastCompletion?.let { completion ->
+            Notice(
+                text = if (completion.verified) {
+                    stringResource(R.string.focus_finished_verified, completion.taskTitle, completion.focusMinutes)
+                } else {
+                    stringResource(R.string.focus_finished_not_verified)
+                },
+            )
+            Text(
+                text = stringResource(R.string.overdue_action_dismiss),
+                fontFamily = InterFamily,
+                fontWeight = FontWeight.Medium,
+                fontSize = 13.sp,
+                color = AnchorColors.textSecondary,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = viewModel::onDismissCompletion)
+                    .padding(vertical = Spacing.x2),
+            )
         }
     }
 }

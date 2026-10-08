@@ -2,6 +2,7 @@ package com.anchor.app.feature.focus
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.anchor.app.core.common.DispatcherProvider
 import com.anchor.app.core.common.TimeProvider
@@ -16,6 +17,7 @@ import com.anchor.app.core.domain.repository.FocusRepository
 import com.anchor.app.core.domain.repository.SettingsRepository
 import com.anchor.app.core.domain.repository.TaskRepository
 import com.anchor.app.core.domain.usecase.focus.FinishFocusUseCase
+import com.anchor.app.core.domain.usecase.focus.FinishFocusUseCase.FinishFocusResult
 import com.anchor.app.core.domain.usecase.focus.PauseFocusUseCase
 import com.anchor.app.core.domain.usecase.focus.StartFocusUseCase
 import com.anchor.app.BuildConfig
@@ -56,6 +58,13 @@ private data class SetupSelection(
     val serviceEnabled: Boolean,
 )
 
+/** Result of the last finished session, for post-session feedback (PRD v0.5 §10.1). */
+data class CompletionResult(
+    val taskTitle: String,
+    val verified: Boolean,
+    val focusMinutes: Int,
+)
+
 /** UI state for screens 05 (Setup) and 06 (Active). */
 data class FocusUiState(
     val taskOptions: List<FocusTaskOption> = emptyList(),
@@ -64,7 +73,8 @@ data class FocusUiState(
     val selectedDurationMin: Int = FOCUS_DURATIONS_MIN.first(),
     val active: ActiveFocus? = null,
     val lastFallbackReason: String? = null,
-    val lastFinishedTaskId: String? = null,
+    /** Outcome shown after a session ends (PRD v0.5 §10.1). Null once acknowledged/cleared. */
+    val lastCompletion: CompletionResult? = null,
     /** Apps the user chose to pause (FR-S4). Pre-filled into Strict/Custom sessions. */
     val blockedApps: Set<String> = emptySet(),
     /**
@@ -106,6 +116,7 @@ data class ActiveFocus(
  */
 @HiltViewModel
 class FocusViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     @ApplicationContext private val context: Context,
     private val taskRepository: TaskRepository,
     private val focusRepository: FocusRepository,
@@ -118,12 +129,15 @@ class FocusViewModel @Inject constructor(
     private val dispatchers: DispatcherProvider,
 ) : ViewModel() {
 
-    private val selectedTaskId = MutableStateFlow<String?>(null)
+    /** Optional task preselected by navigation (Detail/FutureView "start focus for this task"). */
+    private val initialTaskId: String? = savedStateHandle.get<String>(ARG_TASK_ID)
+
+    private val selectedTaskId = MutableStateFlow<String?>(initialTaskId)
     private val selectedMode = MutableStateFlow(FocusMode.GENTLE)
     private val selectedDurationMin = MutableStateFlow(FOCUS_DURATIONS_MIN.first())
     private val elapsedMs = MutableStateFlow(0L)
     private val fallbackReason = MutableStateFlow<String?>(null)
-    private val lastFinishedTaskId = MutableStateFlow<String?>(null)
+    private val lastCompletion = MutableStateFlow<CompletionResult?>(null)
     private val serviceEnabled = MutableStateFlow(false)
     private var startedAt: Long = 0L
 
@@ -215,7 +229,7 @@ class FocusViewModel @Inject constructor(
             selectedDurationMin = selection.duration,
             active = active,
             lastFallbackReason = fallbackReason.value,
-            lastFinishedTaskId = lastFinishedTaskId.value,
+            lastCompletion = lastCompletion.value,
             blockedApps = settings.blockedApps,
             blockingReady = BuildConfig.FOCUS_BLOCKING_ENABLED &&
                 settings.focusBlockingEnabled &&
@@ -239,7 +253,7 @@ class FocusViewModel @Inject constructor(
             blockedApps = effectiveBlockedApps(mode, uiState.value.blockedApps),
         )
         fallbackReason.value = result.fallbackReason
-        lastFinishedTaskId.value = null
+        lastCompletion.value = null
         FocusService.start(context)
         startTicking()
     }
@@ -264,33 +278,38 @@ class FocusViewModel @Inject constructor(
         }
     }
 
-    /** Normal finish (FR-F6): record duration, stop the service, offer a progress update. */
+    /** Normal finish (FR-F6, PRD v0.5 §10.1): records duration; a full session completes the task. */
     fun onFinish() = viewModelScope.launch(dispatchers.io) {
         val session = focusRepository.current() ?: return@launch
         val result = finishFocus(session.id, currentElapsed(), aborted = false)
         stopTicking()
         FocusService.stop(context)
-        lastFinishedTaskId.value = result.taskId
+        lastCompletion.value = result.toCompletionResult()
         elapsedMs.value = 0L
     }
 
-    /** Emergency exit (FR-F6, PRD §10.5): always available, aborts the session. */
+    /** Emergency exit (FR-F6, PRD §10.5): always available, aborts the session (no completion). */
     fun onEmergencyExit() = viewModelScope.launch(dispatchers.io) {
         val session = focusRepository.current() ?: return@launch
-        finishFocus(session.id, currentElapsed(), aborted = true)
+        val result = finishFocus(session.id, currentElapsed(), aborted = true)
         stopTicking()
         FocusService.stop(context)
+        lastCompletion.value = result.toCompletionResult()
         elapsedMs.value = 0L
     }
 
-    /** Applies the offered progress update to the finished task (FR-F6). */
-    fun onUpdateProgress(percent: Int) = viewModelScope.launch(dispatchers.io) {
-        val taskId = lastFinishedTaskId.value ?: return@launch
-        taskRepository.setProgress(taskId, percent.coerceIn(0, 100))
-        lastFinishedTaskId.value = null
-    }
+    /** Clears the post-session feedback banner. */
+    fun onDismissCompletion() { lastCompletion.value = null }
 
-    fun onDismissProgressOffer() { lastFinishedTaskId.value = null }
+    private suspend fun FinishFocusResult.toCompletionResult(): CompletionResult? {
+        val taskId = taskId ?: return null
+        val title = taskRepository.getById(taskId)?.title ?: return null
+        return CompletionResult(
+            taskTitle = title,
+            verified = completedTask,
+            focusMinutes = (totalMs / 60_000L).toInt(),
+        )
+    }
 
     private fun currentElapsed(): Long =
         if (startedAt == 0L) elapsedMs.value
@@ -317,5 +336,10 @@ class FocusViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         stopTicking()
+    }
+
+    companion object {
+        /** Optional nav argument: pre-selects the task a session is started for. */
+        const val ARG_TASK_ID = "taskId"
     }
 }

@@ -54,7 +54,7 @@
     <!-- Overdue banner (07-screens §2.5 / 06-design-system §7.12, FR-T11) -->
     <string name="overdue_banner_review">Review &amp; Reschedule</string>
     <string name="overdue_action_reschedule">Reschedule</string>
-    <string name="overdue_action_complete">Complete</string>
+    <string name="overdue_action_open">Open</string>
     <string name="overdue_action_keep">Keep for Today</string>
     <string name="overdue_action_dismiss">Dismiss</string>
 
@@ -100,6 +100,7 @@
     <string name="detail_action_start_focus">Start Focus Session</string>
     <string name="detail_action_reschedule">Reschedule</string>
     <string name="detail_action_complete">Mark as Done</string>
+    <string name="detail_action_complete_via_focus">Start Focus to Complete</string>
     <string name="detail_action_delete">Delete Task</string>
     <string name="detail_future_callout">See what happens if you delay</string>
     <string name="detail_add_subtask">Add step</string>
@@ -247,8 +248,8 @@
     <string name="focus_active_resume">Resume</string>
     <string name="focus_active_finish">Finish</string>
     <string name="focus_emergency_exit">Emergency exit</string>
-    <string name="focus_finished_toast">Session recorded. Update your progress?</string>
-    <string name="focus_update_progress">Update progress</string>
+    <string name="focus_finished_verified">Task completed — you focused %1$d min on \"%2$s\".</string>
+    <string name="focus_finished_not_verified">Session recorded. Complete the full duration to mark the task done.</string>
 
     <string name="focus_channel_name">Focus sessions</string>
     <string name="focus_channel_desc">Shows an ongoing focus session with a way to exit at any time.</string>

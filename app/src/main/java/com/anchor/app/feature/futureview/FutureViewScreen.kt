@@ -37,6 +37,7 @@ import com.anchor.app.core.design.theme.Spacing
 import com.anchor.app.core.domain.model.DominoEffect
 import com.anchor.app.core.domain.model.FutureScenario
 import com.anchor.app.core.domain.model.FutureView
+import com.anchor.app.core.domain.model.Task
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -52,12 +53,13 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun FutureViewScreen(
     onBack: () -> Unit,
-    onStartFocus: () -> Unit,
+    onStartFocus: (String) -> Unit,
     onOpenTask: (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: FutureViewViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val cycleWarning by viewModel.cycleMessage.collectAsStateWithLifecycle()
 
     Column(
         modifier = modifier
@@ -119,9 +121,16 @@ fun FutureViewScreen(
 
         state.domino?.let { DominoSection(it, onOpenTask) }
 
+        DominoLinkSection(
+            candidates = state.linkCandidates,
+            cycleWarning = cycleWarning,
+            onLink = { viewModel.onAddDependency(it) },
+        )
+
+        val taskId = state.task?.id
         PrimaryButton(
             label = stringResource(R.string.future_start_focus),
-            onClick = onStartFocus,
+            onClick = { taskId?.let(onStartFocus) },
         )
     }
 }
@@ -243,6 +252,69 @@ private fun DominoRow(title: String, tag: String?, onClick: () -> Unit) {
                 fontSize = 10.sp,
                 color = AnchorColors.textFaint,
             )
+        }
+    }
+}
+
+/**
+ * Lets the user link this task to another (PRD §10.7 FR-DE1). Each candidate is a tappable
+ * row; a rejected cycle shows a calm, non-alarming notice (never a hard error).
+ */
+@Composable
+private fun DominoLinkSection(
+    candidates: List<Task>,
+    cycleWarning: Boolean,
+    onLink: (String) -> Unit,
+) {
+    SectionHeader(title = stringResource(R.string.future_domino_add_label))
+
+    if (cycleWarning) {
+        Notice(text = stringResource(R.string.future_domino_cycle_warning))
+    }
+
+    if (candidates.isEmpty()) {
+        Text(
+            text = stringResource(R.string.future_domino_none_available),
+            fontFamily = InterFamily,
+            fontSize = 13.sp,
+            color = AnchorColors.textFaint,
+        )
+        return
+    }
+
+    Text(
+        text = stringResource(R.string.future_domino_pick_hint),
+        fontFamily = InterFamily,
+        fontSize = 12.sp,
+        color = AnchorColors.textMuted,
+    )
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
+        candidates.forEach { task ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(Radius.field))
+                    .background(AnchorColors.surfaceSunken)
+                    .clickable { onLink(task.id) }
+                    .padding(horizontal = Spacing.x3, vertical = Spacing.x2),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = task.title,
+                    fontFamily = InterFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp,
+                    color = AnchorColors.textPrimary,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    text = stringResource(R.string.future_domino_add_button),
+                    fontFamily = InterFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 12.sp,
+                    color = AnchorColors.textSecondary,
+                )
+            }
         }
     }
 }

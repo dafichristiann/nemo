@@ -16,6 +16,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.ZoneId
 import javax.inject.Inject
@@ -27,6 +28,8 @@ data class FutureViewUiState(
     val domino: DominoEffect? = null,
     val zone: ZoneId = ZoneId.systemDefault(),
     val loading: Boolean = true,
+    /** Other open tasks the user can pick to become affected (downstream) tasks. */
+    val linkCandidates: List<Task> = emptyList(),
 )
 
 /**
@@ -50,19 +53,35 @@ class FutureViewViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(FutureViewUiState())
     val uiState: StateFlow<FutureViewUiState> = _uiState.asStateFlow()
 
+    private val _cycleMessage = MutableStateFlow(false)
+    val cycleMessage: StateFlow<Boolean> = _cycleMessage.asStateFlow()
+
     init {
         viewModelScope.launch(dispatchers.io) { load() }
     }
 
     private suspend fun load() {
         val task = taskRepository.getById(taskId)
+        val domino = computeDomino(taskId)
         _uiState.value = FutureViewUiState(
             task = task,
             futureView = task?.let { futureViewCalculator(it) },
-            domino = computeDomino(taskId),
+            domino = domino,
             zone = timeProvider.zoneId(),
             loading = false,
+            linkCandidates = linkCandidatesFor(taskId, domino),
         )
+    }
+
+    /**
+     * Open tasks the user may link this task to (PRD §10.7): every non-done task except this
+     * one and any already on the dependency chain. Keeps the picker short and prevents the
+     * most obvious cycles before they are attempted.
+     */
+    private suspend fun linkCandidatesFor(taskId: String, domino: DominoEffect?): List<Task> {
+        val onChain = domino?.let { listOf(it.root.taskId) + it.affected.map { n -> n.taskId } }.orEmpty().toSet()
+        return taskRepository.observeAll().first()
+            .filter { it.id != taskId && it.id !in onChain }
     }
 
     /** Adds `taskId → otherId`, surfacing a cycle rejection message (PRD §10.7 AC). */
@@ -74,9 +93,6 @@ class FutureViewViewModel @Inject constructor(
             load()
         }
     }
-
-    private val _cycleMessage = MutableStateFlow(false)
-    val cycleMessage: StateFlow<Boolean> = _cycleMessage.asStateFlow()
 
     fun onCycleMessageShown() { _cycleMessage.value = false }
 

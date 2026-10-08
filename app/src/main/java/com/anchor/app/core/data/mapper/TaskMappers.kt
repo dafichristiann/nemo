@@ -4,6 +4,7 @@ import com.anchor.app.core.data.entity.RescheduleEventEntity
 import com.anchor.app.core.data.entity.SubtaskEntity
 import com.anchor.app.core.data.entity.TaskDefinitionEntity
 import com.anchor.app.core.data.entity.TaskEntity
+import com.anchor.app.core.domain.model.CompletionSource
 import com.anchor.app.core.domain.model.RecurrenceRule
 import com.anchor.app.core.domain.model.RescheduleEvent
 import com.anchor.app.core.domain.model.Subtask
@@ -32,6 +33,7 @@ fun TaskEntity.toDomain(): Task = Task(
     progressPercent = progressPercent,
     parentTaskId = parentTaskId,
     definitionOccurrenceDate = definitionOccurrenceDate,
+    completionSource = completionSource.toCompletionSource(),
 )
 
 fun Task.toEntity(): TaskEntity = TaskEntity(
@@ -49,6 +51,7 @@ fun Task.toEntity(): TaskEntity = TaskEntity(
     progressPercent = progressPercent,
     parentTaskId = parentTaskId,
     definitionOccurrenceDate = definitionOccurrenceDate,
+    completionSource = completionSource?.name,
 )
 
 fun SubtaskEntity.toDomain(): Subtask =
@@ -109,3 +112,7 @@ private fun String.toTaskStatus(): TaskStatus =
 
 private fun String.toRecurrenceRule(): RecurrenceRule =
     runCatching { RecurrenceRule.valueOf(this) }.getOrDefault(RecurrenceRule.NONE)
+
+/** Unknown/legacy values degrade to `null` (never crash) — PRD v0.5 §10.1. */
+private fun String?.toCompletionSource(): CompletionSource? =
+    this?.let { runCatching { CompletionSource.valueOf(it) }.getOrNull() }

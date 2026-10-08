@@ -44,6 +44,15 @@ object Routes {
     fun taskDetail(taskId: String) = "task/$taskId"
     const val FUTURE_VIEW = "future/{taskId}"
     fun futureView(taskId: String) = "future/$taskId"
+
+    /**
+     * Focus route. The optional `taskId` preselects the task a session is started for
+     * (PRD v0.5 §10.1: "start focus for this task" from Detail/FutureView).
+     */
+    const val FOCUS_TASK_ARG = "taskId"
+    const val FOCUS = "focus?$FOCUS_TASK_ARG={$FOCUS_TASK_ARG}"
+    fun focus(taskId: String? = null) =
+        if (taskId == null) "focus" else "focus?$FOCUS_TASK_ARG=$taskId"
 }
 
 /**
@@ -135,6 +144,23 @@ fun AnchorNavHost(
                     onOpenAccessibilitySettings = { AccessibilityStatus().open(context) },
                 )
             }
+            // Focus opened for a specific task (PRD v0.5 §10.1): same screen, task preselected.
+            composable(
+                route = Routes.FOCUS,
+                arguments = listOf(
+                    navArgument(Routes.FOCUS_TASK_ARG) {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    },
+                ),
+            ) {
+                val context = LocalContext.current
+                FocusScreen(
+                    onManageBlockedApps = { navController.navigate(Routes.SETTINGS_BLOCKED) },
+                    onOpenAccessibilitySettings = { AccessibilityStatus().open(context) },
+                )
+            }
             composable(TopLevelDestination.INSIGHTS.route) { InsightsScreen() }
 
             composable(
@@ -143,10 +169,8 @@ fun AnchorNavHost(
             ) {
                 TaskDetailScreen(
                     onBack = { navController.popBackStack() },
-                    onStartFocus = {
-                        navController.navigate(TopLevelDestination.FOCUS.route) {
-                            launchSingleTop = true
-                        }
+                    onStartFocusToComplete = { taskId ->
+                        navController.navigate(Routes.focus(taskId)) { launchSingleTop = true }
                     },
                     onOpenFutureView = { taskId -> navController.navigate(Routes.futureView(taskId)) },
                 )
@@ -158,8 +182,8 @@ fun AnchorNavHost(
             ) {
                 FutureViewScreen(
                     onBack = { navController.popBackStack() },
-                    onStartFocus = {
-                        navController.navigate(TopLevelDestination.FOCUS.route) { launchSingleTop = true }
+                    onStartFocus = { taskId ->
+                        navController.navigate(Routes.focus(taskId)) { launchSingleTop = true }
                     },
                     onOpenTask = { taskId -> navController.navigate(Routes.taskDetail(taskId)) },
                 )

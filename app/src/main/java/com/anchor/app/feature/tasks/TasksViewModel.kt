@@ -8,7 +8,6 @@ import com.anchor.app.core.common.TimeProvider
 import com.anchor.app.core.domain.model.RecurrenceRule
 import com.anchor.app.core.domain.model.Task
 import com.anchor.app.core.domain.model.TaskPriority
-import com.anchor.app.core.domain.usecase.task.CompleteTaskUseCase
 import com.anchor.app.core.domain.usecase.task.CreateTaskInput
 import com.anchor.app.core.domain.usecase.task.CreateTaskResult
 import com.anchor.app.core.domain.usecase.task.CreateTaskUseCase
@@ -57,7 +56,6 @@ class TasksViewModel @Inject constructor(
     private val observeTasks: ObserveTasksUseCase,
     private val observeOverdue: ObserveOverdueTasksUseCase,
     private val createTask: CreateTaskUseCase,
-    private val completeTask: CompleteTaskUseCase,
     private val rescheduleTask: RescheduleTaskUseCase,
     private val generateRecurring: GenerateRecurringTasksUseCase,
     private val timeProvider: TimeProvider,
@@ -123,10 +121,6 @@ class TasksViewModel @Inject constructor(
             )
             launch(dispatchers.main) { onResult(result) }
         }
-    }
-
-    fun onComplete(taskId: String) {
-        viewModelScope.launch(dispatchers.io) { completeTask(taskId) }
     }
 
     fun onReschedule(taskId: String, newDeadline: Long?) {

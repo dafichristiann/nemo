@@ -43,4 +43,9 @@ data class TaskEntity(
     val progressPercent: Int = 0,
     val parentTaskId: String? = null,
     val definitionOccurrenceDate: Long? = null,
+    /**
+     * How the task reached DONE (PRD v0.5 §10.1). `null` for legacy rows / unfinished tasks;
+     * added in schema v10 via `MIGRATION_9_10` (no backfill).
+     */
+    val completionSource: String? = null,
 )

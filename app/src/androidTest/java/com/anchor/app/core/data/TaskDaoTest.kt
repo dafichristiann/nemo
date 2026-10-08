@@ -29,6 +29,7 @@ class TaskDaoTest {
     private val day = 1_000_000_000L
     private val startOfDay = day
     private val endOfDay = day + 86_400_000L
+    private val todayEpochDay = 42L
 
     @Before
     fun setUp() {
@@ -85,8 +86,19 @@ class TaskDaoTest {
         dao.insert(task("done-in-day", deadline = startOfDay + 100, status = "DONE"))
         dao.insert(task("before", deadline = startOfDay - 1))
 
-        val ids = dao.observeToday(startOfDay, endOfDay).first().map { it.id }.toSet()
+        val ids = dao.observeToday(startOfDay, endOfDay, todayEpochDay).first().map { it.id }.toSet()
         assertEquals(setOf("in-day", "at-start"), ids)
+    }
+
+    @Test
+    fun observeToday_includesRecurringInstanceWithoutDeadline() = runTest {
+        // F2: a recurring task with no deadline ("Morning run", DAILY) must still show Today
+        // when its occurrence date is today.
+        dao.insert(task("recur-today", occurrenceDate = todayEpochDay))
+        dao.insert(task("recur-other-day", occurrenceDate = todayEpochDay - 1))
+
+        val ids = dao.observeToday(startOfDay, endOfDay, todayEpochDay).first().map { it.id }.toSet()
+        assertEquals(setOf("recur-today"), ids)
     }
 
     @Test
@@ -177,5 +189,17 @@ class TaskDaoTest {
 
         val ids = dao.observeAll().first().map { it.id }.toSet()
         assertEquals(setOf("keep"), ids)
+    }
+
+    @Test
+    fun completionSource_roundTrips_andDefaultsNull() = runTest {
+        // PRD v0.5 §10.1: verified completions persist their source; unfinished tasks stay null.
+        dao.insert(task("manual", status = "DONE", completedAt = day).copy(completionSource = "MANUAL"))
+        dao.insert(task("verified", status = "DONE", completedAt = day).copy(completionSource = "VERIFIED"))
+        dao.insert(task("open"))
+
+        assertEquals("MANUAL", dao.observeById("manual").first()?.completionSource)
+        assertEquals("VERIFIED", dao.observeById("verified").first()?.completionSource)
+        assertEquals(null, dao.observeById("open").first()?.completionSource)
     }
 }

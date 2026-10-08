@@ -1,7 +1,7 @@
 # PRD — Anchor (Personal Focus Assistant)
 
-> **Status:** Approved / Locked for Architecture · **Version:** 0.4
-> **Tanggal:** 2026-10-07 (v0.2) · 2026-10-08 (v0.3) · 2026-10-08 (v0.4)
+> **Status:** Approved / Locked for Architecture · **Version:** 0.5
+> **Tanggal:** 2026-10-07 (v0.2) · 2026-10-08 (v0.3) · 2026-10-08 (v0.4) · 2026-10-08 (v0.5)
 > **Dokumen terkait:** `00-product-brief.md`
 > **Catatan:** PRD ini mendefinisikan aturan perilaku (*behavioral rules*) yang telah dikunci.
 > **v0.3:** mengaktifkan AI Personal Insight via **Gemini opt-in** (§10.8, §13.1); Phase 6
@@ -12,6 +12,12 @@
 > tiga lapis (build flag + toggle opt-in + izin OS), dan fallback Gentle yang wajib.
 > **Tidak ada** aturan perilaku baru selain yang sudah terkunci di §10.5; dokumen ini hanya
 > memindahkan FR-F4/F8 dari "no-op" ke implementasi sesuai keputusan Spike B.
+> **v0.5:** mengubah cara menyelesaikan task menjadi **berbasis usaha** (effort-based
+> completion) — §10.1 "Effort-based Completion [LOCKED v0.5]". Task hanya menjadi `DONE`
+> lewat **Focus Session penuh**; tidak ada lagi tombol "selesai instan" di daftar/detail.
+> Menambah atribut `completionSource` (MANUAL/VERIFIED) pada Task model. Perubahan ini
+> tetap tunduk pada prinsip **Autonomy > Forced Behavior**: yang berubah hanyalah **apa
+> yang dicatat** dan **jalur yang tersedia**, bukan penambahan hukuman/paksaan.
 
 ---
 
@@ -178,6 +184,7 @@ Untuk mendukung recurring task tanpa mengacaukan riwayat & progress, model dipis
 | `completedAt` | Epoch millis | yes | Waktu selesai |
 | `progressPercent` | Int | no | Dihitung dari subtask / manual (default 0) |
 | `parentTaskId` | Long | yes | Untuk dependency/hierarki dasar |
+| `completionSource` | Enum | yes | `MANUAL / VERIFIED` (v0.5). `null` = task lama / belum selesai. Lihat §10.1 Effort-based Completion |
 
 **Subtask model:**
 
@@ -197,7 +204,7 @@ Untuk mendukung recurring task tanpa mengacaukan riwayat & progress, model dipis
 5. FR-T5: Set kategori (dari daftar kategori, bisa custom).
 6. FR-T6: Tambah/hapus/check/uncheck subtask, atur urutan.
 7. FR-T7: Support Recurring Task: **Daily** dan **Weekly** aktif sejak Phase 1 via pemisahan Task Definition & Task Instance.
-8. FR-T8: Tandai task selesai (status → DONE, catat `completedAt`).
+8. FR-T8: Tandai task selesai (status → DONE, catat `completedAt`). **[Revised v0.5]** Satu-satunya jalur penyelesaian adalah **Focus Session penuh** (lihat §10.1 Effort-based Completion); tidak ada penyelesaian instan dari daftar atau detail.
 9. FR-T9: Progress dihitung dari subtask jika ada, jika tidak = 0/100.
 10. FR-T10: View: **All / Today / Upcoming / Completed**.
 11. FR-T11: Overdue task handling via non-blocking UI (lihat Overdue Behavior).
@@ -236,8 +243,47 @@ TODO ──► IN_PROGRESS ──► DONE ──► ARCHIVED
 ```
 - `TODO`: dibuat, belum dikerjakan
 - `IN_PROGRESS`: sedang dikerjakan / ada di focus session
-- `DONE`: selesai (`completedAt` diisi)
+- `DONE`: selesai (`completedAt` diisi). **[v0.5]** Hanya dicapai lewat Focus Session penuh.
 - `ARCHIVED`: disembunyikan tanpa dihapus
+
+**Effort-based Completion [LOCKED v0.5]:**
+
+**Konteks & Masalah.** Sebelum v0.5, task dapat ditandai `DONE` dengan satu ketukan
+("Mark as Done" / checkbox di daftar). Karena aplikasi ini **single-user & personal**,
+"penipuan" yang relevan bukan kecurangan pada pihak ketiga, melainkan **self-deception**:
+otak menginginkan rasa lega sesaat, sehingga task diklaim selesai padahal belum. Akibatnya
+angka progress kehilangan makna.
+
+**Prinsip desain.** Solusi **tidak** boleh berupa hukuman, verifikasi paksa, atau
+gamifikasi — itu melanggar §4 (*Autonomy > Forced Behavior*, *Guidance > Punishment*) dan
+justru akan **mendorong** kebohongan baru. Yang diubah hanyalah **jalur yang tersedia** dan
+**apa yang dicatat**: menyelesaikan task kini menuntut **usaha nyata**, bukan satu ketukan.
+
+**Aturan (LOCKED):**
+1. Task berubah menjadi `DONE` **hanya** lewat **Focus Session** untuk task tersebut yang
+   **diselesaikan penuh**.
+2. **Definisi "penuh" (VERIFIED):** `actualDurationMs >= plannedDurationMin × 60.000`
+   (`plannedDurationMin` non-null dan > 0). Toleransi tidak diberikan.
+3. Sesi yang di-**Finish lebih awal** atau lewat **Emergency Exit** tetap tercatat sebagai
+   `FocusSession`, tetapi **tidak** menyelesaikan task.
+4. Saat sebuah task diverifikasi, `completionSource = VERIFIED`; `completedAt` diisi, dan
+   `progressPercent = 100`.
+5. **Tidak ada penyelesaian instan.** Checkbox "selesai" di daftar tidak lagi menyelesaikan
+   task; tombol besar di Detail mengarahkan user ke Focus, bukan menyelesaikan langsung.
+   Checkbox **subtask** tetap manual (itu menandai langkah, bukan klaim selesai).
+6. Sesi fokus **tanpa task** (`taskId == null`) tetap valid dan tidak menyelesaikan apa pun.
+7. `completionSource` boleh `MANUAL` untuk task yang diselesaikan lewat jalur lain di masa
+   depan (mis. WorkManager recur-run / migrasi); pada alur normal v0.5 nilainya `VERIFIED`.
+   Task lama dari migrasi skema ber-`completionSource = null` (tidak di-backfill).
+
+**Nada UI (non-judgmental).** Feedback bersifat netral & suportif, tanpa tuduhan:
+- Verified: *"Tugas selesai — kamu fokus N menit."*
+- Belum penuh: *"Sesi tercatat. Selesaikan durasi penuh untuk menyelesaikan tugas."*
+
+**Explicitly NOT (v0.5):**
+- ❌ PIN / password / cooldown sebelum boleh selesai
+- ❌ Streak / poin / hukuman bila task di-uncheck (melanggar "no heavy gamification")
+- ❌ Memaksa durasi atau memblokir edit status
 
 **Recurring Task Architecture [LOCKED v0.2]:**
 - Supported rules: **DAILY** dan **WEEKLY**.
@@ -256,9 +302,18 @@ When   user membuka Today
 Then   task tampil dengan tanda overdue yang halus (bukan merah menyala),
        dan tersedia aksi "Reschedule", tanpa notifikasi menghakimi
 
-Given  user menandai task selesai
-When   status berubah menjadi DONE
-Then   completedAt dicatat, task muncul di "Completed", progress = 100%
+Given  user memiliki task
+When   user menekan "selesai" cepat di daftar atau tombol "Mark as Done" di Detail
+Then   task TIDAK langsung selesai; user diarahkan untuk memulai Focus Session (§10.1)
+
+Given  user menjalankan Focus Session untuk sebuah task dan menyelesaikannya penuh
+When   sesi berakhir (actualDurationMs >= plannedDurationMin × 60.000)
+Then   status berubah menjadi DONE, completedAt dicatat, completionSource = VERIFIED,
+       task muncul di "Completed", progress = 100%
+
+Given  user menekan Finish lebih awal (durasi belum penuh) atau Emergency Exit
+When   sesi berakhir
+Then   sesi tetap tercatat, namun task TIDAK berubah menjadi DONE
 ```
 
 ---

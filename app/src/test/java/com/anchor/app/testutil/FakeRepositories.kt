@@ -1,5 +1,6 @@
 package com.anchor.app.testutil
 
+import com.anchor.app.core.domain.model.CompletionSource
 import com.anchor.app.core.domain.model.RescheduleEvent
 import com.anchor.app.core.domain.model.Subtask
 import com.anchor.app.core.domain.model.Task
@@ -22,12 +23,13 @@ class FakeTaskRepository : TaskRepository {
 
     override fun observeAll(): Flow<List<Task>> = tasks
 
-    override fun observeToday(startOfDay: Long, endOfDay: Long): Flow<List<Task>> = tasks.map { list ->
+    override fun observeToday(startOfDay: Long, endOfDay: Long, todayEpochDay: Long): Flow<List<Task>> = tasks.map { list ->
         list.filter {
             it.status in OPEN &&
-                it.deadline != null &&
-                it.deadline!! >= startOfDay &&
-                it.deadline!! < endOfDay
+                (
+                    (it.deadline != null && it.deadline!! >= startOfDay && it.deadline!! < endOfDay) ||
+                        it.definitionOccurrenceDate == todayEpochDay
+                    )
         }
     }
 
@@ -64,12 +66,13 @@ class FakeTaskRepository : TaskRepository {
         tasks.value = tasks.value.filterNot { it.id == id }
     }
 
-    override suspend fun markDone(id: String, completedAt: Long) {
+    override suspend fun markDone(id: String, completedAt: Long, source: CompletionSource) {
         update(
             tasks.value.first { it.id == id }.copy(
                 status = TaskStatus.DONE,
                 completedAt = completedAt,
                 progressPercent = 100,
+                completionSource = source,
             ),
         )
     }

@@ -44,6 +44,7 @@ import com.anchor.app.core.data.entity.WeeklyUsageSummaryEntity
  *  - v7: + `insight` (Sprint 7)
  *  - v8: + `app_settings.blockedAppsJson` (FR-S4)
  *  - v9: + `app_settings.focusBlockingEnabled` (FR-F4/F8, PRD v0.4 §10.5)
+ *  - v10: + `task_instance.completionSource` (FR-T8, PRD v0.5 §10.1)
  *
  * `exportSchema = true` writes JSON schema files to `app/schemas` (KSP `room.schemaLocation`).
  * Migrations are explicit; there is no destructive fallback.
@@ -64,7 +65,7 @@ import com.anchor.app.core.data.entity.WeeklyUsageSummaryEntity
         TaskDependencyEntity::class,
         InsightEntity::class,
     ],
-    version = 9,
+    version = 10,
     exportSchema = true,
 )
 abstract class AnchorDatabase : RoomDatabase() {
@@ -86,11 +87,11 @@ abstract class AnchorDatabase : RoomDatabase() {
         const val NAME = "anchor.db"
 
         /** Current schema version (mirrors the `@Database(version = ...)` above). */
-        const val VERSION = 9
+        const val VERSION = 10
 
         /** All migration steps, in order — used by tests and by [DatabaseModule]. */
         val ALL_MIGRATIONS: Array<Migration>
-            get() = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
+            get() = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
 
         /** v1 → v2: add the Phase-1 task tables (docs 03 §2). */
         val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -344,6 +345,16 @@ abstract class AnchorDatabase : RoomDatabase() {
         val MIGRATION_8_9 = object : Migration(8, 9) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE `app_settings` ADD COLUMN `focusBlockingEnabled` INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
+        /**
+         * v9 → v10: record how a task was completed (PRD v0.5 §10.1). Nullable; legacy rows
+         * keep `NULL` (never backfilled) so historical data is left untouched.
+         */
+        val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `task_instance` ADD COLUMN `completionSource` TEXT")
             }
         }
     }

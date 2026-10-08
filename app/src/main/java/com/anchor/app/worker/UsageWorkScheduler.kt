@@ -87,6 +87,28 @@ class UsageWorkScheduler @Inject constructor(
         )
     }
 
+    /**
+     * Schedules the daily recurring-task generator (FR-T7). Independent of usage tracking:
+     * recurring tasks are a Phase-1 core feature, so this runs even when tracking is off.
+     * Idempotent via a unique name + KEEP.
+     */
+    fun scheduleRecurringTasks() {
+        val recurring = PeriodicWorkRequestBuilder<RecurringTaskWorker>(1, TimeUnit.DAYS).build()
+        workManager.enqueueUniquePeriodicWork(
+            RecurringTaskWorker.UNIQUE_NAME,
+            ExistingPeriodicWorkPolicy.KEEP,
+            recurring,
+        )
+
+        // Also issue today's instances immediately, so a first install doesn't wait a day.
+        val now = OneTimeWorkRequestBuilder<RecurringTaskWorker>().build()
+        workManager.enqueueUniqueWork(
+            RecurringTaskWorker.UNIQUE_NAME + "_now",
+            ExistingWorkPolicy.KEEP,
+            now,
+        )
+    }
+
     companion object {
         /** ~15 minutes: the shortest battery-friendly periodic interval (docs 02 §4.1). */
         const val COLLECT_INTERVAL_MINUTES = 15L

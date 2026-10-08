@@ -2,10 +2,14 @@ package com.anchor.app.core.domain.usecase.focus
 
 import com.anchor.app.core.common.FakeIdProvider
 import com.anchor.app.core.common.FakeTimeProvider
+import com.anchor.app.core.domain.model.CompletionSource
 import com.anchor.app.core.domain.model.FocusMode
 import com.anchor.app.core.domain.model.FocusStatus
+import com.anchor.app.core.domain.model.Task
+import com.anchor.app.core.domain.model.TaskStatus
 import com.anchor.app.testutil.FakeBlockingStrategy
 import com.anchor.app.testutil.FakeFocusRepository
+import com.anchor.app.testutil.FakeTaskRepository
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -25,6 +29,8 @@ class FocusUseCasesTest {
         ZonedDateTime.of(2026, 10, 7, 9, 0, 0, 0, ZoneOffset.UTC).toInstant().toEpochMilli()
 
     private fun time() = FakeTimeProvider(fixedNow, ZoneOffset.UTC)
+
+    private fun task(id: String) = Task(id = id, title = id, createdAt = fixedNow)
 
     // --- StartFocusUseCase ---
 
@@ -112,28 +118,99 @@ class FocusUseCasesTest {
     @Test
     fun finish_recordsDurationAndReleasesBlocking() = runTest {
         val repo = FakeFocusRepository()
+        val tasks = FakeTaskRepository()
+        tasks.insert(task("t1"))
         val blocking = FakeBlockingStrategy(available = true)
         val start = StartFocusUseCase(repo, blocking, time(), FakeIdProvider())
         val id = start("t1", FocusMode.STRICT, 25, setOf("com.tiktok")).sessionId
 
-        val result = FinishFocusUseCase(repo, blocking, time())(id, elapsedMs = 20 * 60_000L)
+        // Full 25-minute session -> verified -> task completed.
+        val result = FinishFocusUseCase(repo, blocking, tasks, time())(id, elapsedMs = 25 * 60_000L)
 
         val session = repo.getById(id)!!
         assertEquals(FocusStatus.FINISHED, session.status)
-        assertEquals(20 * 60_000L, session.actualDurationMs)
+        assertEquals(25 * 60_000L, session.actualDurationMs)
         assertEquals("t1", result.taskId)
+        assertTrue(result.completedTask)
         assertTrue(blocking.released)
         assertNull(repo.current())
     }
 
     @Test
+    fun finish_fullSession_marksTaskDoneVerified() = runTest {
+        val repo = FakeFocusRepository()
+        val tasks = FakeTaskRepository()
+        tasks.insert(task("t1"))
+        val start = StartFocusUseCase(repo, FakeBlockingStrategy(), time(), FakeIdProvider())
+        val id = start("t1", FocusMode.GENTLE, 25).sessionId
+
+        val result = FinishFocusUseCase(repo, FakeBlockingStrategy(), tasks, time())(id, 25 * 60_000L)
+
+        assertTrue(result.completedTask)
+        val saved = tasks.getById("t1")!!
+        assertEquals(TaskStatus.DONE, saved.status)
+        assertEquals(CompletionSource.VERIFIED, saved.completionSource)
+        assertEquals(fixedNow, saved.completedAt)
+        assertEquals(100, saved.progressPercent)
+    }
+
+    @Test
+    fun finish_shortSession_doesNotCompleteTask() = runTest {
+        val repo = FakeFocusRepository()
+        val tasks = FakeTaskRepository()
+        tasks.insert(task("t1"))
+        val start = StartFocusUseCase(repo, FakeBlockingStrategy(), time(), FakeIdProvider())
+        val id = start("t1", FocusMode.GENTLE, 25).sessionId
+
+        // 24 min, one minute short of the plan -> session recorded, task untouched.
+        val result = FinishFocusUseCase(repo, FakeBlockingStrategy(), tasks, time())(id, 24 * 60_000L)
+
+        assertFalse(result.completedTask)
+        val saved = tasks.getById("t1")!!
+        assertEquals(TaskStatus.TODO, saved.status)
+        assertNull(saved.completionSource)
+    }
+
+    @Test
+    fun emergencyExit_doesNotCompleteTaskEvenIfLongEnough() = runTest {
+        val repo = FakeFocusRepository()
+        val tasks = FakeTaskRepository()
+        tasks.insert(task("t1"))
+        val start = StartFocusUseCase(repo, FakeBlockingStrategy(), time(), FakeIdProvider())
+        val id = start("t1", FocusMode.GENTLE, 25).sessionId
+
+        val result = FinishFocusUseCase(repo, FakeBlockingStrategy(), tasks, time())(
+            id,
+            elapsedMs = 30 * 60_000L,
+            aborted = true,
+        )
+
+        assertFalse(result.completedTask)
+        assertEquals(TaskStatus.TODO, tasks.getById("t1")!!.status)
+    }
+
+    @Test
+    fun finish_sessionWithoutTask_completesNothing() = runTest {
+        val repo = FakeFocusRepository()
+        val tasks = FakeTaskRepository()
+        val start = StartFocusUseCase(repo, FakeBlockingStrategy(), time(), FakeIdProvider())
+        val id = start(null, FocusMode.GENTLE, 25).sessionId
+
+        val result = FinishFocusUseCase(repo, FakeBlockingStrategy(), tasks, time())(id, 25 * 60_000L)
+
+        assertFalse(result.completedTask)
+        assertNull(result.taskId)
+    }
+
+    @Test
     fun emergencyExit_abortsSessionAndReleasesBlocking() = runTest {
         val repo = FakeFocusRepository()
+        val tasks = FakeTaskRepository()
         val blocking = FakeBlockingStrategy(available = true)
         val start = StartFocusUseCase(repo, blocking, time(), FakeIdProvider())
         val id = start("t1", FocusMode.STRICT, 25, setOf("com.tiktok")).sessionId
 
-        val result = FinishFocusUseCase(repo, blocking, time())(id, elapsedMs = 2 * 60_000L, aborted = true)
+        val result = FinishFocusUseCase(repo, blocking, tasks, time())(id, elapsedMs = 2 * 60_000L, aborted = true)
 
         assertEquals(FocusStatus.ABORTED, repo.getById(id)!!.status)
         assertTrue(result.aborted)
@@ -143,8 +220,9 @@ class FocusUseCasesTest {
     @Test
     fun totalDuration_sumsFinishedSessionsInWindow() = runTest {
         val repo = FakeFocusRepository()
+        val tasks = FakeTaskRepository()
         val start = StartFocusUseCase(repo, FakeBlockingStrategy(), time(), FakeIdProvider())
-        val finish = FinishFocusUseCase(repo, FakeBlockingStrategy(), time())
+        val finish = FinishFocusUseCase(repo, FakeBlockingStrategy(), tasks, time())
 
         val a = start("t1", FocusMode.GENTLE, 25).sessionId
         finish(a, 20 * 60_000L)

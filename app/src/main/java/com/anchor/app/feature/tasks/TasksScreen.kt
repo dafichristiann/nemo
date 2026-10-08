@@ -112,7 +112,7 @@ fun TasksScreen(
                     ) { row ->
                         OverdueTaskRow(
                             row = row,
-                            onComplete = { viewModel.onComplete(row.task.id) },
+                            onOpen = { onOpenTask(row.task.id) },
                             onKeep = { viewModel.onKeepForToday(row.task.id) },
                             onReschedule = { rescheduling = row },
                         )
@@ -135,7 +135,6 @@ fun TasksScreen(
                         TaskListItem(
                             row = row,
                             onClick = { onOpenTask(row.task.id) },
-                            onComplete = { viewModel.onComplete(row.task.id) },
                         )
                     }
                 }
@@ -317,7 +316,7 @@ private fun FilterTabs(selected: TaskFilter, onSelect: (TaskFilter) -> Unit) {
 }
 
 @Composable
-private fun TaskListItem(row: TaskRowUi, onClick: () -> Unit, onComplete: () -> Unit) {
+private fun TaskListItem(row: TaskRowUi, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -325,7 +324,9 @@ private fun TaskListItem(row: TaskRowUi, onClick: () -> Unit, onComplete: () -> 
             .clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        RoundCheckbox(checked = row.task.isDone, onToggle = onComplete)
+        // Passive status indicator (PRD v0.5 §10.1): completion can no longer be toggled from
+        // the list — a task is completed only by finishing a full Focus session.
+        TaskStatusIndicator(done = row.task.isDone)
         Spacer(modifier = Modifier.width(Spacing.x3))
         com.anchor.app.core.design.components.TaskCard(
             title = row.task.title,
@@ -335,6 +336,32 @@ private fun TaskListItem(row: TaskRowUi, onClick: () -> Unit, onComplete: () -> 
             priorityBarColor = row.task.priority.barColor(),
             trailing = { PriorityPill(row.task.priority) },
         )
+    }
+}
+
+/** Non-interactive done marker shown at the start of a task row (no onClick). */
+@Composable
+private fun TaskStatusIndicator(done: Boolean, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .size(24.dp)
+            .clip(CircleShape)
+            .border(
+                width = 1.5.dp,
+                color = if (done) AnchorColors.ink else AnchorColors.border,
+                shape = CircleShape,
+            )
+            .background(if (done) AnchorColors.ink else Color.Transparent),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (done) {
+            Icon(
+                imageVector = Icons.Rounded.Check,
+                contentDescription = null,
+                tint = AnchorColors.surface,
+                modifier = Modifier.size(14.dp),
+            )
+        }
     }
 }
 
@@ -411,7 +438,7 @@ private fun OverdueBanner(count: Int, onReview: () -> Unit, onDismiss: () -> Uni
 @Composable
 private fun OverdueTaskRow(
     row: TaskRowUi,
-    onComplete: () -> Unit,
+    onOpen: () -> Unit,
     onKeep: () -> Unit,
     onReschedule: () -> Unit,
 ) {
@@ -419,11 +446,12 @@ private fun OverdueTaskRow(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Spacing.x2),
     ) {
-        TaskListItem(row = row, onClick = {}, onComplete = onComplete)
+        TaskListItem(row = row, onClick = onOpen)
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.x2)) {
             SmallAction(stringResource(R.string.overdue_action_reschedule), onReschedule)
             SmallAction(stringResource(R.string.overdue_action_keep), onKeep)
-            SmallAction(stringResource(R.string.overdue_action_complete), onComplete)
+            // Completion now requires a focus session (PRD v0.5 §10.1) — open the task to start one.
+            SmallAction(stringResource(R.string.overdue_action_open), onOpen)
         }
     }
 }

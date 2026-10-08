@@ -152,4 +152,26 @@ class MigrationTest {
             assertEquals("focusBlockingEnabled should default OFF", 0, c.getInt(1))
         }
     }
+
+    @Test
+    fun migrate9ToLatest_addsCompletionSourceColumn_nullsLegacyRows() {
+        // v9 task row should survive and gain a null completionSource (PRD v0.5 §10.1, no backfill).
+        helper.createDatabase(testDb, 9).use { db ->
+            db.execSQL(
+                "INSERT INTO task_instance (id, title, priority, status, createdAt, progressPercent) " +
+                    "VALUES ('t1', 'Legacy', 'HIGH', 'DONE', 123, 100)",
+            )
+        }
+        val db = helper.runMigrationsAndValidate(
+            testDb,
+            AnchorDatabase.VERSION,
+            true,
+            *AnchorDatabase.ALL_MIGRATIONS,
+        )
+        db.query("SELECT title, completionSource FROM task_instance WHERE id='t1'").use { c ->
+            assertTrue(c.moveToFirst())
+            assertEquals("Legacy", c.getString(0))
+            assertTrue("completionSource should be null for legacy rows", c.isNull(1))
+        }
+    }
 }

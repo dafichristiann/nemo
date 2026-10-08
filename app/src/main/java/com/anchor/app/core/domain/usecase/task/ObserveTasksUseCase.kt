@@ -20,12 +20,14 @@ class ObserveTasksUseCase @Inject constructor(
     private val timeProvider: TimeProvider,
 ) {
     operator fun invoke(filter: TaskFilter): Flow<List<Task>> {
-        val startOfToday = timeProvider.startOfDayMillis(timeProvider.nowMillis())
+        val now = timeProvider.nowMillis()
+        val startOfToday = timeProvider.startOfDayMillis(now)
         val endOfToday = startOfToday + ONE_DAY_MS
+        val todayEpochDay = timeProvider.epochDayOf(now)
 
         return when (filter) {
             TaskFilter.ALL -> taskRepository.observeAll()
-            TaskFilter.TODAY -> taskRepository.observeToday(startOfToday, endOfToday)
+            TaskFilter.TODAY -> taskRepository.observeToday(startOfToday, endOfToday, todayEpochDay)
             TaskFilter.UPCOMING -> taskRepository.observeUpcoming(endOfToday)
             TaskFilter.COMPLETED -> taskRepository.observeCompleted()
         }

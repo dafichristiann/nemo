@@ -64,7 +64,7 @@ import com.anchor.app.core.domain.model.TaskPriority
 fun TaskDetailScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    onStartFocus: () -> Unit = {},
+    onStartFocusToComplete: (String) -> Unit = {},
     onOpenFutureView: (String) -> Unit = {},
     viewModel: TaskDetailViewModel = hiltViewModel(),
 ) {
@@ -257,13 +257,14 @@ fun TaskDetailScreen(
             )
         }
 
-        // Actions
+        // Actions. Completion requires a focus session (PRD v0.5 §10.1), so the primary action
+        // opens Focus for this task instead of completing it directly.
         PrimaryButton(
-            label = stringResource(R.string.detail_action_complete),
-            onClick = { viewModel.onComplete() },
+            label = stringResource(R.string.detail_action_complete_via_focus),
+            onClick = { onStartFocusToComplete(task.id) },
         )
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.x2)) {
-            SecondaryAction(stringResource(R.string.detail_action_start_focus), onClick = onStartFocus)
+            SecondaryAction(stringResource(R.string.detail_action_start_focus)) { onStartFocusToComplete(task.id) }
             SecondaryAction(stringResource(R.string.detail_action_reschedule)) {
                 showReschedule = true
             }

@@ -19,6 +19,10 @@ data class Task(
     val progressPercent: Int = 0,
     val parentTaskId: String? = null,
     val definitionOccurrenceDate: Long? = null,
+    /**
+     * How this task reached DONE (PRD v0.5 §10.1). `null` for legacy rows or unfinished tasks.
+     */
+    val completionSource: CompletionSource? = null,
 ) {
     val isDone: Boolean get() = status == TaskStatus.DONE || status == TaskStatus.ARCHIVED
 

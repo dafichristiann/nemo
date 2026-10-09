@@ -1,6 +1,7 @@
 package com.anchor.app.core.domain.repository
 
 import com.anchor.app.core.domain.model.AppSettings
+import com.anchor.app.core.domain.model.FocusArea
 import kotlinx.coroutines.flow.Flow
 
 /** Settings repository (docs 02-architecture.md §3.1, docs 03 §7). */
@@ -15,6 +16,12 @@ interface SettingsRepository {
     suspend fun setBlockedApps(packages: Set<String>)
     /** Opt-in toggle for Strict/Custom blocking (FR-F4/F8, PRD v0.4 §10.5). */
     suspend fun setFocusBlockingEnabled(enabled: Boolean)
+    /** Persists the mascot's preferred name for the user (blank clears it). */
+    suspend fun setNickname(nickname: String)
+    /** Persists the user's main focus area (docs 07-screens.md §2.3b). */
+    suspend fun setFocusArea(area: FocusArea)
+    /** Persists the default focus-session length in minutes (25/45/60). */
+    suspend fun setDefaultFocusDurationMin(minutes: Int)
     /** Erase all user data (PRD §10.10 "delete all data"). */
     suspend fun resetAll()
 }

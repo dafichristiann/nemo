@@ -20,8 +20,11 @@ interface BlockingStrategy {
     /** The mode this strategy actually applies (may differ from the requested one after fallback). */
     val effectiveMode: FocusMode
 
-    /** True when this strategy can block right now (permission + service available). */
-    fun isAvailable(): Boolean
+    /**
+     * True when this strategy can block right now (permission + service available). Suspending
+     * so implementations may consult an authoritative (non-cached) source of truth.
+     */
+    suspend fun isAvailable(): Boolean
 
     /**
      * Requests that [packages] be blocked for the session. Returns true when blocking is active;

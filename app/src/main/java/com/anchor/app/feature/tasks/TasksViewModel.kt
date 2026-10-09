@@ -8,6 +8,7 @@ import com.anchor.app.core.common.TimeProvider
 import com.anchor.app.core.domain.model.RecurrenceRule
 import com.anchor.app.core.domain.model.Task
 import com.anchor.app.core.domain.model.TaskPriority
+import com.anchor.app.core.domain.repository.SettingsRepository
 import com.anchor.app.core.domain.usecase.task.CreateTaskInput
 import com.anchor.app.core.domain.usecase.task.CreateTaskResult
 import com.anchor.app.core.domain.usecase.task.CreateTaskUseCase
@@ -42,6 +43,8 @@ data class TasksUiState(
     val overdueCount: Int = 0,
     val today: java.time.LocalDate = java.time.LocalDate.now(),
     val zone: java.time.ZoneId = java.time.ZoneId.systemDefault(),
+    /** User's preferred name for the personalized greeting; blank = plain greeting. */
+    val nickname: String = "",
 )
 
 /**
@@ -58,6 +61,7 @@ class TasksViewModel @Inject constructor(
     private val createTask: CreateTaskUseCase,
     private val rescheduleTask: RescheduleTaskUseCase,
     private val generateRecurring: GenerateRecurringTasksUseCase,
+    private val settingsRepository: SettingsRepository,
     private val timeProvider: TimeProvider,
     private val dispatchers: DispatcherProvider,
 ) : ViewModel() {
@@ -68,7 +72,8 @@ class TasksViewModel @Inject constructor(
         filter.flatMapLatest { observeTasks(it) },
         observeOverdue(),
         filter,
-    ) { tasks, overdue, currentFilter ->
+        settingsRepository.observe(),
+    ) { tasks, overdue, currentFilter, settings ->
         val now = timeProvider.nowMillis()
         val zone = timeProvider.zoneId()
         TasksUiState(
@@ -77,6 +82,7 @@ class TasksViewModel @Inject constructor(
             overdueCount = overdue.size,
             today = timeProvider.today(),
             zone = zone,
+            nickname = settings.nickname,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -129,8 +135,9 @@ class TasksViewModel @Inject constructor(
 
     /** "Keep for Today": push the deadline to today 23:59 and clear overdue (FR-T11). */
     fun onKeepForToday(taskId: String) {
-        val endOfToday = timeProvider.startOfDayMillis(timeProvider.nowMillis()) +
-            ONE_DAY_MS - 1
+        // Derive the day boundary from the next local midnight, not `startOfDay + 24h - 1`,
+        // so the deadline is exactly the last ms of today on DST-transition days (23h/25h days).
+        val endOfToday = timeProvider.endOfDayMillis(timeProvider.nowMillis()) - 1
         onReschedule(taskId, endOfToday)
     }
 
@@ -147,9 +154,5 @@ class TasksViewModel @Inject constructor(
             metaLabel = meta,
             overdue = isOverdue(now),
         )
-    }
-
-    private companion object {
-        const val ONE_DAY_MS = 24L * 60L * 60L * 1000L
     }
 }

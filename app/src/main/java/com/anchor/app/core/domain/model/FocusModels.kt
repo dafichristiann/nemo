@@ -19,7 +19,7 @@ data class FocusSession(
     val id: String,
     val taskId: String?,
     val mode: FocusMode,
-    val plannedDurationMin: Int?,
+    val plannedDurationSec: Int?,
     val actualDurationMs: Long,
     val startedAt: Long,
     val endedAt: Long?,

@@ -90,15 +90,13 @@ class AndroidUsageStatsSource @Inject constructor(
     }
 
     override fun queryTotals(startMillis: Long, endMillis: Long): List<AppTotal> {
-        val m = manager ?: return emptyList()
-        val stats = runCatching { m.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, startMillis, endMillis) }
-            .getOrNull()
-            ?: return emptyList()
-
-        return stats
-            .filter { it.totalTimeInForeground > 0 && it.lastTimeUsed >= startMillis }
+        // Derive totals from the event stream (the same source of truth as [queryEvents]) so the
+        // result is genuinely clamped to [startMillis, endMillis). `queryUsageStats(INTERVAL_DAILY,
+        // ...)` would instead return whole daily buckets that can extend beyond the window, which
+        // over-counts "today so far" style queries.
+        return queryEvents(startMillis, endMillis)
             .groupBy { it.packageName }
-            .map { (pkg, list) -> AppTotal(pkg, list.sumOf { it.totalTimeInForeground }) }
+            .map { (pkg, events) -> AppTotal(pkg, events.sumOf { it.durationMs }) }
             .sortedByDescending { it.totalTimeMs }
     }
 

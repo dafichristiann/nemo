@@ -10,12 +10,15 @@ import javax.inject.Inject
 
 /**
  * Finishes or aborts a focus session (FR-F6; docs 07-screens.md §2.10). Records the final
- * duration + status, releases any blocking, and — per PRD v0.5 §10.1 "Effort-based
- * Completion" — **completes the linked task when the session was run in full**.
+ * duration + status, releases any blocking, and completes the linked task.
  *
- * A task is marked DONE (with `completionSource = VERIFIED`) only when the session was not
- * aborted AND [isFocusVerified] passes for the recorded duration vs. the planned duration.
- * Finishing early or an emergency exit still records the session but never completes the task.
+ * Completion rule: a normal **Finish** completes the linked task — pressing "Finish" is an
+ * explicit "I'm done with this task", whatever the elapsed time. Only the [aborted] *emergency
+ * exit* skips completion (the user is bailing out, not finishing).
+ *
+ * `completionSource` is recorded as [CompletionSource.VERIFIED] because the completion came from
+ * a focus session; [isFocusVerified] remains available on the recorded duration for callers that
+ * want the stricter "ran in full" signal.
  *
  * [aborted] distinguishes an emergency exit (ABORTED) from a normal Finish (FINISHED). Both
  * always release blocking — the emergency exit must never be blocked by anything (PRD §10.5).
@@ -45,11 +48,11 @@ class FinishFocusUseCase @Inject constructor(
         )
         runCatching { blockingStrategy.release() }
 
-        // Effort-based completion (PRD v0.5 §10.1): only a full, non-aborted session earns DONE.
+        // Finish completes the linked task; the emergency exit (aborted) does not.
         val taskId = session?.taskId
-        val verified = !aborted && isFocusVerified(duration, session?.plannedDurationMin)
-        if (taskId != null && verified) {
-            taskRepository.markDone(taskId, now, CompletionSource.VERIFIED)
+        val completed = taskId != null && !aborted
+        if (completed) {
+            taskRepository.markDone(taskId!!, now, CompletionSource.VERIFIED)
         }
 
         return FinishFocusResult(
@@ -57,7 +60,7 @@ class FinishFocusUseCase @Inject constructor(
             taskId = taskId,
             totalMs = duration,
             aborted = aborted,
-            completedTask = taskId != null && verified,
+            completedTask = completed,
         )
     }
 
@@ -67,7 +70,7 @@ class FinishFocusUseCase @Inject constructor(
         val taskId: String?,
         val totalMs: Long,
         val aborted: Boolean,
-        /** True when this session completed its task (PRD v0.5 §10.1). */
+        /** True when this session completed its task. */
         val completedTask: Boolean,
     )
 }

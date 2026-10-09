@@ -58,6 +58,18 @@ class FakeTaskRepository : TaskRepository {
         tasks.value = tasks.value + task
     }
 
+    override suspend fun insertIgnoringDuplicate(task: Task): Boolean {
+        if (task.definitionId != null && task.definitionOccurrenceDate != null) {
+            val duplicate = tasks.value.any {
+                it.definitionId == task.definitionId &&
+                    it.definitionOccurrenceDate == task.definitionOccurrenceDate
+            }
+            if (duplicate) return false
+        }
+        tasks.value = tasks.value + task
+        return true
+    }
+
     override suspend fun update(task: Task) {
         tasks.value = tasks.value.map { if (it.id == task.id) task else it }
     }
@@ -67,8 +79,10 @@ class FakeTaskRepository : TaskRepository {
     }
 
     override suspend fun markDone(id: String, completedAt: Long, source: CompletionSource) {
+        // Mirror the real repo: a missing task is a safe no-op (not an exception).
+        val current = tasks.value.firstOrNull { it.id == id } ?: return
         update(
-            tasks.value.first { it.id == id }.copy(
+            current.copy(
                 status = TaskStatus.DONE,
                 completedAt = completedAt,
                 progressPercent = 100,

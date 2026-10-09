@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!--
   Terjemahan Bahasa Indonesia (PRD 12 "Localization"). Default app = English; berkas ini
   menyediakan terjemahan penuh yang siap dipakai. Semua teks antarmuka lewat string
-  resources — jangan hardcode. Nada: tenang, mendukung, ringkas, tanpa menghakimi.
+  resources â€” jangan hardcode. Nada: tenang, mendukung, ringkas, tanpa menghakimi.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">Anchor</string>
+    <string name="app_name">Nemo</string>
 
     <!-- Navigation / bottom bar (07-screens.md 2, PRD 12) -->
     <string name="nav_tasks">Tugas</string>
@@ -15,25 +15,36 @@
 
     <!-- 03 Digital Wellbeing (07-screens.md 2.7, PRD 10.2) -->
     <string name="wellbeing_title">Kesejahteraan</string>
-    <string name="wellbeing_screen_time">Waktu layar hari ini</string>
+    <string name="wellbeing_screen_time">Waktu layar</string>
     <string name="wellbeing_top_apps">APLIKASI TERATAS</string>
     <string name="wellbeing_this_week">MINGGU INI</string>
+    <string name="wellbeing_day_today">Hari ini</string>
+    <string name="wellbeing_day_yesterday">kemarin</string>
     <string name="wellbeing_local_only">Semua angka berasal dari perangkatmu. Tidak ada yang dikirim ke mana pun.</string>
-    <string name="wellbeing_no_comparison">Belum ada data untuk kemarin.</string>
-    <string name="wellbeing_same_as_yesterday">Hampir sama dengan kemarin.</string>
-    <string name="wellbeing_more_than_yesterday">%1$s lebih banyak dari kemarin.</string>
-    <string name="wellbeing_less_than_yesterday">%1$s lebih sedikit dari kemarin.</string>
+    <string name="wellbeing_no_comparison">Belum ada data untuk hari sebelumnya.</string>
+    <string name="wellbeing_same_as_previous">Hampir sama dengan %1$s.</string>
+    <string name="wellbeing_more_than_previous">%1$s lebih banyak dari %2$s.</string>
+    <string name="wellbeing_less_than_previous">%1$s lebih sedikit dari %2$s.</string>
+    <string name="wellbeing_stats_title">HARI INI SEKILAS</string>
+    <string name="wellbeing_stats_vs_yesterday">Waktu layar vs %1$s</string>
+    <string name="wellbeing_stats_vs_avg">vs rata-rata %1$d hari</string>
+    <string name="wellbeing_stats_distraction">Porsi distraksi vs %1$s</string>
     <string name="wellbeing_perm_title">Lihat waktu layarmu</string>
-    <string name="wellbeing_perm_body">Anchor butuh akses Penggunaan untuk menampilkan wawasan waktu layar lokalmu. Aktifkan di Pengaturan — datamu tetap di perangkat ini.</string>
+    <string name="wellbeing_perm_body">Nemo butuh akses Penggunaan untuk menampilkan wawasan waktu layar lokalmu. Aktifkan di Pengaturan â€” datamu tetap di perangkat ini.</string>
     <string name="wellbeing_perm_cta">Buka Pengaturan</string>
     <string name="wellbeing_perm_app_settings">Pengaturan aplikasi</string>
     <string name="wellbeing_nodata_title">Belum ada data penggunaan</string>
     <string name="wellbeing_nodata_body">Setelah kamu memakai ponsel sebentar, ringkasan waktu layarmu akan muncul di sini.</string>
 
-    <!-- 01 Home · Smart Todo (07-screens.md 2.5) -->
+    <!-- 01 Home Â· Smart Todo (07-screens.md 2.5) -->
     <string name="home_greeting_morning">Selamat pagi</string>
     <string name="home_greeting_afternoon">Selamat siang</string>
     <string name="home_greeting_evening">Selamat malam</string>
+    <!-- Varian personal: %1$s adalah nama panggilan pengguna (dari onboarding/Pengaturan). -->
+    <string name="home_greeting_morning_named">Selamat pagi, %1$s</string>
+    <string name="home_greeting_afternoon_named">Selamat siang, %1$s</string>
+    <string name="home_greeting_evening_named">Selamat malam, %1$s</string>
+    <string name="home_subtitle_plan">Ini sekilas harimu.</string>
     <string name="home_progress_title">Progres hari ini</string>
     <string name="home_progress_count" tools:ignore="PluralsCandidate">%1$d dari %2$d tugas selesai</string>
     <string name="home_progress_percent">%1$d%%</string>
@@ -42,7 +53,7 @@
     <string name="task_filter_upcoming">Mendatang</string>
     <string name="task_filter_completed">Selesai</string>
 
-    <string name="home_empty_title">Belum ada tugas — rencanakan harimu.</string>
+    <string name="home_empty_title">Belum ada tugas â€” rencanakan harimu.</string>
     <string name="home_empty_body">Ketuk + untuk menambah tugas pertamamu.</string>
 
     <string name="task_priority_low">RENDAH</string>
@@ -61,17 +72,21 @@
 
     <!-- 02 Add Task sheet (07-screens.md 2.6) -->
     <string name="add_task_title">Tugas Baru</string>
-    <string name="add_task_field_title_hint">Judul tugas…</string>
+    <string name="add_task_field_title_hint">Judul tugasâ€¦</string>
     <string name="add_task_field_description_hint">Deskripsi (opsional)</string>
     <string name="add_task_priority_label">Prioritas</string>
     <string name="add_task_deadline_label">Tenggat</string>
     <string name="add_task_deadline_hint">Tanpa tenggat</string>
-    <string name="add_task_duration_label">Perkiraan durasi (menit)</string>
-    <string name="add_task_duration_hint">mis. 120</string>
+    <string name="add_task_duration_label">Perkiraan durasi</string>
+    <string name="add_task_duration_not_set">Tidak diset</string>
+    <string name="add_task_duration_minutes">%1$d menit</string>
+    <string name="add_task_duration_choose">Pilih</string>
+    <string name="dialog_cancel">Batal</string>
+    <string name="dialog_set">Set</string>
     <string name="add_task_category_label">Kategori (opsional)</string>
     <string name="add_task_category_hint">mis. Belajar</string>
     <string name="add_task_subtasks_label">Sub-tugas (%1$d)</string>
-    <string name="add_task_subtask_hint">Tambah langkah…</string>
+    <string name="add_task_subtask_hint">Tambah langkahâ€¦</string>
     <string name="add_task_subtask_add">Tambah langkah</string>
     <string name="add_task_recurrence_label">Ulangi</string>
     <string name="recurrence_none">Tidak ada</string>
@@ -79,6 +94,7 @@
     <string name="recurrence_weekly">Mingguan</string>
     <string name="add_task_save">Simpan Tugas</string>
     <string name="cd_close_sheet">Tutup</string>
+    <string name="cd_selected">Terpilih</string>
 
     <!-- Reschedule sheet (07-screens.md 2.5/2.14, FR-T12) -->
     <string name="reschedule_title">Jadwalkan Ulang</string>
@@ -109,29 +125,38 @@
     <!-- 09 Settings & Privacy (07-screens.md 2.13) -->
     <string name="settings_title">Pengaturan</string>
     <string name="settings_open">Pengaturan</string>
+
+    <!-- Pengaturan Â· Profil (nama panggilan Â· fokus utama Â· durasi fokus default) -->
+    <string name="settings_section_profile">Profil</string>
+    <string name="settings_profile_nickname_title">Nama panggilan</string>
+    <string name="settings_profile_nickname_hint">Nama panggilanmu</string>
+    <string name="settings_profile_focus_area_title">Fokus utama</string>
+    <string name="settings_profile_duration_title">Durasi fokus default</string>
+    <string name="settings_profile_duration_value">%1$d menit</string>
+
     <string name="settings_section_privacy">Privasi &amp; AI</string>
     <string name="settings_section_data">Kontrol data</string>
     <string name="settings_ai_title">Wawasan Personal AI</string>
     <string name="settings_ai_subtitle">Hanya ringkasan agregat yang dikirim, tidak pernah penggunaan mentah.</string>
     <string name="settings_tracking_title">Pelacakan penggunaan</string>
     <string name="settings_tracking_subtitle">Kumpulkan waktu layar lokal untuk menggerakkan Kesejahteraan.</string>
-    <string name="settings_retention_label" tools:ignore="PluralsCandidate">Retensi data — simpan maksimal %1$d hari</string>
+    <string name="settings_retention_label" tools:ignore="PluralsCandidate">Retensi data â€” simpan maksimal %1$d hari</string>
     <string name="settings_delete_all">Hapus semua data</string>
     <string name="settings_assurance">Data penggunaan mentah tidak pernah meninggalkan ponselmu.</string>
 
-    <!-- Settings · Izin (FR-S1, PRD 14) -->
+    <!-- Settings Â· Izin (FR-S1, PRD 14) -->
     <string name="settings_section_permissions">Izin</string>
     <string name="settings_perm_usage_title">Akses penggunaan</string>
-    <string name="settings_perm_usage_desc">Memungkinkan Anchor membaca waktu layar secara lokal untuk Kesejahteraan &lt;&amp; deteksi drift.</string>
+    <string name="settings_perm_usage_desc">Memungkinkan Nemo membaca waktu layar secara lokal untuk Kesejahteraan &lt;&amp; deteksi drift.</string>
     <string name="settings_perm_notif_title">Notifikasi</string>
     <string name="settings_perm_notif_desc">Pengingat lembut dan notifikasi fokus yang berjalan.</string>
     <string name="settings_perm_accessibility_title">Pemblokiran aplikasi</string>
-    <string name="settings_perm_accessibility_desc">Memungkinkan Anchor menjeda aplikasi pilihan selama fokus Ketat/Kustom. Dibaca dari Settings → Aksesibilitas.</string>
+    <string name="settings_perm_accessibility_desc">Memungkinkan Nemo menjeda aplikasi pilihan selama fokus Ketat/Kustom. Dibaca dari Settings â†’ Aksesibilitas.</string>
     <string name="settings_perm_granted">Aktif</string>
     <string name="settings_perm_denied">Nonaktif</string>
     <string name="settings_perm_enable">Aktifkan</string>
 
-    <!-- Settings · Kategori aplikasi (FR-S3) -->
+    <!-- Settings Â· Kategori aplikasi (FR-S3) -->
     <string name="settings_section_categories">Kategori aplikasi</string>
     <string name="settings_categories_empty">Belum ada aplikasi yang dikategorikan. Muncul setelah data penggunaan terkumpul.</string>
     <string name="settings_category_distraction">Anggap sebagai distraksi</string>
@@ -139,10 +164,10 @@
     <string name="settings_category_save">Simpan</string>
     <string name="settings_manage">Kelola</string>
     <string name="settings_categories_summary" tools:ignore="PluralsCandidate">%1$d aplikasi dikategorikan</string>
-    <string name="settings_categories_search_hint">Cari aplikasi…</string>
+    <string name="settings_categories_search_hint">Cari aplikasiâ€¦</string>
     <string name="categories_title">Kategori aplikasi</string>
 
-    <!-- Settings · Aplikasi diblokir (FR-S4) -->
+    <!-- Settings Â· Aplikasi diblokir (FR-S4) -->
     <string name="settings_section_blocked">Aplikasi diblokir</string>
     <string name="settings_section_focus_blocking">Pemblokiran fokus</string>
     <string name="settings_focus_blocking_title">Jeda aplikasi diblokir (eksperimental)</string>
@@ -153,7 +178,7 @@
     <string name="settings_blocked_add">Tambah</string>
     <string name="settings_blocked_remove">Hapus</string>
     <string name="settings_blocked_choose">Pilih aplikasi untuk diblokir</string>
-    <string name="settings_blocked_search_hint">Cari aplikasi…</string>
+    <string name="settings_blocked_search_hint">Cari aplikasiâ€¦</string>
     <string name="settings_blocked_no_apps">Tidak ada aplikasi terpasang yang ditemukan.</string>
     <string name="settings_blocked_blocked_tag">Diblokir</string>
     <string name="settings_blocked_all_installed">Aplikasi terpasang</string>
@@ -161,15 +186,10 @@
     <string name="settings_blocked_summary_none">Belum ada aplikasi yang dijeda</string>
     <string name="blocked_title">Aplikasi diblokir</string>
 
-    <!-- 00 / 00b Onboarding (2.3–2.4, 10.10) -->
-    <string name="onboarding_skip">Lewati</string>
-    <string name="onboarding_title_line1">Tetap berlabuh</string>
-    <string name="onboarding_title_line2">pada yang penting.</string>
-    <string name="onboarding_subtitle">Anchor menyadari ketika kamu menjauh dari hal yang penting — dan dengan lembut membantumu kembali, tanpa menghakimi.</string>
-    <string name="onboarding_get_started">Mulai</string>
+    <!-- 00b / 00a Onboarding (2.4, 2.3b, 10.10) -->
     <string name="onboarding_perm_step">Persiapan %1$d dari %2$d</string>
     <string name="onboarding_perm_headline">Smart Todo langsung berfungsi.</string>
-    <string name="onboarding_perm_sub">Izin ini opsional — buka fitur lengkap Anchor kapan pun kamu siap.</string>
+    <string name="onboarding_perm_sub">Izin ini opsional â€” buka fitur lengkap Nemo kapan pun kamu siap.</string>
     <string name="onboarding_perm_usage_title">Akses penggunaan</string>
     <string name="onboarding_perm_usage_sub">Untuk Kesejahteraan &amp; deteksi drift</string>
     <string name="onboarding_perm_notif_title">Notifikasi</string>
@@ -180,6 +200,21 @@
     <string name="onboarding_privacy_card">Semua data tersimpan lokal di ponselmu.</string>
     <string name="onboarding_continue">Lanjutkan</string>
     <string name="onboarding_skip_for_now">Lewati dulu</string>
+
+    <!-- 00a Persiapan profil (field pengguna baru: nama panggilan Â· fokus utama Â· durasi fokus) -->
+    <string name="onboarding_profile_step">Persiapan %1$d dari %2$d</string>
+    <string name="onboarding_profile_headline">Yuk, buat Nemo jadi milikmu.</string>
+    <string name="onboarding_profile_sub">Tiga hal singkat supaya aplikasi bisa menyapamu dan merencanakan sesuai yang paling penting.</string>
+    <string name="onboarding_profile_nickname_label">Panggil kamu apa?</string>
+    <string name="onboarding_profile_nickname_hint">Nama panggilanmu</string>
+    <string name="onboarding_profile_focus_label">Fokus utama</string>
+    <string name="onboarding_profile_focus_college">Kuliah</string>
+    <string name="onboarding_profile_focus_career">Karier</string>
+    <string name="onboarding_profile_focus_personal">Pengembangan Diri</string>
+    <string name="onboarding_profile_duration_label">Durasi sesi fokus</string>
+    <string name="onboarding_profile_duration_value">%1$d menit</string>
+    <string name="onboarding_profile_continue">Lanjutkan</string>
+    <string name="onboarding_profile_skip">Lewati dulu</string>
 
     <!-- Plurals -->
     <plurals name="overdue_banner_title">
@@ -196,7 +231,7 @@
     <string name="intervention_notif_title_future">Waktu untuk merencanakan</string>
     <string name="intervention_notif_title_focus">Siap untuk fokus?</string>
 
-    <string name="intervention_notif_body_gentle">Kamu sudah di sini cukup lama. Tanpa tekanan — hanya menyadari.</string>
+    <string name="intervention_notif_body_gentle">Kamu sudah di sini cukup lama. Tanpa tekanan â€” hanya menyadari.</string>
     <string name="intervention_notif_body_contextual">Ada tugas yang penting masih menunggumu.</string>
     <string name="intervention_notif_body_future">Mulai sekarang bisa memberimu waktu luang nanti malam.</string>
     <string name="intervention_notif_body_focus">Siap kapan pun kamu mau memulai sesi fokus.</string>
@@ -210,7 +245,7 @@
     <string name="intervention_overlay_title_contextual">Tugasmu masih belum selesai.</string>
     <string name="intervention_overlay_title_future">Mulai sekarang memberimu waktu luang nanti.</string>
     <string name="intervention_overlay_title_focus">Mulai sesi fokus?</string>
-    <string name="intervention_overlay_body">Hanya kesadaran — kamu yang memutuskan.</string>
+    <string name="intervention_overlay_body">Hanya kesadaran â€” kamu yang memutuskan.</string>
     <string name="intervention_overlay_later_hint">Kami akan diam soal ini untuk sementara.</string>
 
     <!-- 05 Focus Setup + 06 Focus Active (07-screens.md 2.9-2.10, PRD 10.5) -->
@@ -221,7 +256,7 @@
     <string name="focus_mode_gentle">Lembut</string>
     <string name="focus_mode_strict">Ketat</string>
     <string name="focus_mode_custom">Kustom</string>
-    <string name="focus_mode_gentle_hint">Hanya mengurangi gangguan — tidak ada yang diblokir.</string>
+    <string name="focus_mode_gentle_hint">Hanya mengurangi gangguan â€” tidak ada yang diblokir.</string>
     <string name="focus_mode_strict_hint">Bisa menghentikan sementara aplikasi pengganggu saat kamu fokus.</string>
     <string name="focus_mode_custom_hint">Kamu yang memilih aplikasi mana yang dihentikan.</string>
     <string name="focus_duration_label">Durasi</string>
@@ -233,13 +268,13 @@
     <string name="focus_blocked_empty">Belum ada aplikasi dipilih. Tambahkan di Settings untuk menjeda.</string>
     <string name="focus_blocked_manage">Pilih aplikasi di Settings</string>
 
-    <!-- Strict/Custom blocking via AccessibilityService (PRD v0.4 §10.5, FR-F4/F8) -->
-    <string name="focus_blocking_setup_body">Untuk menjeda aplikasi selama fokus Ketat atau Kustom, izinkan Anchor di Settings → Aksesibilitas. Bila tidak, sesi berjalan dalam mode Lembut.</string>
+    <!-- Strict/Custom blocking via AccessibilityService (PRD v0.4 Â§10.5, FR-F4/F8) -->
+    <string name="focus_blocking_setup_body">Untuk menjeda aplikasi selama fokus Ketat atau Kustom, izinkan Nemo di Settings â†’ Aksesibilitas. Bila tidak, sesi berjalan dalam mode Lembut.</string>
     <string name="focus_blocking_setup_cta">Aktifkan pemblokiran aplikasi di Settings</string>
     <string name="accessibility_service_summary">Menjeda aplikasi pengganggu pilihan selama sesi fokus Ketat atau Kustom.</string>
-    <string name="accessibility_service_description">Anchor memakai aksesibilitas hanya untuk mengetahui saat kamu membuka aplikasi yang kamu pilih untuk dijeda selama sesi fokus. Tidak ada konten layar yang dibaca dan tidak ada data yang dikirim keluar dari perangkatmu.</string>
+    <string name="accessibility_service_description">Nemo memakai aksesibilitas hanya untuk mengetahui saat kamu membuka aplikasi yang kamu pilih untuk dijeda selama sesi fokus. Tidak ada konten layar yang dibaca dan tidak ada data yang dikirim keluar dari perangkatmu.</string>
     <string name="focus_block_overlay_title">Kembali fokus?</string>
-    <string name="focus_block_overlay_body">Kamu memilih untuk menjeda aplikasi ini selama sesi fokus. Anchor hanya mengingatkan — keputusan tetap milikmu.</string>
+    <string name="focus_block_overlay_body">Kamu memilih untuk menjeda aplikasi ini selama sesi fokus. Nemo hanya mengingatkan â€” keputusan tetap milikmu.</string>
     <string name="focus_block_overlay_exit_hint">Kamu selalu bisa mengakhiri sesi dari layar fokus atau notifikasinya.</string>
     <string name="focus_block_overlay_back">Kembali fokus</string>
 
@@ -248,8 +283,10 @@
     <string name="focus_active_pause">Jeda</string>
     <string name="focus_active_resume">Lanjutkan</string>
     <string name="focus_active_finish">Selesai</string>
+    <string name="focus_active_remaining_label">tersisa</string>
+    <string name="focus_active_paused_label">dijeda</string>
     <string name="focus_emergency_exit">Keluar darurat</string>
-    <string name="focus_finished_verified">Tugas selesai — kamu fokus %1$d menit untuk \"%2$s\".</string>
+    <string name="focus_finished_verified">Tugas selesai â€” kamu fokus %1$d menit untuk \"%2$s\".</string>
     <string name="focus_finished_not_verified">Sesi tercatat. Selesaikan durasi penuh untuk menandai tugas selesai.</string>
 
     <string name="focus_channel_name">Sesi fokus</string>
@@ -259,12 +296,12 @@
 
     <!-- 07 Future View + Domino (07-screens.md 2.11, PRD 10.6-10.7) -->
     <string name="future_title">Apa yang terjadi selanjutnya?</string>
-    <string name="future_disclaimer">Berdasarkan jadwalmu saat ini — sebuah proyeksi, bukan ramalan.</string>
+    <string name="future_disclaimer">Berdasarkan jadwalmu saat ini â€” sebuah proyeksi, bukan ramalan.</string>
     <string name="future_scenario_now">JIKA SAYA MULAI SEKARANG</string>
     <string name="future_scenario_delay">JIKA SAYA TERUS MENUNDA</string>
-    <string name="future_scenario_range">%1$s → %2$s</string>
+    <string name="future_scenario_range">%1$s â†’ %2$s</string>
     <string name="future_scenario_deadline">Tenggat %1$s</string>
-    <string name="future_assumptions">Beberapa nilai memakai asumsi bawaan (durasi atau tenggat) — ditandai agar kamu tahu.</string>
+    <string name="future_assumptions">Beberapa nilai memakai asumsi bawaan (durasi atau tenggat) â€” ditandai agar kamu tahu.</string>
     <string name="future_domino_title">Efek Domino</string>
     <string name="future_domino_count" tools:ignore="PluralsCandidate">1 tugas dapat memengaruhi %1$d tugas mendatang.</string>
     <string name="future_domino_empty">Belum ada tugas terkait.</string>
@@ -287,7 +324,7 @@
     <string name="insights_longest_distraction">Distraksi terpanjang</string>
     <string name="insights_tag_insight">WAWASAN</string>
     <string name="insights_tag_suggestion">SARAN</string>
-    <string name="insights_source_ai">Dihasilkan oleh AI Anchor (hanya data agregat)</string>
+    <string name="insights_source_ai">Dihasilkan oleh AI Nemo (hanya data agregat)</string>
     <string name="insights_source_rule">Dihasilkan secara lokal di perangkatmu</string>
     <string name="insights_pattern_label">Pola</string>
     <string name="insights_refresh">Segarkan</string>

@@ -77,6 +77,22 @@ class UsageWorkScheduler @Inject constructor(
         runAggregationNow()
     }
 
+    /**
+     * Cancels the usage-tracking pipeline: collection, pruning, aggregation, drift check and the
+     * daily reflection. Called when the user opts out of tracking, so no background collection or
+     * processing keeps running after consent is withdrawn (privacy default is OFF, FR-S6).
+     *
+     * Recurring-task generation is intentionally left untouched — it is a Phase-1 core feature
+     * independent of usage tracking.
+     */
+    fun cancelPeriodic() {
+        workManager.cancelUniqueWork(UsageCollectWorker.UNIQUE_NAME)
+        workManager.cancelUniqueWork(PruningWorker.UNIQUE_NAME)
+        workManager.cancelUniqueWork(InterventionCheckWorker.UNIQUE_NAME)
+        workManager.cancelUniqueWork(DailyReflectionWorker.UNIQUE_NAME)
+        workManager.cancelUniqueWork(AggregationWorker.UNIQUE_NAME)
+    }
+
     /** Runs a single aggregation pass, replacing any pending one. */
     fun runAggregationNow() {
         val aggregation = OneTimeWorkRequestBuilder<AggregationWorker>().build()

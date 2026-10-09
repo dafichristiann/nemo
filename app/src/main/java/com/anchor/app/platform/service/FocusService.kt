@@ -42,7 +42,9 @@ class FocusService : Service() {
             }
             else -> startForegroundCompat()
         }
-        return START_STICKY
+        // NOT sticky: the session lives in Room and the service is started only while a session is
+        // active, so the OS must not recreate a sessionless "phantom" foreground notification.
+        return START_NOT_STICKY
     }
 
     private fun startForegroundCompat() {
@@ -108,11 +110,10 @@ class FocusService : Service() {
 
         /** Stops the service (finish, abort, emergency exit). Safe to call repeatedly. */
         fun stop(context: Context) {
-            runCatching {
-                context.startService(
-                    Intent(context, FocusService::class.java).setAction(ACTION_STOP),
-                )
-            }
+            // `stopService` is the correct, always-permitted API for tearing down a started
+            // foreground service. (`startService(...ACTION_STOP)` throws from the background on
+            // API 26+, so the emergency exit could silently fail exactly when it is needed.)
+            runCatching { context.stopService(Intent(context, FocusService::class.java)) }
         }
     }
 }

@@ -1,11 +1,16 @@
 package com.anchor.app.feature.tasks
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,7 +25,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.Checklist
+import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,7 +42,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,14 +54,15 @@ import com.anchor.app.R
 import com.anchor.app.core.common.DateTimeFormatter
 import com.anchor.app.core.design.components.AddTaskFab
 import com.anchor.app.core.design.components.Banner
-import com.anchor.app.core.design.components.Divider
-import com.anchor.app.core.design.components.ProgressTrack
 import com.anchor.app.core.design.components.TextPill
+import com.anchor.app.core.design.components.minTouchTarget
+import com.anchor.app.core.design.components.pressable
 import com.anchor.app.core.design.theme.AnchorColors
 import com.anchor.app.core.design.theme.AnchorElevation
 import com.anchor.app.core.design.theme.AnchorTheme
 import com.anchor.app.core.design.theme.InterFamily
 import com.anchor.app.core.design.theme.LocalAnchorElevation
+import com.anchor.app.core.design.theme.Motion
 import com.anchor.app.core.design.theme.Radius
 import com.anchor.app.core.design.theme.Spacing
 import com.anchor.app.core.domain.model.Task
@@ -65,8 +74,14 @@ import java.time.LocalTime
 /**
  * 01 Home — Smart Todo (docs/superpowers/design/07-screens.md §2.5).
  *
- * Greeting + date, today's progress card, All/Today/Upcoming/Completed tabs, a calm
- * overdue banner (never red, FR-T11), the task list, and the add-task FAB.
+ * Layout refreshed to a calmer, editorial "planner" look (monochrome, high-contrast):
+ *  - an oversized greeting header with a compact week strip (today highlighted);
+ *  - a soft segmented filter control;
+ *  - a refined progress summary;
+ *  - the task list rendered as a **timeline** (status node + connector, time on the right),
+ *    so the day reads like a schedule rather than a stack of cards.
+ *
+ * All data still comes from [TasksViewModel]; only presentation changed.
  */
 @Composable
 fun TasksScreen(
@@ -85,15 +100,15 @@ fun TasksScreen(
         Column(modifier = Modifier.fillMaxSize()) {
             LazyColumn(
                 modifier = Modifier.weight(1f).fillMaxWidth(),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                contentPadding = PaddingValues(
                     start = Spacing.screenHorizontal,
                     end = Spacing.screenHorizontal,
-                    top = Spacing.x6,
-                    bottom = 96.dp,
+                    top = Spacing.x5,
+                    bottom = 104.dp,
                 ),
                 verticalArrangement = Arrangement.spacedBy(Spacing.listGap),
             ) {
-                item { HomeHeader(onOpenSettings = onOpenSettings) }
+                item { HomeHeader(state = state, onOpenSettings = onOpenSettings) }
 
                 if (state.overdueCount > 0 && !bannerDismissed) {
                     item {
@@ -120,21 +135,22 @@ fun TasksScreen(
                 }
 
                 item {
-                    ProgressCard(
+                    SummaryCard(
                         completed = state.rows.count { it.task.isDone },
                         total = state.rows.size,
                     )
                 }
 
-                item { FilterTabs(selected = state.filter, onSelect = viewModel::setFilter) }
+                item { FilterSegmented(selected = state.filter, onSelect = viewModel::setFilter) }
 
                 if (state.rows.isEmpty()) {
                     item { EmptyState() }
                 } else {
                     items(items = state.rows, key = { it.task.id }) { row ->
-                        TaskListItem(
+                        TimelineTaskRow(
                             row = row,
                             onClick = { onOpenTask(row.task.id) },
+                            modifier = Modifier.animateItem(),
                         )
                     }
                 }
@@ -186,128 +202,196 @@ fun TasksScreen(
     }
 }
 
+/**
+ * Oversized greeting + a compact week strip. Today is highlighted with an ink pill, the way a
+ * planner marks the current day — quiet but confident.
+ */
 @Composable
-private fun HomeHeader(onOpenSettings: () -> Unit) {
+private fun HomeHeader(state: TasksUiState, onOpenSettings: () -> Unit) {
     val hour = LocalTime.now().hour
-    val greeting = when {
-        hour < 12 -> stringResource(R.string.home_greeting_morning)
-        hour < 18 -> stringResource(R.string.home_greeting_afternoon)
-        else -> stringResource(R.string.home_greeting_evening)
-    }
-    val today = LocalDate.now()
-    val dateLabel = DateTimeFormatter.dateLabelComma(today)
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(Spacing.x1)) {
-            Text(
-                text = greeting,
-                fontFamily = InterFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = 28.sp,
-                color = AnchorColors.textPrimary,
-            )
-            Text(
-                text = dateLabel,
-                fontFamily = InterFamily,
-                fontWeight = FontWeight.Normal,
-                fontSize = 14.sp,
-                color = AnchorColors.textMuted,
-            )
+    val nickname = state.nickname
+    val greeting = if (nickname.isBlank()) {
+        when {
+            hour < 12 -> stringResource(R.string.home_greeting_morning)
+            hour < 18 -> stringResource(R.string.home_greeting_afternoon)
+            else -> stringResource(R.string.home_greeting_evening)
         }
-        Icon(
-            imageVector = Icons.Rounded.Settings,
-            contentDescription = stringResource(R.string.settings_open),
-            tint = AnchorColors.textMutedAlt,
-            modifier = Modifier
-                .size(24.dp)
-                .clickable(onClick = onOpenSettings),
-        )
+    } else {
+        when {
+            hour < 12 -> stringResource(R.string.home_greeting_morning_named, nickname)
+            hour < 18 -> stringResource(R.string.home_greeting_afternoon_named, nickname)
+            else -> stringResource(R.string.home_greeting_evening_named, nickname)
+        }
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.x4)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top,
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.x1)) {
+                Text(
+                    text = greeting,
+                    fontFamily = InterFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 30.sp,
+                    letterSpacing = (-0.5).sp,
+                    color = AnchorColors.textPrimary,
+                )
+                Text(
+                    text = stringResource(R.string.home_subtitle_plan),
+                    fontFamily = InterFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 14.sp,
+                    color = AnchorColors.textMuted,
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .minTouchTarget()
+                    .clip(CircleShape)
+                    .border(1.dp, AnchorColors.border, CircleShape)
+                    .pressable(shape = CircleShape, onClick = onOpenSettings),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Tune,
+                    contentDescription = stringResource(R.string.settings_open),
+                    tint = AnchorColors.textStrongAlt,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+        }
+        WeekStrip(today = state.today)
     }
 }
 
+/**
+ * Compact 7-day strip (Mon..Sun of today's week). Today gets an ink pill; every other day is a
+ * quiet numeral. Purely a date reference for now — the list itself is filtered by the tabs below.
+ */
 @Composable
-private fun ProgressCard(completed: Int, total: Int) {
+private fun WeekStrip(today: LocalDate) {
+    val monday = today.minusDays((today.dayOfWeek.value - 1).toLong())
+    val days = (0..6).map { monday.plusDays(it.toLong()) }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        days.forEach { date ->
+            val isToday = date == today
+            val bg by animateColorAsState(
+                targetValue = if (isToday) AnchorColors.ink else Color.Transparent,
+                animationSpec = Motion.standardSpec(),
+                label = "day-bg",
+            )
+            val fg = if (isToday) AnchorColors.surface else AnchorColors.textMutedAlt
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(Radius.chip))
+                    .background(bg)
+                    .padding(vertical = Spacing.x2),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(Spacing.x1),
+            ) {
+                Text(
+                    text = date.dayOfWeekLabel(),
+                    fontFamily = InterFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 10.sp,
+                    letterSpacing = 0.5.sp,
+                    color = fg,
+                )
+                Text(
+                    text = date.dayOfMonth.toString(),
+                    fontFamily = InterFamily,
+                    fontWeight = if (isToday) FontWeight.Bold else FontWeight.SemiBold,
+                    fontSize = 15.sp,
+                    color = fg,
+                )
+            }
+        }
+    }
+}
+
+/** "M","T",… single-letter weekday index for the compact strip. */
+private fun LocalDate.dayOfWeekLabel(): String = dayOfWeek.name.take(1)
+
+/**
+ * Refined progress summary: a large percentage, the count, and the hairline track. Reads as a
+ * quiet stat block rather than a boxed card.
+ */
+@Composable
+private fun SummaryCard(completed: Int, total: Int) {
     val elevation: AnchorElevation = LocalAnchorElevation.current
-    val percent = if (total == 0) 0 else (completed * 100f / total).toInt()
+    val fraction = if (total == 0) 0f else completed.toFloat() / total
+    val percent = Math.round(fraction * 100f)
+    val animatedFraction by animateFloatAsState(
+        targetValue = fraction,
+        animationSpec = Motion.standardSpec(),
+        label = "summary-progress",
+    )
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .shadow(
                 elevation = elevation.card.dp,
                 shape = RoundedCornerShape(Radius.card),
-                ambientColor = Color.Black.copy(alpha = 0.06f),
-                spotColor = Color.Black.copy(alpha = 0.06f),
+                ambientColor = Color.Black.copy(alpha = 0.05f),
+                spotColor = Color.Black.copy(alpha = 0.05f),
             )
             .clip(RoundedCornerShape(Radius.card))
             .background(AnchorColors.surfaceCard)
-            .padding(Spacing.cardHorizontal),
+            .padding(horizontal = Spacing.cardHorizontal, vertical = Spacing.x5),
         verticalArrangement = Arrangement.spacedBy(Spacing.x3),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.Bottom,
         ) {
-            Text(
-                text = stringResource(R.string.home_progress_title),
-                fontFamily = InterFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp,
-                color = AnchorColors.textSecondary,
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.x1)) {
+                Text(
+                    text = stringResource(R.string.home_progress_title),
+                    fontFamily = InterFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 13.sp,
+                    color = AnchorColors.textMutedAlt,
+                )
+                Text(
+                    text = stringResource(R.string.home_progress_count, completed, total),
+                    fontFamily = InterFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 12.sp,
+                    color = AnchorColors.textMuted,
+                )
+            }
             Text(
                 text = stringResource(R.string.home_progress_percent, percent),
                 fontFamily = InterFamily,
                 fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
+                fontSize = 34.sp,
+                letterSpacing = (-1).sp,
                 color = AnchorColors.textPrimary,
             )
         }
-        ProgressTrack(progress = if (total == 0) 0f else completed.toFloat() / total)
-        Text(
-            text = stringResource(R.string.home_progress_count, completed, total),
-            fontFamily = InterFamily,
-            fontWeight = FontWeight.Normal,
-            fontSize = 12.sp,
-            color = AnchorColors.textMuted,
-        )
-    }
-}
-
-@Composable
-private fun FilterTabs(selected: TaskFilter, onSelect: (TaskFilter) -> Unit) {
-    val tabs = listOf(
-        TaskFilter.ALL to R.string.task_filter_all,
-        TaskFilter.TODAY to R.string.task_filter_today,
-        TaskFilter.UPCOMING to R.string.task_filter_upcoming,
-        TaskFilter.COMPLETED to R.string.task_filter_completed,
-    )
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(Spacing.x6),
-    ) {
-        tabs.forEach { (filter, labelRes) ->
-            val isSelected = filter == selected
-            Column(
-                modifier = Modifier.clickable { onSelect(filter) },
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(Spacing.x1),
-            ) {
-                Text(
-                    text = stringResource(labelRes),
-                    fontFamily = InterFamily,
-                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                    fontSize = 13.sp,
-                    color = if (isSelected) AnchorColors.ink else AnchorColors.textMutedAlt,
-                )
+        // Hairline track with a smooth sweep.
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(4.dp)
+                .clip(RoundedCornerShape(Radius.track))
+                .background(AnchorColors.track),
+        ) {
+            if (animatedFraction > 0f) {
                 Box(
                     modifier = Modifier
-                        .height(2.dp)
-                        .width(if (isSelected) 24.dp else 0.dp)
+                        .fillMaxWidth(animatedFraction)
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(Radius.track))
                         .background(AnchorColors.ink),
                 )
             }
@@ -315,80 +399,179 @@ private fun FilterTabs(selected: TaskFilter, onSelect: (TaskFilter) -> Unit) {
     }
 }
 
+/**
+ * Segmented filter control: a soft track holding equal-width segments. The active segment gets
+ * an ink pill that slides/animates — a cleaner alternative to the previous underline tabs.
+ */
 @Composable
-private fun TaskListItem(row: TaskRowUi, onClick: () -> Unit) {
+private fun FilterSegmented(selected: TaskFilter, onSelect: (TaskFilter) -> Unit) {
+    val tabs = listOf(
+        TaskFilter.ALL to R.string.task_filter_all,
+        TaskFilter.TODAY to R.string.task_filter_today,
+        TaskFilter.UPCOMING to R.string.task_filter_upcoming,
+        TaskFilter.COMPLETED to R.string.task_filter_completed,
+    )
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(Radius.card))
-            .clickable(onClick = onClick),
-        verticalAlignment = Alignment.CenterVertically,
+            .clip(RoundedCornerShape(Radius.button))
+            .background(AnchorColors.surfaceMuted)
+            .horizontalScroll(rememberScrollState())
+            .padding(Spacing.x1),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.x1),
     ) {
-        // Passive status indicator (PRD v0.5 §10.1): completion can no longer be toggled from
-        // the list — a task is completed only by finishing a full Focus session.
-        TaskStatusIndicator(done = row.task.isDone)
-        Spacer(modifier = Modifier.width(Spacing.x3))
-        com.anchor.app.core.design.components.TaskCard(
-            title = row.task.title,
-            subtitle = row.deadlineLabel,
-            meta = row.metaLabel,
+        tabs.forEach { (filter, labelRes) ->
+            val isSelected = filter == selected
+            val bg by animateColorAsState(
+                targetValue = if (isSelected) AnchorColors.ink else Color.Transparent,
+                animationSpec = Motion.standardSpec(),
+                label = "seg-bg",
+            )
+            val fg by animateColorAsState(
+                targetValue = if (isSelected) AnchorColors.surface else AnchorColors.textMuted,
+                animationSpec = Motion.standardSpec(),
+                label = "seg-fg",
+            )
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(Radius.field))
+                    .background(bg)
+                    .pressable(
+                        shape = RoundedCornerShape(Radius.field),
+                        pressedScale = 0.97f,
+                        onClick = { onSelect(filter) },
+                    )
+                    .padding(horizontal = Spacing.x4, vertical = Spacing.x2),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = stringResource(labelRes),
+                    fontFamily = InterFamily,
+                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                    fontSize = 12.sp,
+                    color = fg,
+                    maxLines = 1,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * A task rendered as a timeline row: a status node + vertical connector on the left, the title
+ * and meta in the middle, and the deadline time on the right. The node fills when the task is
+ * done; a thin priority bar sits under the title to signal importance without shouting.
+ */
+@Composable
+private fun TimelineTaskRow(
+    row: TaskRowUi,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(Radius.card))
+            .pressable(shape = RoundedCornerShape(Radius.card), pressedScale = 0.99f, onClick = onClick)
+            .padding(vertical = Spacing.x2),
+        verticalAlignment = Alignment.Top,
+    ) {
+        TimelineNode(done = row.task.isDone)
+        Spacer(modifier = Modifier.width(Spacing.x4))
+        Column(
             modifier = Modifier.weight(1f),
-            priorityBarColor = row.task.priority.barColor(),
-            trailing = { PriorityPill(row.task.priority) },
+            verticalArrangement = Arrangement.spacedBy(Spacing.x1),
+        ) {
+            Text(
+                text = row.task.title,
+                fontFamily = InterFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 15.sp,
+                color = if (row.task.isDone) AnchorColors.textMuted else AnchorColors.textPrimary,
+                textDecoration = if (row.task.isDone) TextDecoration.LineThrough else null,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            val metaLine = listOfNotNull(row.metaLabel, row.deadlineLabel).joinToString("  ·  ")
+            if (metaLine.isNotBlank()) {
+                Text(
+                    text = metaLine,
+                    fontFamily = InterFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 12.sp,
+                    color = AnchorColors.textMuted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Spacer(modifier = Modifier.height(Spacing.x1))
+            PriorityBar(priority = row.task.priority)
+        }
+        Spacer(modifier = Modifier.width(Spacing.x3))
+        PriorityPill(priority = row.task.priority)
+    }
+}
+
+/** The circular status node and the connector stub below it. */
+@Composable
+private fun TimelineNode(done: Boolean) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding(top = 2.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(18.dp)
+                .clip(CircleShape)
+                .border(
+                    width = 1.5.dp,
+                    color = if (done) AnchorColors.ink else AnchorColors.borderSoftAlt,
+                    shape = CircleShape,
+                )
+                .background(if (done) AnchorColors.ink else Color.Transparent),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (done) {
+                Icon(
+                    imageVector = Icons.Rounded.Check,
+                    contentDescription = null,
+                    tint = AnchorColors.surface,
+                    modifier = Modifier.size(11.dp),
+                )
+            }
+        }
+        // Connector stub — implies the timeline even on the last row, subtly.
+        Box(
+            modifier = Modifier
+                .padding(top = Spacing.x1)
+                .width(1.5.dp)
+                .height(20.dp)
+                .clip(RoundedCornerShape(Radius.track))
+                .background(AnchorColors.borderSoft),
         )
     }
 }
 
-/** Non-interactive done marker shown at the start of a task row (no onClick). */
+/** Thin priority bar under a task title — soft tone, never a red block. */
 @Composable
-private fun TaskStatusIndicator(done: Boolean, modifier: Modifier = Modifier) {
+private fun PriorityBar(priority: TaskPriority) {
+    val width by animateDpAsState(
+        targetValue = when (priority) {
+            TaskPriority.URGENT -> 40.dp
+            TaskPriority.HIGH -> 28.dp
+            TaskPriority.MEDIUM -> 18.dp
+            TaskPriority.LOW -> 10.dp
+        },
+        animationSpec = Motion.standardSpec(),
+        label = "priority-bar",
+    )
     Box(
-        modifier = modifier
-            .size(24.dp)
-            .clip(CircleShape)
-            .border(
-                width = 1.5.dp,
-                color = if (done) AnchorColors.ink else AnchorColors.border,
-                shape = CircleShape,
-            )
-            .background(if (done) AnchorColors.ink else Color.Transparent),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (done) {
-            Icon(
-                imageVector = Icons.Rounded.Check,
-                contentDescription = null,
-                tint = AnchorColors.surface,
-                modifier = Modifier.size(14.dp),
-            )
-        }
-    }
-}
-
-@Composable
-internal fun RoundCheckbox(checked: Boolean, onToggle: () -> Unit, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .size(24.dp)
-            .clip(CircleShape)
-            .border(
-                width = 1.5.dp,
-                color = if (checked) AnchorColors.ink else AnchorColors.border,
-                shape = CircleShape,
-            )
-            .background(if (checked) AnchorColors.ink else Color.Transparent)
-            .clickable { onToggle() },
-        contentAlignment = Alignment.Center,
-    ) {
-        if (checked) {
-            Icon(
-                imageVector = Icons.Rounded.Check,
-                contentDescription = null,
-                tint = AnchorColors.surface,
-                modifier = Modifier.size(14.dp),
-            )
-        }
-    }
+        modifier = Modifier
+            .width(width)
+            .height(3.dp)
+            .clip(RoundedCornerShape(Radius.track))
+            .background(priority.barColor()),
+    )
 }
 
 @Composable
@@ -404,7 +587,7 @@ private fun PriorityPill(priority: TaskPriority) {
 
 @Composable
 private fun OverdueBanner(count: Int, onReview: () -> Unit, onDismiss: () -> Unit) {
-    val title = androidx.compose.ui.res.pluralStringResource(R.plurals.overdue_banner_title, count, count)
+    val title = pluralStringResource(R.plurals.overdue_banner_title, count, count)
     Banner {
         Text(
             text = title,
@@ -419,7 +602,7 @@ private fun OverdueBanner(count: Int, onReview: () -> Unit, onDismiss: () -> Uni
                 modifier = Modifier
                     .clip(RoundedCornerShape(Radius.chip))
                     .border(1.dp, AnchorColors.border, RoundedCornerShape(Radius.chip))
-                    .clickable(onClick = onReview)
+                    .pressable(shape = RoundedCornerShape(Radius.chip), onClick = onReview)
                     .padding(horizontal = Spacing.x4, vertical = Spacing.x2),
             ) {
                 Text(
@@ -446,8 +629,11 @@ private fun OverdueTaskRow(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Spacing.x2),
     ) {
-        TaskListItem(row = row, onClick = onOpen)
-        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.x2)) {
+        TimelineTaskRow(row = row, onClick = onOpen)
+        Row(
+            modifier = Modifier.padding(start = 34.dp),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.x2),
+        ) {
             SmallAction(stringResource(R.string.overdue_action_reschedule), onReschedule)
             SmallAction(stringResource(R.string.overdue_action_keep), onKeep)
             // Completion now requires a focus session (PRD v0.5 §10.1) — open the task to start one.
@@ -462,7 +648,7 @@ private fun SmallAction(label: String, onClick: () -> Unit) {
         modifier = Modifier
             .clip(RoundedCornerShape(Radius.chip))
             .background(AnchorColors.surfaceMuted)
-            .clickable(onClick = onClick)
+            .pressable(shape = RoundedCornerShape(Radius.chip), onClick = onClick)
             .padding(horizontal = Spacing.x3, vertical = Spacing.x2),
     ) {
         Text(
@@ -482,14 +668,29 @@ private fun EmptyState() {
             .fillMaxWidth()
             .padding(top = Spacing.x8),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(Spacing.x2),
+        verticalArrangement = Arrangement.spacedBy(Spacing.x3),
     ) {
+        Box(
+            modifier = Modifier
+                .size(72.dp)
+                .clip(CircleShape)
+                .border(1.dp, AnchorColors.border, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Checklist,
+                contentDescription = null,
+                tint = AnchorColors.textFaintAlt,
+                modifier = Modifier.size(30.dp),
+            )
+        }
         Text(
             text = stringResource(R.string.home_empty_title),
             fontFamily = InterFamily,
             fontWeight = FontWeight.SemiBold,
-            fontSize = 15.sp,
-            color = AnchorColors.textSecondary,
+            fontSize = 16.sp,
+            color = AnchorColors.textPrimary,
+            textAlign = TextAlign.Center,
         )
         Text(
             text = stringResource(R.string.home_empty_body),
@@ -497,6 +698,7 @@ private fun EmptyState() {
             fontWeight = FontWeight.Normal,
             fontSize = 13.sp,
             color = AnchorColors.textMuted,
+            textAlign = TextAlign.Center,
         )
     }
 }
@@ -509,8 +711,39 @@ private fun TaskPriority.barColor(): Color = when (this) {
     TaskPriority.LOW -> AnchorColors.border
 }
 
+/**
+ * Interactive round checkbox — kept for the subtask list on the Task Detail screen
+ * (docs 07-screens.md §2.6). The Home list itself uses the passive [TimelineNode], since a task
+ * is completed only by finishing a full Focus session (PRD v0.5 §10.1).
+ */
+@Composable
+internal fun RoundCheckbox(checked: Boolean, onToggle: () -> Unit, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .size(24.dp)
+            .clip(CircleShape)
+            .border(
+                width = 1.5.dp,
+                color = if (checked) AnchorColors.ink else AnchorColors.border,
+                shape = CircleShape,
+            )
+            .background(if (checked) AnchorColors.ink else Color.Transparent)
+            .pressable(shape = CircleShape, onClick = onToggle),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (checked) {
+            Icon(
+                imageVector = Icons.Rounded.Check,
+                contentDescription = null,
+                tint = AnchorColors.surface,
+                modifier = Modifier.size(14.dp),
+            )
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
-private fun ProgressCardPreview() {
-    AnchorTheme { ProgressCard(completed = 1, total = 3) }
+private fun SummaryCardPreview() {
+    AnchorTheme { SummaryCard(completed = 2, total = 5) }
 }

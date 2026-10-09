@@ -3,6 +3,7 @@ package com.anchor.app.core.data.repository
 import com.anchor.app.core.data.dao.AppSettingsDao
 import com.anchor.app.core.data.entity.AppSettingsEntity
 import com.anchor.app.core.domain.model.AppSettings
+import com.anchor.app.core.domain.model.FocusArea
 import com.anchor.app.core.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -48,6 +49,21 @@ class SettingsRepositoryImpl @Inject constructor(
         dao.upsert(current.copy(focusBlockingEnabled = enabled).toEntity())
     }
 
+    override suspend fun setNickname(nickname: String) {
+        val current = dao.get()?.toDomain() ?: AppSettings()
+        dao.upsert(current.copy(nickname = nickname.trim()).toEntity())
+    }
+
+    override suspend fun setFocusArea(area: FocusArea) {
+        val current = dao.get()?.toDomain() ?: AppSettings()
+        dao.upsert(current.copy(focusArea = area).toEntity())
+    }
+
+    override suspend fun setDefaultFocusDurationMin(minutes: Int) {
+        val current = dao.get()?.toDomain() ?: AppSettings()
+        dao.upsert(current.copy(defaultFocusDurationMin = minutes).toEntity())
+    }
+
     override suspend fun resetAll() {
         dao.clear()
     }
@@ -62,6 +78,9 @@ private fun AppSettingsEntity.toDomain(): AppSettings = AppSettings(
     locale = locale,
     blockedApps = decodeBlockedApps(blockedAppsJson),
     focusBlockingEnabled = focusBlockingEnabled,
+    nickname = nickname.orEmpty(),
+    focusArea = decodeFocusArea(focusArea),
+    defaultFocusDurationMin = defaultFocusDurationMin,
 )
 
 private fun AppSettings.toEntity(): AppSettingsEntity = AppSettingsEntity(
@@ -73,7 +92,14 @@ private fun AppSettings.toEntity(): AppSettingsEntity = AppSettingsEntity(
     locale = locale,
     blockedAppsJson = encodeBlockedApps(blockedApps),
     focusBlockingEnabled = focusBlockingEnabled,
+    nickname = nickname.ifBlank { null },
+    focusArea = focusArea.name,
+    defaultFocusDurationMin = defaultFocusDurationMin,
 )
+
+/** Parses the stored [FocusArea] name, falling back to the default for unknown values. */
+private fun decodeFocusArea(raw: String): FocusArea =
+    FocusArea.entries.firstOrNull { it.name == raw } ?: FocusArea.COLLEGE
 
 private fun encodeBlockedApps(apps: Set<String>): String? {
     if (apps.isEmpty()) return null

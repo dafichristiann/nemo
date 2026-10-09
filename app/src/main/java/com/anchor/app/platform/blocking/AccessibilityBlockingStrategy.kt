@@ -22,10 +22,19 @@ class AccessibilityBlockingStrategy @Inject constructor(
     private val blockingState: BlockingState,
 ) : BlockingStrategy {
 
-    override val effectiveMode: FocusMode = FocusMode.CUSTOM
+    /**
+     * Label for the mode this strategy enforces when it engages. Strict is the blocking mode
+     * offered in the UI (Custom is hidden), so a ready blocking strategy reports [FocusMode.STRICT]
+     * rather than hard-coding CUSTOM — otherwise a Strict session would be recorded as Custom.
+     */
+    override val effectiveMode: FocusMode = FocusMode.STRICT
 
-    override fun isAvailable(): Boolean =
-        gate.isBuildFlagOn() && gate.isToggleOn() && gate.isServiceEnabled()
+    /**
+     * Uses the authoritative toggle read ([BlockingGate.isToggleOnNow]) rather than the cached hot
+     * value, so a cold-start cache miss can't silently degrade a Strict session to Gentle.
+     */
+    override suspend fun isAvailable(): Boolean =
+        gate.isBuildFlagOn() && gate.isToggleOnNow() && gate.isServiceEnabled()
 
     override suspend fun engage(packages: Set<String>): Boolean {
         if (!isAvailable()) return false

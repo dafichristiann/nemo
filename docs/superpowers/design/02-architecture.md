@@ -70,6 +70,45 @@ Anchor adalah aplikasi **Android native, local-first, single-user, tanpa backend
 > **Catatan real-device:** Karena single-user, target utama adalah device pribadi.
 > Tetap uji di minimal 2 device (1 low-RAM 3–4 GB) untuk benchmark PRD §12.
 
+### 1.1 Kebijakan Dependensi — "Pakai Library Ringan, Jangan Bikin Sendiri"
+
+> **Aturan (WAJIB):** Untuk setiap fitur yang sudah jelas kebutuhannya (pemilih tanggal/waktu,
+> pemilih daftar, kalender, format tanggal/durasi, drag-and-drop, grafik, dsb.), **gunakan
+> library ringan yang sudah matang terlebih dahulu**. **Jangan** menulis komponen kompleks dari
+> nol kecuali ada alasan kuat.
+
+**Urutan preferensi (ambil yang paling ringan/terpilih pertama yang memenuhi):**
+
+1. **Sudah ada di stack** — `androidx.compose.material3`, `material-icons-extended`,
+   `androidx.compose.foundation`, Android platform APIs. Pakai ini dulu.
+2. **Library Jetpack resmi** — `androidx.compose.material3` (DatePicker/TimePicker),
+   `androidx.*` lainnya. Paling aman: versi selaras BOM, mantenance jelas.
+3. **Library ringan pihak ketiga yang terpilih** (open-source, lisensi permisif, adopsi luas,
+   tanpa dependency transitif berat). Contoh yang dapat dipertimbangkan: **`com.kizitonwose:calendar-compose`**
+   (kalender ringan), **`androidx.compose.material3` DatePicker**, library chart ringan seperti
+   **`co.yml:ycharts`** / **`com.patrykandpatrick.vico`**. Evaluasi per fitur.
+4. **Buat sendiri** — pilihan **terakhir**, hanya bila:
+   - tidak ada library ringan yang cocok, **atau**
+   - library menambah ukuran/nilai yang tidak sepadan (bertentangan PRD §12: RAM < 150 MB),
+   - dan komponennya sederhana (mis. `ListItemPicker`, `WheelPicker`) sehingga wajar ditulis kecil.
+
+**Syarat sebelum menambah library baru:**
+
+- Ringan: dorong kecil, tanpa dependency transitif besar, tidak menambah startup cost berarti.
+- Tidak membawa analytics/telemetry pihak ketiga (lihat §7 Privacy).
+- Lisensi permisif (Apache-2.0 / MIT) — tidak ada GPL untuk kode yang didistribusikan.
+- Versi dikelola di `gradle/libs.versions.toml` (version catalog), bukan hard-coded.
+- Dapat dites di JVM/Compose test tanpa layanan eksternal.
+- Cocok dengan bahasa Indonesia (i18n string resource, bukan string hard-coded).
+
+**Alasan:** hemat waktu & baris kode, komponen teruji (edge case tanggal/waktu/scroll sudah
+ditangani), lebih mudah dirawat, dan mengurangi bug. Menulis sendiri hanya dibenarkan untuk
+komponen **kecil dan spesifik** yang tidak ada padanannya secara ringan.
+
+> **Ringkas untuk AI/dev:** Sebelum menulis widget kompleks, **cek dulu**: (1) sudah ada di
+> Compose/Material3? (2) ada library Jetpack? (3) ada library ringan terpilih? Baru kalau ketiganya
+> "tidak", tulis sendiri — itupun minimalis.
+
 ---
 
 ## 2. Struktur Modul (Package Layout)

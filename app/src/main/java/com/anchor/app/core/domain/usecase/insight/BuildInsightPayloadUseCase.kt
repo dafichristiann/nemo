@@ -30,8 +30,8 @@ class BuildInsightPayloadUseCase @Inject constructor(
         val tasksPlanned = tasks.count { it.status != TaskStatus.ARCHIVED }
         val tasksCompleted = tasks.count { it.status == TaskStatus.DONE && it.completedAt != null }
 
-        val startOfDay = timeProvider.startOfDayMillis(dateEpochDay * DAY_MS_APPROX)
-        val endOfDay = startOfDay + DAY_MS_APPROX
+        val startOfDay = timeProvider.startOfDayMillisForEpochDay(dateEpochDay)
+        val endOfDay = timeProvider.endOfDayMillisForEpochDay(dateEpochDay)
         val focusMs = focusRepository.totalDurationBetween(startOfDay, endOfDay)
 
         val daily = usageRepository.dailySummary(dateEpochDay)
@@ -61,8 +61,4 @@ class BuildInsightPayloadUseCase @Inject constructor(
 
     private fun humanizeCategory(category: String): String =
         category.lowercase().replaceFirstChar { it.uppercase() }
-
-    private companion object {
-        const val DAY_MS_APPROX = 24 * 60 * 60 * 1000L
-    }
 }

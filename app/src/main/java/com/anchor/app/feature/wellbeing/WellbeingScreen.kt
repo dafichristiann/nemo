@@ -1,7 +1,6 @@
 package com.anchor.app.feature.wellbeing
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,9 +16,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,13 +38,23 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.BarChart
 import com.anchor.app.R
+import com.anchor.app.core.common.DateTimeFormatter
+import com.anchor.app.core.common.short
 import com.anchor.app.core.design.components.PrimaryButton
 import com.anchor.app.core.design.components.SectionHeader
+import com.anchor.app.core.design.components.pressable
 import com.anchor.app.core.design.theme.AnchorColors
 import com.anchor.app.core.design.theme.AnchorElevation
 import com.anchor.app.core.design.theme.InterFamily
 import com.anchor.app.core.design.theme.LocalAnchorElevation
+import com.anchor.app.core.design.theme.Motion
 import com.anchor.app.core.design.theme.Radius
 import com.anchor.app.core.design.theme.Spacing
 import com.anchor.app.platform.usagestats.UsageAccessSettings
@@ -103,16 +114,29 @@ fun WellbeingScreen(
             )
             WellbeingAvailability.NO_DATA -> NoDataEmptyState()
             WellbeingAvailability.AVAILABLE -> {
+                val selectedLabel = if (state.selectedIsToday) {
+                    stringResource(R.string.wellbeing_day_today)
+                } else {
+                    DateTimeFormatter.dateLabelComma(state.selectedDate)
+                }
+                val previousLabel = if (state.previousIsYesterday) {
+                    stringResource(R.string.wellbeing_day_yesterday)
+                } else {
+                    state.previousDate.dayOfWeek.short()
+                }
                 ScreenTimeCard(
-                    todayMs = state.todayTotalMs,
-                    yesterdayMs = state.yesterdayTotalMs,
+                    label = selectedLabel,
+                    totalMs = state.totalMs,
+                    previousMs = state.previousTotalMs,
+                    previousLabel = previousLabel,
                 )
+                StatsOverview(state = state, previousLabel = previousLabel)
                 if (state.topApps.isNotEmpty()) {
                     SectionHeader(title = stringResource(R.string.wellbeing_top_apps))
                     TopApps(state.topApps)
                 }
                 SectionHeader(title = stringResource(R.string.wellbeing_this_week))
-                WeeklyChart(state.week)
+                WeeklyChart(week = state.week, onSelectDay = viewModel::onSelectDay)
                 Text(
                     text = stringResource(R.string.wellbeing_local_only),
                     fontFamily = InterFamily,
@@ -125,9 +149,14 @@ fun WellbeingScreen(
 }
 
 @Composable
-private fun ScreenTimeCard(todayMs: Long, yesterdayMs: Long) {
+private fun ScreenTimeCard(
+    label: String,
+    totalMs: Long,
+    previousMs: Long,
+    previousLabel: String,
+) {
     val elevation: AnchorElevation = LocalAnchorElevation.current
-    val delta = todayMs - yesterdayMs
+    val delta = totalMs - previousMs
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -142,25 +171,38 @@ private fun ScreenTimeCard(todayMs: Long, yesterdayMs: Long) {
             .padding(Spacing.cardHorizontal),
         verticalArrangement = Arrangement.spacedBy(Spacing.x2),
     ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.wellbeing_screen_time),
+                fontFamily = InterFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 13.sp,
+                color = AnchorColors.textSecondary,
+            )
+            Text(
+                text = label,
+                fontFamily = InterFamily,
+                fontWeight = FontWeight.Medium,
+                fontSize = 12.sp,
+                color = AnchorColors.textMuted,
+            )
+        }
         Text(
-            text = stringResource(R.string.wellbeing_screen_time),
-            fontFamily = InterFamily,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 13.sp,
-            color = AnchorColors.textSecondary,
-        )
-        Text(
-            text = formatDuration(todayMs),
+            text = formatDuration(totalMs),
             fontFamily = InterFamily,
             fontWeight = FontWeight.Bold,
             fontSize = 34.sp,
             color = AnchorColors.textPrimary,
         )
         val comparison = when {
-            yesterdayMs <= 0L -> stringResource(R.string.wellbeing_no_comparison)
-            delta == 0L -> stringResource(R.string.wellbeing_same_as_yesterday)
-            delta > 0L -> stringResource(R.string.wellbeing_more_than_yesterday, formatDuration(delta))
-            else -> stringResource(R.string.wellbeing_less_than_yesterday, formatDuration(-delta))
+            previousMs <= 0L -> stringResource(R.string.wellbeing_no_comparison)
+            delta == 0L -> stringResource(R.string.wellbeing_same_as_previous, previousLabel)
+            delta > 0L -> stringResource(R.string.wellbeing_more_than_previous, formatDuration(delta), previousLabel)
+            else -> stringResource(R.string.wellbeing_less_than_previous, formatDuration(-delta), previousLabel)
         }
         Text(
             text = comparison,
@@ -169,6 +211,153 @@ private fun ScreenTimeCard(todayMs: Long, yesterdayMs: Long) {
             color = AnchorColors.textMuted,
         )
     }
+}
+
+@Composable
+private fun StatsOverview(state: WellbeingUiState, previousLabel: String) {
+    // Only render when there is at least one honest comparison to show.
+    val hasVsYesterday = state.vsYesterday != null
+    val hasVsAverage = state.vsWeekAverage != null
+    val hasDistraction = state.distractionDeltaPctPoints != null
+    if (!hasVsYesterday && !hasVsAverage && !hasDistraction) return
+
+    val elevation: AnchorElevation = LocalAnchorElevation.current
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(
+                elevation = elevation.card.dp,
+                shape = RoundedCornerShape(Radius.card),
+                ambientColor = Color.Black.copy(alpha = 0.06f),
+                spotColor = Color.Black.copy(alpha = 0.06f),
+            )
+            .clip(RoundedCornerShape(Radius.card))
+            .background(AnchorColors.surfaceCard)
+            .padding(Spacing.cardHorizontal),
+        verticalArrangement = Arrangement.spacedBy(Spacing.x3),
+    ) {
+        Text(
+            text = stringResource(R.string.wellbeing_stats_title),
+            fontFamily = InterFamily,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 13.sp,
+            color = AnchorColors.textSecondary,
+        )
+        state.vsYesterday?.let { cmp ->
+            StatRow(
+                label = stringResource(R.string.wellbeing_stats_vs_yesterday, previousLabel),
+                comparison = cmp,
+            )
+        }
+        state.vsWeekAverage?.let { cmp ->
+            StatRow(
+                label = stringResource(R.string.wellbeing_stats_vs_avg, state.daysWithData),
+                comparison = cmp,
+            )
+        }
+        state.distractionDeltaPctPoints?.let { points ->
+            DistractionRow(points = points, previousLabel = previousLabel)
+        }
+    }
+}
+
+@Composable
+private fun StatRow(label: String, comparison: StatComparison) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            fontFamily = InterFamily,
+            fontSize = 13.sp,
+            color = AnchorColors.textMuted,
+            modifier = Modifier.weight(1f),
+        )
+        Spacer(modifier = Modifier.width(Spacing.x2))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = trendGlyph(comparison.direction),
+                fontFamily = InterFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.sp,
+                color = trendColor(comparison.direction),
+            )
+            Spacer(modifier = Modifier.width(Spacing.x1))
+            Text(
+                // Prefer the honest percentage; fall back to the absolute delta when the
+                // baseline was zero (no percentage is defined).
+                text = comparison.deltaPct?.let { "${if (it > 0) "+" else ""}$it%" }
+                    ?: formatDelta(comparison.deltaMs),
+                fontFamily = InterFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 13.sp,
+                color = trendColor(comparison.direction),
+            )
+        }
+    }
+}
+
+@Composable
+private fun DistractionRow(points: Float, previousLabel: String) {
+    val direction = when {
+        points > 0f -> TrendDirection.UP
+        points < 0f -> TrendDirection.DOWN
+        else -> TrendDirection.FLAT
+    }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = stringResource(R.string.wellbeing_stats_distraction, previousLabel),
+            fontFamily = InterFamily,
+            fontSize = 13.sp,
+            color = AnchorColors.textMuted,
+            modifier = Modifier.weight(1f),
+        )
+        Spacer(modifier = Modifier.width(Spacing.x2))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = trendGlyph(direction),
+                fontFamily = InterFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.sp,
+                color = trendColor(direction),
+            )
+            Spacer(modifier = Modifier.width(Spacing.x1))
+            Text(
+                text = "${if (points > 0f) "+" else ""}${kotlin.math.round(points)}pp",
+                fontFamily = InterFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 13.sp,
+                color = trendColor(direction),
+            )
+        }
+    }
+}
+
+private fun trendGlyph(direction: TrendDirection): String = when (direction) {
+    TrendDirection.UP -> "\u25B2"
+    TrendDirection.DOWN -> "\u25BC"
+    TrendDirection.FLAT -> "\u2013"
+}
+
+/** Up = more screen time (a nudge, not a scold); down = less. Neutral grey when flat. */
+@Composable
+private fun trendColor(direction: TrendDirection): Color = when (direction) {
+    TrendDirection.UP -> AnchorColors.textPrimary
+    TrendDirection.DOWN -> AnchorColors.textMuted
+    TrendDirection.FLAT -> AnchorColors.textFaint
+}
+
+/** "+25m" / "-1h 5m" for the absolute-delta fallback. */
+private fun formatDelta(ms: Long): String {
+    if (ms == 0L) return "0m"
+    val sign = if (ms > 0) "+" else "-"
+    return sign + formatDuration(kotlin.math.abs(ms))
 }
 
 @Composable
@@ -223,8 +412,11 @@ private fun TopApps(apps: List<TopAppRow>) {
 }
 
 @Composable
-private fun WeeklyChart(week: List<DayBar>) {
+private fun WeeklyChart(week: List<DayBar>, onSelectDay: (Long) -> Unit) {
     val maxMs = week.maxOf { it.totalMs }.coerceAtLeast(1L)
+    // Animate the chart in on first composition: bars grow from the baseline (calm motion).
+    var appeared by remember { mutableStateOf(false) }
+    LaunchedEffect(week.map { it.epochDay }) { appeared = true }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -233,25 +425,36 @@ private fun WeeklyChart(week: List<DayBar>) {
         verticalAlignment = Alignment.Bottom,
     ) {
         week.forEach { day ->
+            val targetFraction = (8 + (72 * day.totalMs / maxMs).toInt()).dp
+            val animatedHeight by animateDpAsState(
+                targetValue = if (appeared) targetFraction else 8.dp,
+                animationSpec = Motion.enterSpec(),
+                label = "weekly-bar",
+            )
+            val emphasized = day.isSelected || day.isToday
             Column(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(Radius.chip))
+                    .pressable(shape = RoundedCornerShape(Radius.chip)) { onSelectDay(day.epochDay) }
+                    .padding(vertical = Spacing.x1),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Bottom,
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth(0.6f)
-                        .height((8 + (72 * day.totalMs / maxMs).toInt()).dp)
+                        .height(animatedHeight)
                         .clip(RoundedCornerShape(Radius.track))
-                        .background(if (day.isToday) AnchorColors.ink else AnchorColors.trackAlt),
+                        .background(if (emphasized) AnchorColors.ink else AnchorColors.trackAlt),
                 )
                 Spacer(modifier = Modifier.height(Spacing.x2))
                 Text(
                     text = day.label,
                     fontFamily = InterFamily,
-                    fontWeight = if (day.isToday) FontWeight.SemiBold else FontWeight.Normal,
+                    fontWeight = if (emphasized) FontWeight.SemiBold else FontWeight.Normal,
                     fontSize = 11.sp,
-                    color = if (day.isToday) AnchorColors.textPrimary else AnchorColors.textMutedAlt,
+                    color = if (emphasized) AnchorColors.textPrimary else AnchorColors.textMutedAlt,
                 )
             }
         }
@@ -267,6 +470,20 @@ private fun PermissionEmptyState(onOpenSettings: () -> Unit, onOpenAppSettings: 
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Spacing.x3),
     ) {
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .clip(CircleShape)
+                .background(AnchorColors.surfaceMuted),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.BarChart,
+                contentDescription = null,
+                tint = AnchorColors.textFaintAlt,
+                modifier = Modifier.size(28.dp),
+            )
+        }
         Text(
             text = stringResource(R.string.wellbeing_perm_title),
             fontFamily = InterFamily,
@@ -294,7 +511,7 @@ private fun PermissionEmptyState(onOpenSettings: () -> Unit, onOpenAppSettings: 
             color = AnchorColors.textMuted,
             modifier = Modifier
                 .clip(RoundedCornerShape(Radius.chip))
-                .clickable(onClick = onOpenAppSettings)
+                .pressable(shape = RoundedCornerShape(Radius.chip), onClick = onOpenAppSettings)
                 .padding(horizontal = Spacing.x3, vertical = Spacing.x2),
         )
     }
@@ -307,14 +524,29 @@ private fun NoDataEmptyState() {
             .fillMaxWidth()
             .padding(top = Spacing.x8),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(Spacing.x2),
+        verticalArrangement = Arrangement.spacedBy(Spacing.x3),
     ) {
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .clip(CircleShape)
+                .background(AnchorColors.surfaceMuted),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.BarChart,
+                contentDescription = null,
+                tint = AnchorColors.textFaintAlt,
+                modifier = Modifier.size(28.dp),
+            )
+        }
         Text(
             text = stringResource(R.string.wellbeing_nodata_title),
             fontFamily = InterFamily,
             fontWeight = FontWeight.SemiBold,
             fontSize = 15.sp,
             color = AnchorColors.textSecondary,
+            textAlign = TextAlign.Center,
         )
         Text(
             text = stringResource(R.string.wellbeing_nodata_body),

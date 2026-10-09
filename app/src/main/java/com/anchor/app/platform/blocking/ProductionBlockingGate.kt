@@ -25,7 +25,7 @@ import javax.inject.Singleton
 class ProductionBlockingGate @Inject constructor(
     @ApplicationContext context: Context,
     private val accessibilityStatus: AccessibilityStatus,
-    settingsRepository: SettingsRepository,
+    private val settingsRepository: SettingsRepository,
 ) : BlockingGate {
 
     private val appContext = context.applicationContext
@@ -42,6 +42,13 @@ class ProductionBlockingGate @Inject constructor(
     override fun isBuildFlagOn(): Boolean = BuildConfig.FOCUS_BLOCKING_ENABLED
 
     override fun isToggleOn(): Boolean = toggleOn.get()
+
+    /**
+     * Authoritative read used at decision points: the cached [toggleOn] can still be `false` at
+     * cold start (the flow hasn't emitted yet), which would wrongly degrade a Strict session to
+     * Gentle. Reading straight from the repository removes that race.
+     */
+    override suspend fun isToggleOnNow(): Boolean = settingsRepository.get().focusBlockingEnabled
 
     override fun isServiceEnabled(): Boolean = accessibilityStatus.isEnabled(appContext)
 }

@@ -21,31 +21,36 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -53,108 +58,21 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.anchor.app.R
 import com.anchor.app.core.design.components.Banner
 import com.anchor.app.core.design.components.PrimaryButton
 import com.anchor.app.core.design.components.ProgressTrack
+import com.anchor.app.core.design.components.SectionHeader
+import com.anchor.app.core.design.components.SegmentedChips
 import com.anchor.app.core.design.components.TextPill
 import com.anchor.app.core.design.theme.AnchorColors
 import com.anchor.app.core.design.theme.InterFamily
 import com.anchor.app.core.design.theme.Radius
 import com.anchor.app.core.design.theme.Spacing
+import com.anchor.app.core.domain.model.AppSettings
+import com.anchor.app.core.domain.model.FocusArea
 import com.anchor.app.platform.usagestats.UsageAccessSettings
-
-/**
- * 00 Splash & Onboarding (docs/superpowers/design/07-screens.md §2.3).
- *
- * Logo, two-line title, calm subtitle, and a soft 3D "Get started" CTA. No permissions
- * are requested here (PRD §10.10: onboarding never forces).
- */
-@Composable
-fun OnboardingScreen(
-    onGetStarted: () -> Unit,
-    onSkip: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(AnchorColors.surface)
-            .padding(horizontal = Spacing.screenHorizontal)
-            .padding(vertical = Spacing.x6),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            Text(
-                text = stringResource(R.string.onboarding_skip),
-                fontFamily = InterFamily,
-                fontWeight = FontWeight.Medium,
-                fontSize = 14.sp,
-                color = AnchorColors.textMutedAlt,
-                modifier = Modifier.clickable(onClick = onSkip),
-            )
-        }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Logo avatar stack
-        Box(
-            modifier = Modifier
-                .size(120.dp)
-                .clip(CircleShape)
-                .background(AnchorColors.ink),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.Lock,
-                contentDescription = null,
-                tint = AnchorColors.surface,
-                modifier = Modifier.size(48.dp),
-            )
-        }
-
-        Spacer(modifier = Modifier.height(Spacing.x8))
-
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(Spacing.x2),
-        ) {
-            Text(
-                text = stringResource(R.string.onboarding_title_line1),
-                fontFamily = InterFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = 32.sp,
-                color = AnchorColors.textPrimary,
-            )
-            Text(
-                text = stringResource(R.string.onboarding_title_line2),
-                fontFamily = InterFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = 32.sp,
-                color = AnchorColors.textPrimary,
-            )
-        }
-
-        Spacer(modifier = Modifier.height(Spacing.x4))
-
-        Text(
-            text = stringResource(R.string.onboarding_subtitle),
-            fontFamily = InterFamily,
-            fontWeight = FontWeight.Normal,
-            fontSize = 14.sp,
-            lineHeight = 21.sp,
-            color = AnchorColors.textSecondary,
-            textAlign = TextAlign.Center,
-        )
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        PrimaryButton(
-            label = stringResource(R.string.onboarding_get_started),
-            onClick = onGetStarted,
-        )
-    }
-}
 
 /**
  * 00b Permission Onboarding (docs 07-screens.md §2.4).
@@ -209,13 +127,13 @@ fun PermissionOnboardingScreen(
         verticalArrangement = Arrangement.spacedBy(Spacing.x4),
     ) {
         Text(
-            text = stringResource(R.string.onboarding_perm_step, 1, 2),
+            text = stringResource(R.string.onboarding_perm_step, 3, 3),
             fontFamily = InterFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 12.sp,
             color = AnchorColors.textMutedAlt,
         )
-        ProgressTrack(progress = 0.5f)
+        ProgressTrack(progress = 1f)
 
         Text(
             text = stringResource(R.string.onboarding_perm_headline),
@@ -279,6 +197,164 @@ fun PermissionOnboardingScreen(
     }
 }
 
+/**
+ * 00a Profile Setup (docs 07-screens.md §2.3b).
+ *
+ * Collects the three fields we ask every new user for — a nickname (personalizes the mascot
+ * greeting), a main focus area (College / Career / Personal Growth), and a default focus-session
+ * length (25 / 45 / 60 min). Every field is optional and immediately persisted, so the user can
+ * tap Continue/Skip at any point without losing what they typed.
+ */
+@Composable
+fun ProfileSetupScreen(
+    onContinue: () -> Unit,
+    onSkip: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: ProfileSetupViewModel = hiltViewModel(),
+) {
+    val settings by viewModel.settings.collectAsStateWithLifecycle()
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(AnchorColors.surface)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = Spacing.screenHorizontal)
+            .padding(vertical = Spacing.x6),
+        verticalArrangement = Arrangement.spacedBy(Spacing.x4),
+    ) {
+        Text(
+            text = stringResource(R.string.onboarding_profile_step, 2, 3),
+            fontFamily = InterFamily,
+            fontWeight = FontWeight.Medium,
+            fontSize = 12.sp,
+            color = AnchorColors.textMutedAlt,
+        )
+        ProgressTrack(progress = 2f / 3f)
+
+        Text(
+            text = stringResource(R.string.onboarding_profile_headline),
+            fontFamily = InterFamily,
+            fontWeight = FontWeight.Bold,
+            fontSize = 28.sp,
+            color = AnchorColors.textPrimary,
+        )
+        Text(
+            text = stringResource(R.string.onboarding_profile_sub),
+            fontFamily = InterFamily,
+            fontSize = 14.sp,
+            lineHeight = 20.sp,
+            color = AnchorColors.textSecondary,
+        )
+
+        // Field 1 — nickname (personalizes the mascot greeting).
+        SectionHeader(title = stringResource(R.string.onboarding_profile_nickname_label))
+        NicknameField(
+            value = settings.nickname,
+            onValueChange = viewModel::onNicknameChange,
+            hint = stringResource(R.string.onboarding_profile_nickname_hint),
+        )
+
+        // Field 2 — main focus area.
+        SectionHeader(title = stringResource(R.string.onboarding_profile_focus_label))
+        SegmentedChips(
+            options = listOf(
+                stringResource(R.string.onboarding_profile_focus_college),
+                stringResource(R.string.onboarding_profile_focus_career),
+                stringResource(R.string.onboarding_profile_focus_personal),
+            ),
+            selectedIndex = settings.focusArea.ordinal,
+            onSelect = { viewModel.onSelectFocusArea(FocusArea.entries[it]) },
+        )
+
+        // Field 3 — default focus-session length (25 / 45 / 60; default 25).
+        SectionHeader(title = stringResource(R.string.onboarding_profile_duration_label))
+        SegmentedChips(
+            options = AppSettings.FOCUS_DURATION_OPTIONS_MIN
+                .map { stringResource(R.string.onboarding_profile_duration_value, it) },
+            selectedIndex = AppSettings.FOCUS_DURATION_OPTIONS_MIN
+                .indexOf(settings.defaultFocusDurationMin)
+                .coerceAtLeast(0),
+            onSelect = { viewModel.onSelectDuration(AppSettings.FOCUS_DURATION_OPTIONS_MIN[it]) },
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        PrimaryButton(
+            label = stringResource(R.string.onboarding_profile_continue),
+            onClick = onContinue,
+        )
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            Text(
+                text = stringResource(R.string.onboarding_profile_skip),
+                fontFamily = InterFamily,
+                fontWeight = FontWeight.Medium,
+                fontSize = 14.sp,
+                color = AnchorColors.textMuted,
+                modifier = Modifier.clickable(onClick = onSkip),
+            )
+        }
+    }
+}
+
+/**
+ * Single-line nickname input built on Material3 [OutlinedTextField] (already on the classpath
+ * via the Compose BOM — no extra dependency). Styled to match the App's soft inputs: sunken
+ * background, thin border, Inter font, and a rounded field shape. `singleLine` + IME "Done"
+ * dismisses the keyboard on submit.
+ */
+@Composable
+private fun NicknameField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    hint: String,
+    modifier: Modifier = Modifier,
+) {
+    val keyboard = LocalSoftwareKeyboardController.current
+    // Local editing buffer: binding straight to the persisted (and trimmed) settings value dropped
+    // characters and jumped the cursor, because each keystroke round-tripped through the store.
+    var text by rememberSaveable { mutableStateOf(value) }
+    LaunchedEffect(value) {
+        if (value != text.trim()) text = value
+    }
+    OutlinedTextField(
+        value = text,
+        onValueChange = { new ->
+            val capped = new.take(MAX_NICKNAME_LENGTH)
+            text = capped
+            onValueChange(capped)
+        },
+        modifier = modifier.fillMaxWidth(),
+        singleLine = true,
+        placeholder = {
+            Text(
+                text = hint,
+                fontFamily = InterFamily,
+                fontSize = 14.sp,
+                color = AnchorColors.textFaint,
+            )
+        },
+        textStyle = androidx.compose.ui.text.TextStyle(
+            fontFamily = InterFamily,
+            fontSize = 14.sp,
+            color = AnchorColors.textPrimary,
+        ),
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(onDone = { keyboard?.hide() }),
+        shape = RoundedCornerShape(Radius.field),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = AnchorColors.surfaceSunken,
+            unfocusedContainerColor = AnchorColors.surfaceSunken,
+            focusedBorderColor = AnchorColors.ink,
+            unfocusedBorderColor = AnchorColors.border,
+            cursorColor = AnchorColors.ink,
+        ),
+    )
+}
+
+/** Nickname is a greeting, not data — cap it so the header never overflows. */
+private const val MAX_NICKNAME_LENGTH = 24
+
 /** Reads the PACKAGE_USAGE_STATS AppOps state (special access, granted in Settings). */
 private fun usageAccessGranted(context: Context): Boolean = runCatching {
     val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
@@ -286,7 +362,6 @@ private fun usageAccessGranted(context: Context): Boolean = runCatching {
     val mode = appOps.checkOpNoThrow("android:get_usage_stats", Process.myUid(), context.packageName)
     mode == AppOpsManager.MODE_ALLOWED
 }.getOrDefault(false)
-
 private fun requestNotifications(
     launcher: androidx.activity.result.ActivityResultLauncher<String>,
     context: Context,

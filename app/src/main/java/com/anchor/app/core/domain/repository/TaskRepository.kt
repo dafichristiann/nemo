@@ -34,6 +34,15 @@ interface TaskRepository {
 
     suspend fun insert(task: Task)
 
+    /**
+     * Insert a recurring instance, atomically ignoring it when an instance for the same
+     * `(definitionId, definitionOccurrenceDate)` already exists. Returns true when a new row
+     * was written, false when the write was a no-op (duplicate). Backed by a unique index so
+     * the check-then-act race between the Tasks screen and the recurring Worker cannot create
+     * a double instance (FR-T7).
+     */
+    suspend fun insertIgnoringDuplicate(task: Task): Boolean
+
     suspend fun update(task: Task)
 
     suspend fun delete(id: String)

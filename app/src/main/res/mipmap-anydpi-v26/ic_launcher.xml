@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Nemo adaptive launcher icon. The background colour is theme-aware (white in light, near-black
+  in dark via values-night), and the foreground mark is a transparent PNG (dark mark for light
+  theme in drawable-nodpi, light mark for dark theme in drawable-night-nodpi).
+-->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@drawable/ic_launcher_background" />
+    <background android:drawable="@color/ic_launcher_background" />
     <foreground android:drawable="@drawable/ic_launcher_foreground" />
-    <monochrome android:drawable="@drawable/ic_launcher_foreground" />
 </adaptive-icon>

@@ -2,7 +2,6 @@ package com.anchor.app.feature.settings
 
 import android.graphics.drawable.Drawable
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,8 +21,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,7 +35,9 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.anchor.app.R
+import com.anchor.app.core.design.components.AnchorSwitch
 import com.anchor.app.core.design.components.AppIcon
+import com.anchor.app.core.design.components.pressable
 import com.anchor.app.core.design.theme.AnchorColors
 import com.anchor.app.core.design.theme.InterFamily
 import com.anchor.app.core.design.theme.Radius
@@ -122,7 +122,7 @@ internal fun AppToggleRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(Radius.field))
-            .clickable(onClick = onToggle)
+            .pressable(shape = RoundedCornerShape(Radius.field), onClick = onToggle)
             .padding(horizontal = Spacing.x2, vertical = Spacing.x2),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -143,13 +143,9 @@ internal fun AppToggleRow(
                 color = AnchorColors.textFaint,
             )
         }
-        Switch(
+        AnchorSwitch(
             checked = checked,
             onCheckedChange = { onToggle() },
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = AnchorColors.surface,
-                checkedTrackColor = AnchorColors.ink,
-            ),
         )
     }
 }
@@ -157,12 +153,23 @@ internal fun AppToggleRow(
 @Composable
 internal fun BackHeader(title: String, onBack: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.x3)) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.x2)) {
+        Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(Radius.chip))
+                .pressable(
+                    shape = RoundedCornerShape(Radius.chip),
+                    pressedScale = 0.96f,
+                    onClick = onBack,
+                )
+                .padding(vertical = Spacing.x1, horizontal = Spacing.x1),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.x1),
+        ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                contentDescription = null,
+                contentDescription = stringResource(R.string.detail_back),
                 tint = AnchorColors.textPrimary,
-                modifier = Modifier.clickable(onClick = onBack),
+                modifier = Modifier.size(20.dp),
             )
             Text(
                 text = stringResource(R.string.detail_back),
@@ -170,7 +177,6 @@ internal fun BackHeader(title: String, onBack: () -> Unit) {
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp,
                 color = AnchorColors.textPrimary,
-                modifier = Modifier.clickable(onClick = onBack),
             )
         }
         Text(

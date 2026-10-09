@@ -45,6 +45,9 @@ import com.anchor.app.core.data.entity.WeeklyUsageSummaryEntity
  *  - v8: + `app_settings.blockedAppsJson` (FR-S4)
  *  - v9: + `app_settings.focusBlockingEnabled` (FR-F4/F8, PRD v0.4 §10.5)
  *  - v10: + `task_instance.completionSource` (FR-T8, PRD v0.5 §10.1)
+ *  - v11: `focus_session.plannedDurationMin` → `plannedDurationSec` (second-precise focus durations)
+ *  - v12: + `app_settings.nickname`, `focusArea`, `defaultFocusDurationMin` (onboarding profile)
+ *  - v13: unique index on `task_instance(definitionId, definitionOccurrenceDate)` (FR-T7 no double instance)
  *
  * `exportSchema = true` writes JSON schema files to `app/schemas` (KSP `room.schemaLocation`).
  * Migrations are explicit; there is no destructive fallback.
@@ -65,7 +68,7 @@ import com.anchor.app.core.data.entity.WeeklyUsageSummaryEntity
         TaskDependencyEntity::class,
         InsightEntity::class,
     ],
-    version = 10,
+    version = 13,
     exportSchema = true,
 )
 abstract class AnchorDatabase : RoomDatabase() {
@@ -87,11 +90,11 @@ abstract class AnchorDatabase : RoomDatabase() {
         const val NAME = "anchor.db"
 
         /** Current schema version (mirrors the `@Database(version = ...)` above). */
-        const val VERSION = 10
+        const val VERSION = 13
 
         /** All migration steps, in order — used by tests and by [DatabaseModule]. */
         val ALL_MIGRATIONS: Array<Migration>
-            get() = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
+            get() = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
 
         /** v1 → v2: add the Phase-1 task tables (docs 03 §2). */
         val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -355,6 +358,103 @@ abstract class AnchorDatabase : RoomDatabase() {
         val MIGRATION_9_10 = object : Migration(9, 10) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE `task_instance` ADD COLUMN `completionSource` TEXT")
+            }
+        }
+
+        /**
+         * v10 → v11: store the planned focus duration in **seconds** instead of whole minutes,
+         * so the Setup wheel can pick second-precise durations (FR-F1). Existing rows are
+         * backfilled at the old resolution (minutes × 60) — no data is lost.
+         *
+         * Implemented as a table recreate (create new → copy → drop old → rename) rather than
+         * `ALTER TABLE ... DROP COLUMN`, which needs SQLite 3.35+ (Android 13+) and would crash
+         * on older devices (minSdk 26).
+         */
+        val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `focus_session_new` (
+                        `id` TEXT NOT NULL,
+                        `taskId` TEXT,
+                        `mode` TEXT NOT NULL,
+                        `plannedDurationSec` INTEGER,
+                        `actualDurationMs` INTEGER NOT NULL,
+                        `startedAt` INTEGER NOT NULL,
+                        `endedAt` INTEGER,
+                        `status` TEXT NOT NULL,
+                        `blockedAppsJson` TEXT,
+                        `fallbackReason` TEXT,
+                        PRIMARY KEY(`id`)
+                    )
+                    """.trimIndent(),
+                )
+                db.execSQL(
+                    """
+                    INSERT INTO `focus_session_new`
+                        (`id`, `taskId`, `mode`, `plannedDurationSec`, `actualDurationMs`,
+                         `startedAt`, `endedAt`, `status`, `blockedAppsJson`, `fallbackReason`)
+                    SELECT `id`, `taskId`, `mode`, `plannedDurationMin` * 60, `actualDurationMs`,
+                           `startedAt`, `endedAt`, `status`, `blockedAppsJson`, `fallbackReason`
+                    FROM `focus_session`
+                    """.trimIndent(),
+                )
+                db.execSQL("DROP TABLE `focus_session`")
+                db.execSQL("ALTER TABLE `focus_session_new` RENAME TO `focus_session`")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_focus_session_startedAt` ON `focus_session`(`startedAt`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_focus_session_taskId` ON `focus_session`(`taskId`)")
+            }
+        }
+
+        /**
+         * v11 → v12: onboarding profile columns for personalization (docs 07-screens.md §2.3b).
+         * `nickname` is nullable (legacy rows keep `NULL` = no nickname); `focusArea` and
+         * `defaultFocusDurationMin` default to the app defaults so existing installs are unchanged.
+         */
+        val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `app_settings` ADD COLUMN `nickname` TEXT")
+                db.execSQL("ALTER TABLE `app_settings` ADD COLUMN `focusArea` TEXT NOT NULL DEFAULT 'COLLEGE'")
+                db.execSQL("ALTER TABLE `app_settings` ADD COLUMN `defaultFocusDurationMin` INTEGER NOT NULL DEFAULT 25")
+            }
+        }
+
+        /**
+         * v12 → v13: enforce the "no double instance" recurring guarantee (FR-T7) at the DB
+         * level with a unique index on `(definitionId, definitionOccurrenceDate)`.
+         *
+         * A pre-existing install may already contain duplicates (the old check-then-act guard
+         * was not atomic). Those are collapsed first — keeping the OLDEST row per
+         * `(definitionId, definitionOccurrenceDate)` group — so creating the unique index cannot
+         * fail. Rows with a NULL definitionId/definitionOccurrenceDate are left untouched
+         * (SQLite treats NULLs as distinct in unique indexes).
+         */
+        val MIGRATION_12_13 = object : Migration(12, 13) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    DELETE FROM `task_instance`
+                    WHERE `definitionId` IS NOT NULL
+                      AND `definitionOccurrenceDate` IS NOT NULL
+                      AND `id` NOT IN (
+                          SELECT `id` FROM (
+                              SELECT `id`,
+                                     ROW_NUMBER() OVER (
+                                         PARTITION BY `definitionId`, `definitionOccurrenceDate`
+                                         ORDER BY `createdAt` ASC, `id` ASC
+                                     ) AS rn
+                              FROM `task_instance`
+                              WHERE `definitionId` IS NOT NULL
+                                AND `definitionOccurrenceDate` IS NOT NULL
+                          )
+                          WHERE rn = 1
+                      )
+                    """.trimIndent(),
+                )
+                db.execSQL(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS `index_task_instance_definitionId_definitionOccurrenceDate` " +
+                        "ON `task_instance`(`definitionId`, `definitionOccurrenceDate`)",
+                )
             }
         }
     }

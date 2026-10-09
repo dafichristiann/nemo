@@ -1,7 +1,6 @@
 package com.anchor.app.feature.insights
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,9 +10,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Insights
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -22,12 +25,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.anchor.app.R
 import com.anchor.app.core.design.components.Divider
 import com.anchor.app.core.design.components.SectionHeader
+import com.anchor.app.core.design.components.pressable
 import com.anchor.app.core.design.theme.AnchorColors
 import com.anchor.app.core.design.theme.InterFamily
 import com.anchor.app.core.design.theme.Radius
@@ -115,8 +120,9 @@ fun InsightsScreen(
             fontSize = 13.sp,
             color = AnchorColors.textSecondary,
             modifier = Modifier
-                .clickable(onClick = viewModel::refresh)
-                .padding(vertical = Spacing.x2),
+                .clip(RoundedCornerShape(Radius.chip))
+                .pressable(shape = RoundedCornerShape(Radius.chip), onClick = viewModel::refresh)
+                .padding(horizontal = Spacing.x3, vertical = Spacing.x2),
         )
     }
 }
@@ -222,8 +228,22 @@ private fun EmptyState() {
             .fillMaxWidth()
             .padding(top = Spacing.x8),
         horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(Spacing.x2),
+        verticalArrangement = Arrangement.spacedBy(Spacing.x3),
     ) {
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .clip(androidx.compose.foundation.shape.CircleShape)
+                .background(AnchorColors.surfaceMuted),
+            contentAlignment = androidx.compose.ui.Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Insights,
+                contentDescription = null,
+                tint = AnchorColors.textFaintAlt,
+                modifier = Modifier.size(28.dp),
+            )
+        }
         Text(
             text = stringResource(R.string.insights_empty_title),
             fontFamily = InterFamily,

@@ -57,6 +57,27 @@ interface TimeProvider {
             .toInstant()
             .toEpochMilli()
 
+    /**
+     * Start-of-day (00:00 local) for a local epoch-day, as epoch milliseconds. Use this (not
+     * `epochDay * 86_400_000`) whenever converting a [LocalDate.toEpochDay] value back to an
+     * instant — the naive multiply yields *UTC* midnight and lands on the wrong local day in
+     * zones with a negative offset.
+     */
+    fun startOfDayMillisForEpochDay(epochDay: Long): Long =
+        LocalDate.ofEpochDay(epochDay).atStartOfDay(zoneId()).toInstant().toEpochMilli()
+
+    /**
+     * Start of the *next* local day (00:00 tomorrow) for an epoch-day, as epoch milliseconds.
+     * Deriving the end of day this way (instead of `start + 24h`) keeps day windows correct
+     * across DST transitions, where a local day is 23 or 25 hours long.
+     */
+    fun endOfDayMillisForEpochDay(epochDay: Long): Long =
+        LocalDate.ofEpochDay(epochDay + 1).atStartOfDay(zoneId()).toInstant().toEpochMilli()
+
+    /** Start of the *next* local day (00:00 tomorrow) for the instant [millis]. */
+    fun endOfDayMillis(millis: Long): Long =
+        endOfDayMillisForEpochDay(epochDayOf(millis))
+
     /** ISO week key, e.g. `2026-W41` (used as the weekly aggregate primary key). */
     fun isoWeekKey(date: LocalDate = today()): String {
         val weekFields = java.time.temporal.WeekFields.ISO

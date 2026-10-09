@@ -28,9 +28,16 @@ data class AppSettingsEntity(
     val blockedAppsJson: String? = null,
     /** Opt-in: master switch for Strict/Custom app blocking (FR-F4/F8, PRD v0.4 §10.5). Default OFF. */
     val focusBlockingEnabled: Boolean = false,
+    /** Preferred name the mascot greets the user with. Null/blank = none set. */
+    val nickname: String? = null,
+    /** The user's main focus area, stored as the [com.anchor.app.core.domain.model.FocusArea] name. */
+    val focusArea: String = "COLLEGE",
+    /** Default focus-session length in minutes (25/45/60). Prefills Focus Setup. */
+    val defaultFocusDurationMin: Int = DEFAULT_FOCUS_DURATION_MIN,
 ) {
     companion object {
         const val SINGLETON_ID = 1
         const val DEFAULT_RETENTION_DAYS = 30
+        const val DEFAULT_FOCUS_DURATION_MIN = 25
     }
 }

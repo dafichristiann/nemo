@@ -107,6 +107,9 @@ Detail: `05-mvp-scope.md`.
 - **Privacy by default** — tracking & AI *off* sampai opt-in; raw usage tak keluar device.
 - Sumber kebenaran data usage = **Android API**, bukan AI.
 - Target: **RAM < 150 MB**, **baterai ≤ 2–3%/24 jam**, **100% offline-capable**.
+- **Dependensi: pakai library ringan, jangan bikin sendiri** — utamakan Compose/Material3 →
+  library Jetpack → library ringan terpilih; tulis komponen sendiri hanya untuk widget kecil
+  yang tak punya padanan ringan. Detail: `02-architecture.md` §1.1.
 
 ---
 

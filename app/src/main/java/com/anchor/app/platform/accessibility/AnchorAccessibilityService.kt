@@ -47,8 +47,10 @@ class AnchorAccessibilityService : AccessibilityService() {
             // Show on every *entry* to a blocked app. Re-arming happens when the user leaves to a
             // non-blocked app (see else-branch), so each time they come back the overlay re-appears.
             if (pkg != lastBlockedPackage) {
-                lastBlockedPackage = pkg
-                overlay.show { /* dismissed; re-arms on next entry */ }
+                // Only debounce the entry once the overlay is confirmed attached; a failed
+                // addView must not leave the app entered-but-unblocked with no retry.
+                val shown = overlay.show { /* dismissed; re-arms on next entry */ }
+                if (shown) lastBlockedPackage = pkg
             }
         } else {
             // Moved to a non-blocked app (or Home): drop the interlude and re-arm for next entry.

@@ -152,10 +152,10 @@ class TaskDaoTest {
             ),
         )
         dao.insert(task("d1", definitionId = "def", occurrenceDate = 42))
-        dao.insert(task("d2", definitionId = "def", occurrenceDate = 42))
         dao.insert(task("d3", definitionId = "def", occurrenceDate = 43))
 
-        assertEquals(2, dao.countForDefinitionOnDate("def", 42))
+        // At most one instance per (definitionId, occurrenceDate) — the unique index enforces it.
+        assertEquals(1, dao.countForDefinitionOnDate("def", 42))
         assertEquals(1, dao.countForDefinitionOnDate("def", 43))
         assertEquals(0, dao.countForDefinitionOnDate("other", 42))
     }
@@ -178,6 +178,49 @@ class TaskDaoTest {
         val kept = dao.observeById("d1").first()
         assertTrue(kept != null)
         assertEquals(null, kept!!.definitionId)
+    }
+
+    @Test
+    fun observeAll_ordersBySemanticPriority_notAlphabetical() = runTest {
+        // M7 regression: priority is stored as TEXT; ORDER BY priority DESC would sort
+        // alphabetically (URGENT > MEDIUM > LOW > HIGH), burying HIGH below LOW. The query must
+        // order by semantic rank instead: URGENT, HIGH, MEDIUM, LOW.
+        dao.insert(task("low", priority = "LOW", createdAt = day + 1))
+        dao.insert(task("high", priority = "HIGH", createdAt = day + 2))
+        dao.insert(task("urgent", priority = "URGENT", createdAt = day + 3))
+        dao.insert(task("medium", priority = "MEDIUM", createdAt = day + 4))
+
+        val ids = dao.observeAll().first().map { it.id }
+        assertEquals(listOf("urgent", "high", "medium", "low"), ids)
+    }
+
+    @Test
+    fun observeToday_ordersBySemanticPriority() = runTest {
+        dao.insert(task("low", priority = "LOW", deadline = startOfDay + 10))
+        dao.insert(task("high", priority = "HIGH", deadline = startOfDay + 20))
+
+        val ids = dao.observeToday(startOfDay, endOfDay, todayEpochDay).first().map { it.id }
+        assertEquals(listOf("high", "low"), ids)
+    }
+
+    @Test
+    fun recurringInsert_ignoresDuplicateOccurrenceAtomically() = runTest {
+        // C1 regression: the unique index + IGNORE keeps a single instance per
+        // (definitionId, definitionOccurrenceDate), making the guard atomic.
+        db.taskDefinitionDao().insert(
+            com.anchor.app.core.data.entity.TaskDefinitionEntity(
+                id = "def",
+                title = "Daily",
+                recurrenceRule = "DAILY",
+                createdAt = day,
+            ),
+        )
+        val first = dao.insertIgnoringDuplicate(task("i1", definitionId = "def", occurrenceDate = 42))
+        val second = dao.insertIgnoringDuplicate(task("i2", definitionId = "def", occurrenceDate = 42))
+
+        assertTrue("first insert wins", first != -1L)
+        assertEquals("duplicate ignored", -1L, second)
+        assertEquals(1, dao.countForDefinitionOnDate("def", 42))
     }
 
     @Test

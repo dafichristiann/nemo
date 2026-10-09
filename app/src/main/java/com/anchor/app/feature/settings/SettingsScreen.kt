@@ -7,7 +7,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,22 +14,33 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,13 +50,19 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.anchor.app.R
+import com.anchor.app.core.design.components.AnchorSwitch
 import com.anchor.app.core.design.components.Divider
 import com.anchor.app.core.design.components.SectionHeader
+import com.anchor.app.core.design.components.SegmentedChips
 import com.anchor.app.core.design.components.TextPill
+import com.anchor.app.core.design.components.minTouchTarget
+import com.anchor.app.core.design.components.pressable
 import com.anchor.app.core.design.theme.AnchorColors
 import com.anchor.app.core.design.theme.InterFamily
 import com.anchor.app.core.design.theme.Radius
 import com.anchor.app.core.design.theme.Spacing
+import com.anchor.app.core.domain.model.AppSettings
+import com.anchor.app.core.domain.model.FocusArea
 import com.anchor.app.platform.usagestats.UsageAccessSettings
 
 /**
@@ -96,23 +112,82 @@ fun SettingsScreen(
             .padding(top = Spacing.x6, bottom = Spacing.x8),
         verticalArrangement = Arrangement.spacedBy(Spacing.x4),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(Radius.chip))
+                .pressable(shape = RoundedCornerShape(Radius.chip), pressedScale = 0.96f, onClick = onBack)
+                .padding(vertical = Spacing.x1, horizontal = Spacing.x1),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.x1),
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                contentDescription = null,
+                tint = AnchorColors.textPrimary,
+                modifier = Modifier.size(18.dp),
+            )
             Text(
-                text = stringResource(R.string.detail_back),
+                text = stringResource(R.string.settings_title),
                 fontFamily = InterFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                fontSize = 28.sp,
                 color = AnchorColors.textPrimary,
-                modifier = Modifier.clickable(onClick = onBack),
             )
         }
-        Text(
-            text = stringResource(R.string.settings_title),
-            fontFamily = InterFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize = 28.sp,
-            color = AnchorColors.textPrimary,
-        )
+
+        // --- Profile (nickname · main focus · default focus length) ---
+        SectionHeader(title = stringResource(R.string.settings_section_profile))
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.x1)) {
+            Text(
+                text = stringResource(R.string.settings_profile_nickname_title),
+                fontFamily = InterFamily,
+                fontWeight = FontWeight.Medium,
+                fontSize = 14.sp,
+                color = AnchorColors.textPrimary,
+            )
+            SettingsNicknameField(
+                value = settings.nickname,
+                onValueChange = viewModel::setNickname,
+                hint = stringResource(R.string.settings_profile_nickname_hint),
+            )
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
+            Text(
+                text = stringResource(R.string.settings_profile_focus_area_title),
+                fontFamily = InterFamily,
+                fontWeight = FontWeight.Medium,
+                fontSize = 14.sp,
+                color = AnchorColors.textPrimary,
+            )
+            SegmentedChips(
+                options = listOf(
+                    stringResource(R.string.onboarding_profile_focus_college),
+                    stringResource(R.string.onboarding_profile_focus_career),
+                    stringResource(R.string.onboarding_profile_focus_personal),
+                ),
+                selectedIndex = settings.focusArea.ordinal,
+                onSelect = { viewModel.setFocusArea(FocusArea.entries[it]) },
+            )
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
+            Text(
+                text = stringResource(R.string.settings_profile_duration_title),
+                fontFamily = InterFamily,
+                fontWeight = FontWeight.Medium,
+                fontSize = 14.sp,
+                color = AnchorColors.textPrimary,
+            )
+            SegmentedChips(
+                options = AppSettings.FOCUS_DURATION_OPTIONS_MIN
+                    .map { stringResource(R.string.settings_profile_duration_value, it) },
+                selectedIndex = AppSettings.FOCUS_DURATION_OPTIONS_MIN
+                    .indexOf(settings.defaultFocusDurationMin)
+                    .coerceAtLeast(0),
+                onSelect = { viewModel.setDefaultFocusDurationMin(AppSettings.FOCUS_DURATION_OPTIONS_MIN[it]) },
+            )
+        }
+
+        Divider()
 
         // --- Permissions (FR-S1) ---
         SectionHeader(title = stringResource(R.string.settings_section_permissions))
@@ -202,7 +277,7 @@ fun SettingsScreen(
             modifier = Modifier
                 .clip(RoundedCornerShape(Radius.chip))
                 .border(1.dp, AnchorColors.accentDanger, RoundedCornerShape(Radius.chip))
-                .clickable { viewModel.onDeleteAllData() }
+                .pressable(shape = RoundedCornerShape(Radius.chip), onClick = { viewModel.onDeleteAllData() })
                 .padding(horizontal = Spacing.x4, vertical = Spacing.x3),
         ) {
             Text(
@@ -224,12 +299,71 @@ fun SettingsScreen(
     }
 }
 
+/**
+ * Soft single-line nickname input matching the app's other fields (AddTaskSheet §Field).
+ *
+ * The field keeps its own local text state while the user types, then persists on each change.
+ * Binding the value straight to the persisted setting caused dropped characters and a jumping
+ * cursor: every keystroke round-tripped through Room (which also trims), so the field re-rendered
+ * with a stale value mid-typing. The local state is re-synced from [value] only when the incoming
+ * value genuinely differs from what is shown (e.g. the first load, or an external change) — never
+ * while the user is actively composing.
+ */
+@Composable
+private fun SettingsNicknameField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    hint: String,
+    modifier: Modifier = Modifier,
+) {
+    // Local editing buffer — the single source of truth for what's on screen.
+    var text by rememberSaveable { mutableStateOf(value) }
+    // Keep in sync when the persisted value changes externally (not from our own typing).
+    // Compare against the trimmed persisted value so the repository's trim doesn't fight the buffer.
+    LaunchedEffect(value) {
+        if (value != text.trim()) text = value
+    }
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .clip(RoundedCornerShape(Radius.field))
+            .background(AnchorColors.surfaceSunken)
+            .padding(horizontal = Spacing.x4),
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        if (text.isEmpty()) {
+            Text(
+                text = hint,
+                fontFamily = InterFamily,
+                fontSize = 14.sp,
+                color = AnchorColors.textFaint,
+            )
+        }
+        BasicTextField(
+            value = text,
+            onValueChange = { new ->
+                val capped = new.take(AppSettings.MAX_NICKNAME_LENGTH)
+                text = capped
+                onValueChange(capped)
+            },
+            singleLine = true,
+            textStyle = TextStyle(
+                fontFamily = InterFamily,
+                fontSize = 14.sp,
+                color = AnchorColors.textPrimary,
+            ),
+            cursorBrush = androidx.compose.ui.graphics.SolidColor(AnchorColors.ink),
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
 /** Requests POST_NOTIFICATIONS on 33+; on older versions it is granted by default. */
 private fun requestNotifications(
     launcher: androidx.activity.result.ActivityResultLauncher<String>,
     context: Context,
-) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+) {    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
     } else {
         openNotificationSettings(context)
@@ -260,30 +394,59 @@ private fun PermissionRow(
     onEnable: () -> Unit,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(Radius.card))
+            .border(1.dp, AnchorColors.border, RoundedCornerShape(Radius.card))
+            .background(AnchorColors.surfaceCard)
+            .padding(Spacing.cardHorizontal),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.x1)) {
-            Text(text = title, fontFamily = InterFamily, fontWeight = FontWeight.Medium, fontSize = 14.sp, color = AnchorColors.textPrimary)
-            Text(text = description, fontFamily = InterFamily, fontSize = 12.sp, color = AnchorColors.textMuted)
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(Spacing.x1),
+        ) {
+            Text(
+                text = title,
+                fontFamily = InterFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp,
+                color = AnchorColors.textPrimary,
+            )
+            Text(
+                text = description,
+                fontFamily = InterFamily,
+                fontSize = 12.sp,
+                lineHeight = 16.sp,
+                color = AnchorColors.textMuted,
+            )
         }
         Spacer(modifier = Modifier.width(Spacing.x3))
         if (granted) {
             TextPill(text = stringResource(R.string.settings_perm_granted), highlighted = true)
         } else {
+            // Solid ink pill, sized to a comfortable touch target, with a subtle pressed scale —
+            // matches every other primary affordance in the app (no bare, cramped button).
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(Radius.chip))
+                    .heightIn(min = 36.dp)
+                    .clip(RoundedCornerShape(Radius.button))
                     .background(AnchorColors.ink)
-                    .clickable(onClick = onEnable)
-                    .padding(horizontal = Spacing.x3, vertical = Spacing.x2),
+                    .pressable(
+                        shape = RoundedCornerShape(Radius.button),
+                        pressedScale = 0.96f,
+                        onClick = onEnable,
+                    )
+                    .minTouchTarget()
+                    .padding(horizontal = Spacing.x4),
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = stringResource(R.string.settings_perm_enable),
                     fontFamily = InterFamily,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 12.sp,
+                    fontSize = 13.sp,
                     color = AnchorColors.surface,
                 )
             }
@@ -298,7 +461,7 @@ private fun ManageRow(summary: String, onManage: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(Radius.field))
-            .clickable(onClick = onManage)
+            .pressable(shape = RoundedCornerShape(Radius.field), onClick = onManage)
             .padding(vertical = Spacing.x2),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
@@ -337,13 +500,9 @@ private fun SettingRow(
             Text(text = title, fontFamily = InterFamily, fontWeight = FontWeight.Medium, fontSize = 14.sp, color = AnchorColors.textPrimary)
             Text(text = subtitle, fontFamily = InterFamily, fontSize = 12.sp, color = AnchorColors.textMuted)
         }
-        Switch(
+        AnchorSwitch(
             checked = checked,
             onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = AnchorColors.surface,
-                checkedTrackColor = AnchorColors.ink,
-            ),
         )
     }
 }

@@ -25,7 +25,8 @@ interface TaskDao {
         WHERE status != 'ARCHIVED'
         ORDER BY
             CASE status WHEN 'DONE' THEN 2 ELSE 1 END,
-            priority DESC,
+            CASE priority WHEN 'URGENT' THEN 0 WHEN 'HIGH' THEN 1 WHEN 'MEDIUM' THEN 2
+                          WHEN 'LOW' THEN 3 ELSE 4 END,
             deadline IS NULL,
             deadline ASC,
             createdAt DESC
@@ -47,7 +48,10 @@ interface TaskDao {
                 (deadline IS NOT NULL AND deadline >= :startOfDay AND deadline < :endOfDay)
                 OR definitionOccurrenceDate = :todayEpochDay
               )
-        ORDER BY priority DESC, deadline IS NULL, deadline ASC, createdAt DESC
+        ORDER BY
+            CASE priority WHEN 'URGENT' THEN 0 WHEN 'HIGH' THEN 1 WHEN 'MEDIUM' THEN 2
+                          WHEN 'LOW' THEN 3 ELSE 4 END,
+            deadline IS NULL, deadline ASC, createdAt DESC
         """,
     )
     fun observeToday(startOfDay: Long, endOfDay: Long, todayEpochDay: Long): Flow<List<TaskEntity>>
@@ -59,7 +63,10 @@ interface TaskDao {
         WHERE status IN ('TODO','IN_PROGRESS')
           AND deadline IS NOT NULL
           AND deadline >= :endOfDay
-        ORDER BY deadline ASC, priority DESC, createdAt DESC
+        ORDER BY deadline ASC,
+            CASE priority WHEN 'URGENT' THEN 0 WHEN 'HIGH' THEN 1 WHEN 'MEDIUM' THEN 2
+                          WHEN 'LOW' THEN 3 ELSE 4 END,
+            createdAt DESC
         """,
     )
     fun observeUpcoming(endOfDay: Long): Flow<List<TaskEntity>>
@@ -118,6 +125,16 @@ interface TaskDao {
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(task: TaskEntity)
+
+    /**
+     * Insert a recurring instance, ignoring the write if an instance for the same
+     * `(definitionId, definitionOccurrenceDate)` already exists. Backed by a partial unique
+     * index, this makes the "no double instance" guarantee atomic — closing the check-then-act
+     * race between the Tasks screen and the recurring Worker (PRD FR-T7). Returns the rowId,
+     * or -1 when the insert was ignored.
+     */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertIgnoringDuplicate(task: TaskEntity): Long
 
     @Update
     suspend fun update(task: TaskEntity)

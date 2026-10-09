@@ -234,6 +234,27 @@ class UsageUseCasesTest {
         assertTrue(week!!.baseline.isNotEmpty())
     }
 
+    @Test
+    fun aggregate_invokePersistsEveryTouchedWeek() = runTest {
+        // C3 regression: aggregation must persist a weekly summary for EVERY week that has daily
+        // data — not just the latest one. Otherwise historical weeks have no baseline and drift
+        // can never fire against them (PRD §10.3). Oct 5 is in ISO week 2026-W41, Sep 28 in W40.
+        val repo = FakeUsageRepository()
+        val time = FakeTimeProvider(fixedNow, utc)
+        repo.insertSessions(
+            listOf(
+                session("com.a", millis(2026, 9, 28, 10), millis(2026, 9, 28, 11)),
+                session("com.a", millis(2026, 10, 6, 10), millis(2026, 10, 6, 11)),
+            ),
+        )
+        val useCase = AggregateUsageUseCase(repo, CategorizeAppsUseCase(repo), time)
+
+        useCase()
+
+        assertNotNull("earlier week (2026-W40) must be persisted", repo.weeklySummary("2026-W40"))
+        assertNotNull("later week (2026-W41) must be persisted", repo.weeklySummary("2026-W41"))
+    }
+
     // --- PruneUsageUseCase ---
 
     @Test

@@ -70,7 +70,7 @@ class ManageSubtasksUseCase @Inject constructor(
         val progress = if (subtasks.isEmpty()) {
             0
         } else {
-            (subtasks.count { it.isDone } * 100f / subtasks.size).toInt()
+            Math.round(subtasks.count { it.isDone } * 100f / subtasks.size)
         }
         taskRepository.setProgress(taskId, progress)
     }

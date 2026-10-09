@@ -11,6 +11,7 @@ import com.anchor.app.core.domain.usecase.task.ObserveTasksUseCase
 import com.anchor.app.core.domain.usecase.task.RescheduleTaskUseCase
 import com.anchor.app.core.domain.usecase.task.TaskFilter
 import com.anchor.app.core.domain.model.Task
+import com.anchor.app.testutil.FakeSettingsRepository
 import com.anchor.app.testutil.FakeTaskDefinitionRepository
 import com.anchor.app.testutil.FakeTaskRepository
 import com.anchor.app.testutil.TestDispatcherProvider
@@ -46,6 +47,7 @@ class TasksViewModelTest {
     private lateinit var tasks: FakeTaskRepository
     private lateinit var defs: FakeTaskDefinitionRepository
     private lateinit var time: FakeTimeProvider
+    private lateinit var settings: FakeSettingsRepository
 
     @Before
     fun setUp() {
@@ -53,6 +55,7 @@ class TasksViewModelTest {
         tasks = FakeTaskRepository()
         defs = FakeTaskDefinitionRepository()
         time = FakeTimeProvider(fixedNow, utc)
+        settings = FakeSettingsRepository()
     }
 
     @After
@@ -66,6 +69,7 @@ class TasksViewModelTest {
         createTask = CreateTaskUseCase(tasks, defs, FakeIdProvider(), time),
         rescheduleTask = RescheduleTaskUseCase(tasks, defs, FakeIdProvider("res"), time),
         generateRecurring = GenerateRecurringTasksUseCase(tasks, defs, FakeIdProvider("gen"), time),
+        settingsRepository = settings,
         timeProvider = time,
         dispatchers = TestDispatcherProvider(dispatcher),
     )
@@ -105,8 +109,17 @@ class TasksViewModelTest {
     }
 
     @Test
-    fun setFilter_switchesVisibleRows() = runTest(dispatcher) {
-        val startOfDay = time.startOfDayMillis(fixedNow)
+    fun state_carriesNickname_forPersonalizedGreeting() = runTest(dispatcher) {
+        settings.state.value = settings.state.value.copy(nickname = "Rani")
+        val vm = viewModel()
+        keepCollecting(vm)
+        advanceUntilIdle()
+
+        assertEquals("Rani", vm.uiState.value.nickname)
+    }
+
+    @Test
+    fun setFilter_switchesVisibleRows() = runTest(dispatcher) {        val startOfDay = time.startOfDayMillis(fixedNow)
         tasks.tasks.value = listOf(
             task("today", startOfDay + 3_600_000),
             task("tomorrow", startOfDay + 86_400_000L),
@@ -176,5 +189,35 @@ class TasksViewModelTest {
         val endOfToday = time.startOfDayMillis(fixedNow) + 86_400_000L - 1
         assertEquals(endOfToday, tasks.tasks.value.single { it.id == "late" }.deadline)
         assertEquals(0, vm.uiState.value.overdueCount)
+    }
+
+    @Test
+    fun onKeepForToday_isCorrectOnDstTransitionDay() = runTest(dispatcher) {
+        // C2 regression: on a spring-forward day the local day is 23h. "Keep for Today" must
+        // land on the last ms of the local day (next midnight - 1), not startOfDay + 24h - 1.
+        val zone = java.time.ZoneId.of("America/New_York")
+        // 2026-03-08 is the US spring-forward day (23h long).
+        val dstNow = ZonedDateTime.of(2026, 3, 8, 9, 0, 0, 0, zone).toInstant().toEpochMilli()
+        val dstTime = FakeTimeProvider(dstNow, zone)
+        val dstTasks = FakeTaskRepository()
+        dstTasks.tasks.value = listOf(task("late", dstNow - 86_400_000L))
+
+        val vm = TasksViewModel(
+            observeTasks = ObserveTasksUseCase(dstTasks, dstTime),
+            observeOverdue = ObserveOverdueTasksUseCase(dstTasks, dstTime),
+            createTask = CreateTaskUseCase(dstTasks, defs, FakeIdProvider(), dstTime),
+            rescheduleTask = RescheduleTaskUseCase(dstTasks, defs, FakeIdProvider("res"), dstTime),
+            generateRecurring = GenerateRecurringTasksUseCase(dstTasks, defs, FakeIdProvider("gen"), dstTime),
+            settingsRepository = settings,
+            timeProvider = dstTime,
+            dispatchers = TestDispatcherProvider(dispatcher),
+        )
+        vm.onKeepForToday("late")
+        advanceUntilIdle()
+
+        val expected = dstTime.endOfDayMillis(dstNow) - 1
+        val naive = dstTime.startOfDayMillis(dstNow) + 86_400_000L - 1
+        assertEquals("deadline is the true end of the 23h local day", expected, dstTasks.tasks.value.single { it.id == "late" }.deadline)
+        assertTrue("must differ from the naive +24h value on a DST day", expected != naive)
     }
 }

@@ -28,7 +28,7 @@ class StartFocusUseCase @Inject constructor(
     suspend operator fun invoke(
         taskId: String?,
         mode: FocusMode,
-        plannedDurationMin: Int?,
+        plannedDurationSec: Int?,
         blockedApps: Set<String> = emptySet(),
     ): StartFocusResult {
         val now = timeProvider.nowMillis()
@@ -50,7 +50,7 @@ class StartFocusUseCase @Inject constructor(
                 id = id,
                 taskId = taskId,
                 mode = effectiveMode,
-                plannedDurationMin = plannedDurationMin,
+                plannedDurationSec = plannedDurationSec,
                 actualDurationMs = 0L,
                 startedAt = now,
                 endedAt = null,

@@ -22,7 +22,7 @@ class GentleBlockingStrategy @Inject constructor() : BlockingStrategy {
 
     override val effectiveMode: FocusMode = FocusMode.GENTLE
 
-    override fun isAvailable(): Boolean = false
+    override suspend fun isAvailable(): Boolean = false
 
     override suspend fun engage(packages: Set<String>): Boolean = false
 

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.anchor.app.core.common.DispatcherProvider
 import com.anchor.app.core.domain.model.AppCategory
 import com.anchor.app.core.domain.model.AppSettings
+import com.anchor.app.core.domain.model.FocusArea
 import com.anchor.app.core.domain.repository.FocusRepository
 import com.anchor.app.core.domain.repository.InsightRepository
 import com.anchor.app.core.domain.repository.InterventionRepository
@@ -139,6 +140,18 @@ class SettingsViewModel @Inject constructor(
     /** FR-F4/F8: opt-in toggle for Strict/Custom blocking (PRD v0.4 §10.5). */
     fun setFocusBlockingEnabled(enabled: Boolean) =
         viewModelScope.launch(dispatchers.io) { settingsRepository.setFocusBlockingEnabled(enabled) }
+
+    /** Profile: update the mascot's preferred name (blank clears it). */
+    fun setNickname(nickname: String) =
+        viewModelScope.launch(dispatchers.io) { settingsRepository.setNickname(nickname) }
+
+    /** Profile: update the user's main focus area. */
+    fun setFocusArea(area: FocusArea) =
+        viewModelScope.launch(dispatchers.io) { settingsRepository.setFocusArea(area) }
+
+    /** Profile: update the default focus-session length (25/45/60). */
+    fun setDefaultFocusDurationMin(minutes: Int) =
+        viewModelScope.launch(dispatchers.io) { settingsRepository.setDefaultFocusDurationMin(minutes) }
 
     /** Opens the OS Accessibility settings so the user can grant the service (docs 08 §4). */
     fun onOpenAccessibilitySettings() = accessibilityStatus.open(context)

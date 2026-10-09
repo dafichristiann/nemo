@@ -1,6 +1,7 @@
 package com.anchor.app.testutil
 
 import com.anchor.app.core.domain.model.AppSettings
+import com.anchor.app.core.domain.model.FocusArea
 import com.anchor.app.core.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +38,18 @@ class FakeSettingsRepository(
 
     override suspend fun setFocusBlockingEnabled(enabled: Boolean) {
         state.value = state.value.copy(focusBlockingEnabled = enabled)
+    }
+
+    override suspend fun setNickname(nickname: String) {
+        state.value = state.value.copy(nickname = nickname.trim())
+    }
+
+    override suspend fun setFocusArea(area: FocusArea) {
+        state.value = state.value.copy(focusArea = area)
+    }
+
+    override suspend fun setDefaultFocusDurationMin(minutes: Int) {
+        state.value = state.value.copy(defaultFocusDurationMin = minutes)
     }
 
     override suspend fun resetAll() {

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -46,6 +47,7 @@ import com.anchor.app.core.design.components.PrimaryButton
 import com.anchor.app.core.design.components.ProgressTrack
 import com.anchor.app.core.design.components.SectionHeader
 import com.anchor.app.core.design.components.TextPill
+import com.anchor.app.core.design.components.pressable
 import com.anchor.app.core.design.theme.AnchorColors
 import com.anchor.app.core.design.theme.AnchorElevation
 import com.anchor.app.core.design.theme.InterFamily
@@ -83,12 +85,23 @@ fun TaskDetailScreen(
         verticalArrangement = Arrangement.spacedBy(Spacing.x4),
     ) {
         // Header: back + title
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.x2)) {
+        Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(Radius.chip))
+                .pressable(
+                    shape = RoundedCornerShape(Radius.chip),
+                    pressedScale = 0.96f,
+                    onClick = onBack,
+                )
+                .padding(vertical = Spacing.x1, horizontal = Spacing.x1),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.x1),
+        ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                contentDescription = null,
+                contentDescription = stringResource(R.string.detail_back),
                 tint = AnchorColors.textPrimary,
-                modifier = Modifier.clickable(onClick = onBack),
+                modifier = Modifier.size(20.dp),
             )
             Text(
                 text = stringResource(R.string.detail_back),
@@ -96,7 +109,6 @@ fun TaskDetailScreen(
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp,
                 color = AnchorColors.textPrimary,
-                modifier = Modifier.clickable(onClick = onBack),
             )
         }
 
@@ -264,7 +276,6 @@ fun TaskDetailScreen(
             onClick = { onStartFocusToComplete(task.id) },
         )
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.x2)) {
-            SecondaryAction(stringResource(R.string.detail_action_start_focus)) { onStartFocusToComplete(task.id) }
             SecondaryAction(stringResource(R.string.detail_action_reschedule)) {
                 showReschedule = true
             }
@@ -293,10 +304,12 @@ fun TaskDetailScreen(
 private fun SecondaryAction(label: String, danger: Boolean = false, onClick: () -> Unit) {
     Box(
         modifier = Modifier
+            .heightIn(min = 40.dp)
             .clip(RoundedCornerShape(Radius.chip))
             .border(1.dp, if (danger) AnchorColors.accentDanger else AnchorColors.border, RoundedCornerShape(Radius.chip))
-            .clickable(onClick = onClick)
-            .padding(horizontal = Spacing.x3, vertical = Spacing.x2),
+            .pressable(shape = RoundedCornerShape(Radius.chip), onClick = onClick)
+            .padding(horizontal = Spacing.x3),
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = label,

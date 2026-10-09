@@ -23,6 +23,7 @@ class AccessibilityBlockingStrategyTest {
     ) : BlockingGate {
         override fun isBuildFlagOn(): Boolean = flagOn
         override fun isToggleOn(): Boolean = toggleOn
+        override suspend fun isToggleOnNow(): Boolean = toggleOn
         override fun isServiceEnabled(): Boolean = serviceOn
     }
 
@@ -30,27 +31,27 @@ class AccessibilityBlockingStrategyTest {
         AccessibilityBlockingStrategy(gate, state)
 
     @Test
-    fun effectiveMode_isCustomWhenReady() {
-        assertEquals(FocusMode.CUSTOM, strategy(FakeGate()).effectiveMode)
+    fun effectiveMode_isStrictWhenReady() {
+        assertEquals(FocusMode.STRICT, strategy(FakeGate()).effectiveMode)
     }
 
     @Test
-    fun isAvailable_trueOnlyWhenAllThreeGatesPass() {
+    fun isAvailable_trueOnlyWhenAllThreeGatesPass() = runTest {
         assertTrue(strategy(FakeGate(flagOn = true, toggleOn = true, serviceOn = true)).isAvailable())
     }
 
     @Test
-    fun isAvailable_falseWhenFlagOff() {
+    fun isAvailable_falseWhenFlagOff() = runTest {
         assertFalse(strategy(FakeGate(flagOn = false)).isAvailable())
     }
 
     @Test
-    fun isAvailable_falseWhenToggleOff() {
+    fun isAvailable_falseWhenToggleOff() = runTest {
         assertFalse(strategy(FakeGate(toggleOn = false)).isAvailable())
     }
 
     @Test
-    fun isAvailable_falseWhenServiceDisabled() {
+    fun isAvailable_falseWhenServiceDisabled() = runTest {
         assertFalse(strategy(FakeGate(serviceOn = false)).isAvailable())
     }
 

@@ -1,7 +1,6 @@
 package com.anchor.app.feature.settings
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,14 +10,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,7 +34,9 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.anchor.app.R
+import com.anchor.app.core.design.components.AnchorSwitch
 import com.anchor.app.core.design.components.AppIcon
+import com.anchor.app.core.design.components.pressable
 import com.anchor.app.core.design.theme.AnchorColors
 import com.anchor.app.core.design.theme.InterFamily
 import com.anchor.app.core.design.theme.Radius
@@ -158,10 +158,12 @@ private fun CategoryManageRow(
             }
             Box(
                 modifier = Modifier
+                    .heightIn(min = 44.dp)
                     .clip(RoundedCornerShape(Radius.chip))
                     .background(AnchorColors.ink)
-                    .clickable { onRename(name) }
-                    .padding(horizontal = Spacing.x4, vertical = Spacing.x2),
+                    .pressable(shape = RoundedCornerShape(Radius.chip), onClick = { onRename(name) })
+                    .padding(horizontal = Spacing.x4),
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = stringResource(R.string.settings_category_save),
@@ -181,13 +183,9 @@ private fun CategoryManageRow(
                 color = AnchorColors.textSecondary,
                 modifier = Modifier.weight(1f),
             )
-            Switch(
+            AnchorSwitch(
                 checked = category.isDistraction,
                 onCheckedChange = { onToggleDistraction() },
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = AnchorColors.surface,
-                    checkedTrackColor = AnchorColors.ink,
-                ),
             )
         }
     }

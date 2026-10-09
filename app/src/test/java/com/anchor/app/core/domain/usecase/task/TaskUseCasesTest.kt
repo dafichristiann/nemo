@@ -8,6 +8,7 @@ import com.anchor.app.core.domain.model.TaskStatus
 import com.anchor.app.testutil.FakeTaskDefinitionRepository
 import com.anchor.app.testutil.FakeTaskRepository
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -123,6 +124,24 @@ class TaskUseCasesTest {
         assertEquals(50, tasks.tasks.value.single { it.id == id }.progressPercent)
     }
 
+    // M6 regression: progress rounds to the nearest percent, not truncates (KDoc FR-T9).
+    @Test
+    fun subtaskProgress_roundsToNearestPercent() = runTest {
+        val (tasks, defs, time) = fakes()
+        val create = CreateTaskUseCase(tasks, defs, FakeIdProvider(), time)
+        val manage = ManageSubtasksUseCase(tasks, FakeIdProvider())
+        val id = (create(CreateTaskInput(title = "Task")) as CreateTaskResult.Success).taskId
+
+        manage.add(id, "Step 1")
+        manage.add(id, "Step 2")
+        manage.add(id, "Step 3")
+        manage.toggle(tasks.getSubtasks(id).first { it.title == "Step 1" })
+        manage.toggle(tasks.getSubtasks(id).first { it.title == "Step 2" })
+
+        // 2/3 = 66.67% → rounds to 67, not truncated to 66.
+        assertEquals(67, tasks.tasks.value.single { it.id == id }.progressPercent)
+    }
+
     // FR-T12: reschedule updates deadline and records a RescheduleEvent.
     @Test
     fun reschedule_recordsEvent() = runTest {
@@ -200,6 +219,61 @@ class TaskUseCasesTest {
             it.definitionId == "def-1" && it.definitionOccurrenceDate == time.today().toEpochDay()
         }
         assertEquals(1, occurrences)
+    }
+
+    // C1 regression: a weekly definition must never issue two instances for the SAME day even
+    // when the first instance's occurrence date was derived from a deadline on another day.
+    // The atomic insertIgnoringDuplicate guard (unique index) closes the check-then-act race.
+    @Test
+    fun recurringGenerator_isAtomicAgainstDuplicateOccurrence() = runTest {
+        val (tasks, defs, time) = fakes()
+        // Seed a WEEKLY definition that already has an instance for today.
+        val definition = com.anchor.app.core.domain.model.TaskDefinition(
+            id = "def-weekly",
+            title = "Weekly",
+            recurrenceRule = RecurrenceRule.WEEKLY,
+            createdAt = fixedNow,
+        )
+        defs.insert(definition)
+        val todayEpoch = time.today().toEpochDay()
+        // Pre-existing instance for today, created directly (simulates a prior create/worker run).
+        tasks.insert(
+            com.anchor.app.core.domain.model.Task(
+                id = "seed",
+                definitionId = "def-weekly",
+                title = "Weekly",
+                createdAt = fixedNow,
+                definitionOccurrenceDate = todayEpoch,
+            ),
+        )
+
+        // Run several generators concurrently (Tasks screen + Worker) against the same day.
+        val generate = GenerateRecurringTasksUseCase(tasks, defs, FakeIdProvider("gen"), time)
+        repeat(6) { launch { generate(time.today()) } }
+
+        val occurrences = tasks.tasks.value.count {
+            it.definitionId == "def-weekly" && it.definitionOccurrenceDate == todayEpoch
+        }
+        assertEquals("exactly one instance per occurrence day", 1, occurrences)
+    }
+
+    // M1 regression: recurring scan is bounded to the last 7 days (0..6), not 8.
+    @Test
+    fun recurringGenerator_weeklyScansOnlyLastSevenDays() = runTest {
+        val (tasks, defs, time) = fakes()
+        val definition = com.anchor.app.core.domain.model.TaskDefinition(
+            id = "def-weekly",
+            title = "Weekly",
+            recurrenceRule = RecurrenceRule.WEEKLY,
+            createdAt = fixedNow,
+        )
+        defs.insert(definition)
+        val generate = GenerateRecurringTasksUseCase(tasks, defs, FakeIdProvider("gen"), time)
+
+        // Day 0 has no instance → a WEEKLY definition is due (cold start).
+        assertEquals(1, generate(time.today()))
+        // Already issued for today → not due again.
+        assertEquals(0, generate(time.today()))
     }
 
     // Non-recurring tasks never produce extra instances.

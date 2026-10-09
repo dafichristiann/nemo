@@ -20,7 +20,7 @@ data class FocusSessionEntity(
     @PrimaryKey val id: String,
     val taskId: String?,
     val mode: String,
-    val plannedDurationMin: Int?,
+    val plannedDurationSec: Int?,
     val actualDurationMs: Long,
     val startedAt: Long,
     val endedAt: Long?,

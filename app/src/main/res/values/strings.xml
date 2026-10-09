@@ -4,7 +4,7 @@
   through string resources — never hardcode. Ready for a values-id/ translation.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">Anchor</string>
+    <string name="app_name">Nemo</string>
 
     <!-- Navigation / bottom bar (07-screens.md §2, PRD §12: labels stay English) -->
     <string name="nav_tasks">Tasks</string>
@@ -14,16 +14,22 @@
 
     <!-- 03 Digital Wellbeing (07-screens.md §2.7, PRD §10.2) -->
     <string name="wellbeing_title">Wellbeing</string>
-    <string name="wellbeing_screen_time">Screen time today</string>
+    <string name="wellbeing_screen_time">Screen time</string>
     <string name="wellbeing_top_apps">TOP APPS</string>
     <string name="wellbeing_this_week">THIS WEEK</string>
+    <string name="wellbeing_day_today">Today</string>
+    <string name="wellbeing_day_yesterday">yesterday</string>
     <string name="wellbeing_local_only">All numbers come from your device. Nothing is sent anywhere.</string>
-    <string name="wellbeing_no_comparison">No data for yesterday yet.</string>
-    <string name="wellbeing_same_as_yesterday">About the same as yesterday.</string>
-    <string name="wellbeing_more_than_yesterday">%1$s more than yesterday.</string>
-    <string name="wellbeing_less_than_yesterday">%1$s less than yesterday.</string>
+    <string name="wellbeing_no_comparison">No data for the day before yet.</string>
+    <string name="wellbeing_same_as_previous">About the same as %1$s.</string>
+    <string name="wellbeing_more_than_previous">%1$s more than %2$s.</string>
+    <string name="wellbeing_less_than_previous">%1$s less than %2$s.</string>
+    <string name="wellbeing_stats_title">TODAY AT A GLANCE</string>
+    <string name="wellbeing_stats_vs_yesterday">Screen time vs %1$s</string>
+    <string name="wellbeing_stats_vs_avg">vs your %1$d-day average</string>
+    <string name="wellbeing_stats_distraction">Distraction share vs %1$s</string>
     <string name="wellbeing_perm_title">See your screen time</string>
-    <string name="wellbeing_perm_body">Anchor needs Usage access to show your local screen-time insights. Enable it in Settings — your data stays on this device.</string>
+    <string name="wellbeing_perm_body">Nemo needs Usage access to show your local screen-time insights. Enable it in Settings — your data stays on this device.</string>
     <string name="wellbeing_perm_cta">Open Settings</string>
     <string name="wellbeing_perm_app_settings">App settings</string>
     <string name="wellbeing_nodata_title">No usage data yet</string>
@@ -33,6 +39,11 @@
     <string name="home_greeting_morning">Good morning</string>
     <string name="home_greeting_afternoon">Good afternoon</string>
     <string name="home_greeting_evening">Good evening</string>
+    <!-- Personalized variants: %1$s is the user\'s nickname (from onboarding/Settings profile). -->
+    <string name="home_greeting_morning_named">Good morning, %1$s</string>
+    <string name="home_greeting_afternoon_named">Good afternoon, %1$s</string>
+    <string name="home_greeting_evening_named">Good evening, %1$s</string>
+    <string name="home_subtitle_plan">Here\'s your day at a glance.</string>
     <string name="home_progress_title">Today\'s progress</string>
     <string name="home_progress_count" tools:ignore="PluralsCandidate">%1$d of %2$d tasks completed</string>
     <string name="home_progress_percent">%1$d%%</string>
@@ -65,8 +76,12 @@
     <string name="add_task_priority_label">Priority</string>
     <string name="add_task_deadline_label">Deadline</string>
     <string name="add_task_deadline_hint">No deadline</string>
-    <string name="add_task_duration_label">Est. duration (min)</string>
-    <string name="add_task_duration_hint">e.g. 120</string>
+    <string name="add_task_duration_label">Est. duration</string>
+    <string name="add_task_duration_not_set">Not set</string>
+    <string name="add_task_duration_minutes">%1$d min</string>
+    <string name="add_task_duration_choose">Choose</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="dialog_set">Set</string>
     <string name="add_task_category_label">Category (optional)</string>
     <string name="add_task_category_hint">e.g. Study</string>
     <string name="add_task_subtasks_label">Subtasks (%1$d)</string>
@@ -78,6 +93,7 @@
     <string name="recurrence_weekly">Weekly</string>
     <string name="add_task_save">Save Task</string>
     <string name="cd_close_sheet">Close</string>
+    <string name="cd_selected">Selected</string>
 
     <!-- Reschedule sheet (07-screens.md §2.5/§2.14, FR-T12) -->
     <string name="reschedule_title">Reschedule</string>
@@ -108,10 +124,18 @@
     <!-- 09 Settings & Privacy (07-screens.md §2.13) -->
     <string name="settings_title">Settings</string>
     <string name="settings_open">Settings</string>
+
+    <!-- Settings · Profile (nickname · focus area · default focus duration) -->
+    <string name="settings_section_profile">Profile</string>
+    <string name="settings_profile_nickname_title">Nickname</string>
+    <string name="settings_profile_nickname_hint">Your nickname</string>
+    <string name="settings_profile_focus_area_title">Main focus</string>
+    <string name="settings_profile_duration_title">Default focus length</string>
+    <string name="settings_profile_duration_value">%1$d min</string>
+
     <string name="settings_section_privacy">Privacy &amp; AI</string>
     <string name="settings_section_data">Data controls</string>
-    <string name="settings_ai_title">AI Personal Insights</string>
-    <string name="settings_ai_subtitle">Only aggregated summaries are sent, never raw usage.</string>
+    <string name="settings_ai_title">AI Personal Insights</string>    <string name="settings_ai_subtitle">Only aggregated summaries are sent, never raw usage.</string>
     <string name="settings_tracking_title">Usage tracking</string>
     <string name="settings_tracking_subtitle">Collect local screen-time to power Wellbeing.</string>
     <string name="settings_retention_label" tools:ignore="PluralsCandidate">Data retention — keep at most %1$d days</string>
@@ -121,11 +145,11 @@
     <!-- Settings · Permissions (FR-S1, PRD §14) -->
     <string name="settings_section_permissions">Permissions</string>
     <string name="settings_perm_usage_title">Usage access</string>
-    <string name="settings_perm_usage_desc">Lets Anchor read screen-time locally for Wellbeing &amp; drift detection.</string>
+    <string name="settings_perm_usage_desc">Lets Nemo read screen-time locally for Wellbeing &amp; drift detection.</string>
     <string name="settings_perm_notif_title">Notifications</string>
     <string name="settings_perm_notif_desc">Gentle check-ins and an ongoing focus notification.</string>
     <string name="settings_perm_accessibility_title">App blocking</string>
-    <string name="settings_perm_accessibility_desc">Lets Anchor pause chosen apps during Strict/Custom focus. Read from Settings → Accessibility.</string>
+    <string name="settings_perm_accessibility_desc">Lets Nemo pause chosen apps during Strict/Custom focus. Read from Settings → Accessibility.</string>
     <string name="settings_perm_granted">On</string>
     <string name="settings_perm_denied">Off</string>
     <string name="settings_perm_enable">Enable</string>
@@ -160,15 +184,10 @@
     <string name="settings_blocked_summary_none">No apps paused yet</string>
     <string name="blocked_title">Blocked apps</string>
 
-    <!-- 00 / 00b Onboarding (§2.3–2.4, §10.10) -->
-    <string name="onboarding_skip">Skip</string>
-    <string name="onboarding_title_line1">Stay anchored</string>
-    <string name="onboarding_title_line2">to what matters.</string>
-    <string name="onboarding_subtitle">Anchor notices when you drift away from what matters — and gently helps you return, without judging.</string>
-    <string name="onboarding_get_started">Get started</string>
+    <!-- 00b / 00a Onboarding (§2.4, §2.3b, §10.10) -->
     <string name="onboarding_perm_step">Setup %1$d of %2$d</string>
     <string name="onboarding_perm_headline">Smart Todo works right away.</string>
-    <string name="onboarding_perm_sub">These permissions are optional — unlock Anchor\'s full features whenever you\'re ready.</string>
+    <string name="onboarding_perm_sub">These permissions are optional — unlock Nemo\'s full features whenever you\'re ready.</string>
     <string name="onboarding_perm_usage_title">Usage access</string>
     <string name="onboarding_perm_usage_sub">For Wellbeing &amp; drift detection</string>
     <string name="onboarding_perm_notif_title">Notifications</string>
@@ -179,6 +198,21 @@
     <string name="onboarding_privacy_card">All data is stored locally on your phone.</string>
     <string name="onboarding_continue">Continue</string>
     <string name="onboarding_skip_for_now">Skip for now</string>
+
+    <!-- 00a Profile setup (new-user fields: nickname · focus area · focus duration) -->
+    <string name="onboarding_profile_step">Setup %1$d of %2$d</string>
+    <string name="onboarding_profile_headline">Let\'s make Nemo yours.</string>
+    <string name="onboarding_profile_sub">Three quick things so the app can greet you and plan around what matters most.</string>
+    <string name="onboarding_profile_nickname_label">What should we call you?</string>
+    <string name="onboarding_profile_nickname_hint">Your nickname</string>
+    <string name="onboarding_profile_focus_label">Main focus</string>
+    <string name="onboarding_profile_focus_college">College</string>
+    <string name="onboarding_profile_focus_career">Career</string>
+    <string name="onboarding_profile_focus_personal">Personal Growth</string>
+    <string name="onboarding_profile_duration_label">Focus session length</string>
+    <string name="onboarding_profile_duration_value">%1$d min</string>
+    <string name="onboarding_profile_continue">Continue</string>
+    <string name="onboarding_profile_skip">Skip for now</string>
 
     <!-- Plurals -->
     <plurals name="overdue_banner_title">
@@ -233,12 +267,12 @@
     <string name="focus_blocked_manage">Choose apps in Settings</string>
 
     <!-- Strict/Custom blocking via AccessibilityService (PRD v0.4 §10.5, FR-F4/F8) -->
-    <string name="focus_blocking_setup_body">To pause apps during Strict or Custom focus, allow Anchor under Settings → Accessibility. Otherwise the session runs in Gentle mode.</string>
+    <string name="focus_blocking_setup_body">To pause apps during Strict or Custom focus, allow Nemo under Settings → Accessibility. Otherwise the session runs in Gentle mode.</string>
     <string name="focus_blocking_setup_cta">Enable app blocking in Settings</string>
     <string name="accessibility_service_summary">Pauses chosen distraction apps during Strict or Custom focus sessions.</string>
-    <string name="accessibility_service_description">Anchor uses accessibility only to notice when you open an app you chose to pause during a focus session. It reads no screen content and sends nothing off your device.</string>
+    <string name="accessibility_service_description">Nemo uses accessibility only to notice when you open an app you chose to pause during a focus session. It reads no screen content and sends nothing off your device.</string>
     <string name="focus_block_overlay_title">Back to focus?</string>
-    <string name="focus_block_overlay_body">You asked to pause this app during a focus session. Anchor is just reminding you — the choice is yours.</string>
+    <string name="focus_block_overlay_body">You asked to pause this app during a focus session. Nemo is just reminding you — the choice is yours.</string>
     <string name="focus_block_overlay_exit_hint">You can always end the session from the focus screen or its notification.</string>
     <string name="focus_block_overlay_back">Back to focus</string>
 
@@ -247,6 +281,8 @@
     <string name="focus_active_pause">Pause</string>
     <string name="focus_active_resume">Resume</string>
     <string name="focus_active_finish">Finish</string>
+    <string name="focus_active_remaining_label">remaining</string>
+    <string name="focus_active_paused_label">paused</string>
     <string name="focus_emergency_exit">Emergency exit</string>
     <string name="focus_finished_verified">Task completed — you focused %1$d min on \"%2$s\".</string>
     <string name="focus_finished_not_verified">Session recorded. Complete the full duration to mark the task done.</string>
@@ -286,7 +322,7 @@
     <string name="insights_longest_distraction">Longest distraction</string>
     <string name="insights_tag_insight">INSIGHT</string>
     <string name="insights_tag_suggestion">SUGGESTION</string>
-    <string name="insights_source_ai">Generated by Anchor AI (aggregated data only)</string>
+    <string name="insights_source_ai">Generated by Nemo AI (aggregated data only)</string>
     <string name="insights_source_rule">Generated locally on your device</string>
     <string name="insights_pattern_label">Pattern</string>
     <string name="insights_refresh">Refresh</string>

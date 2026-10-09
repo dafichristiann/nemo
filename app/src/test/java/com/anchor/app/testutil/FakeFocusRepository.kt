@@ -75,7 +75,7 @@ class FakeBlockingStrategy(
 
     fun setAvailable(value: Boolean) { available = value }
 
-    override fun isAvailable(): Boolean = available
+    override suspend fun isAvailable(): Boolean = available
 
     override suspend fun engage(packages: Set<String>): Boolean {
         engaged = packages

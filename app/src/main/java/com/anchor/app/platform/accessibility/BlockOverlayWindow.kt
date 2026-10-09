@@ -37,9 +37,14 @@ internal class BlockOverlayWindow(private val context: Context) {
     /** Whether the overlay is currently attached (used to debounce re-shows). */
     val isShowing: Boolean get() = view != null
 
+    /**
+     * Shows the overlay. Returns true when the view is attached (or was already showing). Returns
+     * false when `addView` failed, so the caller can keep the entry un-debounced and retry rather
+     * than leaving a blocked app entered with no overlay.
+     */
     @SuppressLint("SetTextI18n", "InflateParams")
-    fun show(onBackToFocus: () -> Unit) {
-        if (view != null) return
+    fun show(onBackToFocus: () -> Unit): Boolean {
+        if (view != null) return true
 
         val density = context.resources.displayMetrics.density
         fun dp(value: Int) = (value * density).toInt()
@@ -104,16 +109,22 @@ internal class BlockOverlayWindow(private val context: Context) {
         }
 
         val type = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY
+        // Focusable so the "back to focus" button actually receives input (FLAG_NOT_FOCUSABLE
+        // would make the only interactive control dead, defeating the "user can always dismiss
+        // it" contract). Still non-fullscreen-modal: the user keeps their own way back.
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.MATCH_PARENT,
             type,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, // keep it non-modal; the app stays usable
+            0,
             android.graphics.PixelFormat.TRANSLUCENT,
         ).apply { gravity = Gravity.CENTER }
 
-        runCatching { windowManager.addView(root, params) }
+        // Only mark the entry as handled once the view is actually attached; a failed addView
+        // (e.g. transient BadTokenException) must let the caller retry on the next event.
+        return runCatching { windowManager.addView(root, params) }
             .onSuccess { view = root }
+            .isSuccess
     }
 
     fun hide() {

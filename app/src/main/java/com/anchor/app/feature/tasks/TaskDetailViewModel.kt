@@ -33,7 +33,7 @@ data class TaskDetailUiState(
     val doneSubtaskCount: Int get() = subtasks.count { it.isDone }
     val progressPercent: Int
         get() = if (subtasks.isEmpty()) task?.progressPercent ?: 0
-        else (doneSubtaskCount * 100f / subtasks.size).toInt()
+        else Math.round(doneSubtaskCount * 100f / subtasks.size)
 }
 
 /** Task Detail ViewModel — PRD FR-T8, FR-T9, FR-T12. */

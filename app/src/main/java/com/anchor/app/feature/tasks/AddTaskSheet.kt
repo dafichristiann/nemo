@@ -9,9 +9,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
@@ -19,7 +21,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -31,7 +32,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -39,8 +39,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.anchor.app.R
 import com.anchor.app.core.design.components.AnchorBottomSheet
+import com.anchor.app.core.design.components.AnchorSwitch
 import com.anchor.app.core.design.components.PrimaryButton
 import com.anchor.app.core.design.components.SegmentedChips
+import com.anchor.app.core.design.components.WheelPickerDialog
+import com.anchor.app.core.design.components.minTouchTarget
+import com.anchor.app.core.design.components.pressable
 import com.anchor.app.core.design.theme.AnchorColors
 import com.anchor.app.core.design.theme.InterFamily
 import com.anchor.app.core.design.theme.Radius
@@ -61,6 +65,12 @@ data class TaskDraft(
     val recurrence: RecurrenceRule = RecurrenceRule.NONE,
 )
 
+/** Estimated-duration options (minutes) offered on the Add Task wheel: 5–240 in 5-min steps. */
+private val DURATION_OPTIONS_MIN: List<Int> = (1..48).map { it * 5 }
+
+/** Deadline hour options (whole hours, 0–23) offered on the Add Task deadline wheel. */
+private val DEADLINE_HOUR_OPTIONS: List<Int> = (0..23).toList()
+
 /**
  * 02 Add Task bottom sheet (docs/superpowers/design/07-screens.md §2.6).
  *
@@ -77,7 +87,7 @@ fun AddTaskSheet(
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var priority by remember { mutableStateOf(TaskPriority.MEDIUM) }
-    var durationText by remember { mutableStateOf("") }
+    var durationMinutes by remember { mutableStateOf<Int?>(null) }
     var category by remember { mutableStateOf("") }
     var recurrence by remember { mutableStateOf(RecurrenceRule.NONE) }
     var deadlineHours by remember { mutableStateOf<Int?>(null) }
@@ -111,7 +121,11 @@ fun AddTaskSheet(
                     imageVector = Icons.Rounded.Close,
                     contentDescription = stringResource(R.string.cd_close_sheet),
                     tint = AnchorColors.textMuted,
-                    modifier = Modifier.clickable(onClick = onDismiss),
+                    modifier = Modifier
+                        .minTouchTarget()
+                        .clip(CircleShape)
+                        .pressable(shape = CircleShape, onClick = onDismiss)
+                        .padding(Spacing.x2),
                 )
             }
 
@@ -146,57 +160,131 @@ fun AddTaskSheet(
             }
 
             LabeledSection(stringResource(R.string.add_task_deadline_label)) {
+                // Tap the field → a centered AlertDialog opens with an hour wheel; "Set" commits,
+                // "Cancel" discards. Index 0 is "No deadline"; the rest are whole hours.
+                var dialogOpen by remember { mutableStateOf(false) }
+                val options: List<Int?> = remember { listOf(null) + DEADLINE_HOUR_OPTIONS }
+                val noDeadlineLabel = stringResource(R.string.add_task_deadline_hint)
+                val displayText = deadlineHours?.let { "%02d:00".format(it) } ?: noDeadlineLabel
+
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.x2),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp)
+                        .clip(RoundedCornerShape(Radius.field))
+                        .background(AnchorColors.surfaceSunken)
+                        .pressable(
+                            shape = RoundedCornerShape(Radius.field),
+                            onClick = { dialogOpen = true },
+                        )
+                        .padding(horizontal = Spacing.x4),
                     verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    val chips = listOf(9, 12, 18, 23)
-                    chips.forEach { hour ->
-                        val selected = deadlineHours == hour
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(Radius.chip))
-                                .background(if (selected) AnchorColors.ink else AnchorColors.surfaceMuted)
-                                .clickable { deadlineHours = if (selected) null else hour }
-                                .padding(horizontal = Spacing.x3, vertical = Spacing.x2),
-                        ) {
-                            Text(
-                                text = "%02d:00".format(hour),
-                                fontFamily = InterFamily,
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 12.sp,
-                                color = if (selected) AnchorColors.surface else AnchorColors.textSecondary,
-                            )
-                        }
-                    }
                     Text(
-                        text = if (deadlineHours == null) stringResource(R.string.add_task_deadline_hint) else "",
+                        text = displayText,
                         fontFamily = InterFamily,
+                        fontSize = 14.sp,
+                        color = if (deadlineHours == null) AnchorColors.textFaint else AnchorColors.textPrimary,
+                    )
+                    Text(
+                        text = stringResource(R.string.add_task_duration_choose),
+                        fontFamily = InterFamily,
+                        fontWeight = FontWeight.Medium,
                         fontSize = 12.sp,
-                        color = AnchorColors.textFaint,
+                        color = AnchorColors.textMuted,
+                    )
+                }
+
+                if (dialogOpen) {
+                    WheelPickerDialog(
+                        values = options,
+                        initialIndex = options.indexOf(deadlineHours).coerceAtLeast(0),
+                        title = stringResource(R.string.add_task_deadline_label),
+                        onDismiss = { dialogOpen = false },
+                        onConfirm = { index ->
+                            deadlineHours = options[index]
+                            dialogOpen = false
+                        },
+                        formatValue = { hour ->
+                            if (hour == null) noDeadlineLabel else "%02d:00".format(hour)
+                        },
                     )
                 }
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.x3)) {
-                Column(modifier = Modifier.weight(1f)) {
-                    LabeledSection(stringResource(R.string.add_task_duration_label)) {
-                        Field(
-                            value = durationText,
-                            onValueChange = { durationText = it.filter { c -> c.isDigit() } },
-                            hint = stringResource(R.string.add_task_duration_hint),
-                        )
-                    }
+            LabeledSection(stringResource(R.string.add_task_duration_label)) {
+                // Tap the field → a centered AlertDialog opens with a scroll wheel to pick the
+                // minutes, then "Set" commits (Cancel discards). Metadata is edited in the small
+                // dialog instead of bloating the form, and the wheel reuses the shared,
+                // dependency-free WheelPicker.
+                var dialogOpen by remember { mutableStateOf(false) }
+                val options: List<Int?> = remember { listOf(null) + DURATION_OPTIONS_MIN }
+                val notSetLabel = stringResource(R.string.add_task_duration_not_set)
+                // Precompute labels in composable context; the WheelPicker `formatValue` lambda
+                // is not @Composable, so it must not call stringResource itself.
+                val labelsByIndex: List<String> = options.map { minutes ->
+                    if (minutes == null) notSetLabel
+                    else stringResource(R.string.add_task_duration_minutes, minutes)
                 }
-                Column(modifier = Modifier.weight(1f)) {
-                    LabeledSection(stringResource(R.string.add_task_category_label)) {
-                        Field(
-                            value = category,
-                            onValueChange = { category = it },
-                            hint = stringResource(R.string.add_task_category_hint),
+                val displayText = durationMinutes
+                    ?.let { stringResource(R.string.add_task_duration_minutes, it) }
+                    ?: notSetLabel
+
+                // The tappable field (collapsed state).
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp)
+                        .clip(RoundedCornerShape(Radius.field))
+                        .background(AnchorColors.surfaceSunken)
+                        .pressable(
+                            shape = RoundedCornerShape(Radius.field),
+                            onClick = { dialogOpen = true },
                         )
-                    }
+                        .padding(horizontal = Spacing.x4),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(
+                        text = displayText,
+                        fontFamily = InterFamily,
+                        fontSize = 14.sp,
+                        color = if (durationMinutes == null) AnchorColors.textFaint else AnchorColors.textPrimary,
+                    )
+                    Text(
+                        text = stringResource(R.string.add_task_duration_choose),
+                        fontFamily = InterFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 12.sp,
+                        color = AnchorColors.textMuted,
+                    )
                 }
+
+                if (dialogOpen) {
+                    WheelPickerDialog(
+                        values = options,
+                        initialIndex = options.indexOf(durationMinutes).coerceAtLeast(0),
+                        title = stringResource(R.string.add_task_duration_label),
+                        onDismiss = { dialogOpen = false },
+                        onConfirm = { index ->
+                            durationMinutes = options[index]
+                            dialogOpen = false
+                        },
+                        formatValue = { minutes ->
+                            val idx = options.indexOf(minutes)
+                            if (idx in labelsByIndex.indices) labelsByIndex[idx] else minutes.toString()
+                        },
+                    )
+                }
+            }
+
+            LabeledSection(stringResource(R.string.add_task_category_label)) {
+                Field(
+                    value = category,
+                    onValueChange = { category = it },
+                    hint = stringResource(R.string.add_task_category_hint),
+                )
             }
 
             LabeledSection(stringResource(R.string.add_task_subtasks_label, subtasks.size)) {
@@ -274,7 +362,7 @@ fun AddTaskSheet(
                                 .toInstant().toEpochMilli()
                         },
                         priority = priority,
-                        estimatedDurationMinutes = durationText.toIntOrNull(),
+                        estimatedDurationMinutes = durationMinutes,
                         category = category.trim().ifEmpty { null },
                         subtasks = subtasks.toList(),
                         recurrence = recurrence,
@@ -350,6 +438,6 @@ fun ToggleRow(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Uni
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(text = label, fontFamily = InterFamily, fontSize = 14.sp, color = AnchorColors.textPrimary)
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
+        AnchorSwitch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }

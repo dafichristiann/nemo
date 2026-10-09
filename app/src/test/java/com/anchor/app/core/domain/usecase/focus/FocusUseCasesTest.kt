@@ -40,7 +40,7 @@ class FocusUseCasesTest {
         val blocking = FakeBlockingStrategy(available = false)
         val useCase = StartFocusUseCase(repo, blocking, time(), FakeIdProvider())
 
-        val result = useCase(taskId = "t1", mode = FocusMode.GENTLE, plannedDurationMin = 25)
+        val result = useCase(taskId = "t1", mode = FocusMode.GENTLE, plannedDurationSec = 25 * 60)
 
         assertEquals(FocusMode.GENTLE, result.effectiveMode)
         assertNull(result.fallbackReason)
@@ -57,7 +57,7 @@ class FocusUseCasesTest {
         val repo = FakeFocusRepository()
         val useCase = StartFocusUseCase(repo, FakeBlockingStrategy(), time(), FakeIdProvider())
 
-        val result = useCase(taskId = null, mode = FocusMode.GENTLE, plannedDurationMin = 25)
+        val result = useCase(taskId = null, mode = FocusMode.GENTLE, plannedDurationSec = 25 * 60)
 
         assertNull(repo.getById(result.sessionId)!!.taskId)
     }
@@ -68,7 +68,7 @@ class FocusUseCasesTest {
         val blocking = FakeBlockingStrategy(available = false)
         val useCase = StartFocusUseCase(repo, blocking, time(), FakeIdProvider())
 
-        val result = useCase(taskId = "t1", mode = FocusMode.STRICT, plannedDurationMin = 45)
+        val result = useCase(taskId = "t1", mode = FocusMode.STRICT, plannedDurationSec = 45 * 60)
 
         assertEquals(FocusMode.GENTLE, result.effectiveMode)
         assertEquals(StartFocusUseCase.REASON_BLOCKING_UNAVAILABLE, result.fallbackReason)
@@ -86,7 +86,7 @@ class FocusUseCasesTest {
         val result = useCase(
             taskId = "t1",
             mode = FocusMode.STRICT,
-            plannedDurationMin = 45,
+            plannedDurationSec = 45 * 60,
             blockedApps = setOf("com.tiktok"),
         )
 
@@ -102,7 +102,7 @@ class FocusUseCasesTest {
     fun pause_marksPausedAndStoresElapsed() = runTest {
         val repo = FakeFocusRepository()
         val start = StartFocusUseCase(repo, FakeBlockingStrategy(), time(), FakeIdProvider())
-        val id = start("t1", FocusMode.GENTLE, 25).sessionId
+        val id = start("t1", FocusMode.GENTLE, 25 * 60).sessionId
 
         PauseFocusUseCase(repo, time())(id, elapsedMs = 5 * 60_000L)
 
@@ -122,7 +122,7 @@ class FocusUseCasesTest {
         tasks.insert(task("t1"))
         val blocking = FakeBlockingStrategy(available = true)
         val start = StartFocusUseCase(repo, blocking, time(), FakeIdProvider())
-        val id = start("t1", FocusMode.STRICT, 25, setOf("com.tiktok")).sessionId
+        val id = start("t1", FocusMode.STRICT, 25 * 60, setOf("com.tiktok")).sessionId
 
         // Full 25-minute session -> verified -> task completed.
         val result = FinishFocusUseCase(repo, blocking, tasks, time())(id, elapsedMs = 25 * 60_000L)
@@ -142,7 +142,7 @@ class FocusUseCasesTest {
         val tasks = FakeTaskRepository()
         tasks.insert(task("t1"))
         val start = StartFocusUseCase(repo, FakeBlockingStrategy(), time(), FakeIdProvider())
-        val id = start("t1", FocusMode.GENTLE, 25).sessionId
+        val id = start("t1", FocusMode.GENTLE, 25 * 60).sessionId
 
         val result = FinishFocusUseCase(repo, FakeBlockingStrategy(), tasks, time())(id, 25 * 60_000L)
 
@@ -155,20 +155,20 @@ class FocusUseCasesTest {
     }
 
     @Test
-    fun finish_shortSession_doesNotCompleteTask() = runTest {
+    fun finish_shortSession_stillCompletesTask() = runTest {
         val repo = FakeFocusRepository()
         val tasks = FakeTaskRepository()
         tasks.insert(task("t1"))
         val start = StartFocusUseCase(repo, FakeBlockingStrategy(), time(), FakeIdProvider())
-        val id = start("t1", FocusMode.GENTLE, 25).sessionId
+        val id = start("t1", FocusMode.GENTLE, 25 * 60).sessionId
 
-        // 24 min, one minute short of the plan -> session recorded, task untouched.
-        val result = FinishFocusUseCase(repo, FakeBlockingStrategy(), tasks, time())(id, 24 * 60_000L)
+        // Finishing early is an explicit "I'm done" -> the task is completed (updated rule).
+        val result = FinishFocusUseCase(repo, FakeBlockingStrategy(), tasks, time())(id, 2 * 60_000L)
 
-        assertFalse(result.completedTask)
+        assertTrue(result.completedTask)
         val saved = tasks.getById("t1")!!
-        assertEquals(TaskStatus.TODO, saved.status)
-        assertNull(saved.completionSource)
+        assertEquals(TaskStatus.DONE, saved.status)
+        assertEquals(CompletionSource.VERIFIED, saved.completionSource)
     }
 
     @Test
@@ -177,7 +177,7 @@ class FocusUseCasesTest {
         val tasks = FakeTaskRepository()
         tasks.insert(task("t1"))
         val start = StartFocusUseCase(repo, FakeBlockingStrategy(), time(), FakeIdProvider())
-        val id = start("t1", FocusMode.GENTLE, 25).sessionId
+        val id = start("t1", FocusMode.GENTLE, 25 * 60).sessionId
 
         val result = FinishFocusUseCase(repo, FakeBlockingStrategy(), tasks, time())(
             id,
@@ -194,7 +194,7 @@ class FocusUseCasesTest {
         val repo = FakeFocusRepository()
         val tasks = FakeTaskRepository()
         val start = StartFocusUseCase(repo, FakeBlockingStrategy(), time(), FakeIdProvider())
-        val id = start(null, FocusMode.GENTLE, 25).sessionId
+        val id = start(null, FocusMode.GENTLE, 25 * 60).sessionId
 
         val result = FinishFocusUseCase(repo, FakeBlockingStrategy(), tasks, time())(id, 25 * 60_000L)
 
@@ -208,7 +208,7 @@ class FocusUseCasesTest {
         val tasks = FakeTaskRepository()
         val blocking = FakeBlockingStrategy(available = true)
         val start = StartFocusUseCase(repo, blocking, time(), FakeIdProvider())
-        val id = start("t1", FocusMode.STRICT, 25, setOf("com.tiktok")).sessionId
+        val id = start("t1", FocusMode.STRICT, 25 * 60, setOf("com.tiktok")).sessionId
 
         val result = FinishFocusUseCase(repo, blocking, tasks, time())(id, elapsedMs = 2 * 60_000L, aborted = true)
 
@@ -221,12 +221,14 @@ class FocusUseCasesTest {
     fun totalDuration_sumsFinishedSessionsInWindow() = runTest {
         val repo = FakeFocusRepository()
         val tasks = FakeTaskRepository()
+        tasks.insert(task("t1"))
+        tasks.insert(task("t2"))
         val start = StartFocusUseCase(repo, FakeBlockingStrategy(), time(), FakeIdProvider())
         val finish = FinishFocusUseCase(repo, FakeBlockingStrategy(), tasks, time())
 
-        val a = start("t1", FocusMode.GENTLE, 25).sessionId
+        val a = start("t1", FocusMode.GENTLE, 25 * 60).sessionId
         finish(a, 20 * 60_000L)
-        val b = start("t2", FocusMode.GENTLE, 25).sessionId
+        val b = start("t2", FocusMode.GENTLE, 25 * 60).sessionId
         finish(b, 15 * 60_000L)
 
         val total = repo.totalDurationBetween(fixedNow - 1, fixedNow + 1)

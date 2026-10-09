@@ -26,6 +26,10 @@ import androidx.room.PrimaryKey
         Index("definitionId"),
         Index("status"),
         Index("deadline"),
+        // A recurring definition may issue at most one instance per occurrence day (FR-T7,
+        // "no double instance"). A NULL definitionId/occurrenceDate (ad-hoc tasks) is never
+        // considered equal in SQLite unique indexes, so non-recurring rows are unaffected.
+        Index("definitionId", "definitionOccurrenceDate", unique = true),
     ],
 )
 data class TaskEntity(

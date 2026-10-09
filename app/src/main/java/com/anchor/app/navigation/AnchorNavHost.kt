@@ -22,8 +22,8 @@ import com.anchor.app.feature.futureview.FutureViewScreen
 import com.anchor.app.feature.futureview.FutureViewViewModel
 import com.anchor.app.feature.insights.InsightsScreen
 import com.anchor.app.feature.intervention.InterventionOverlay
-import com.anchor.app.feature.onboarding.OnboardingScreen
 import com.anchor.app.feature.onboarding.PermissionOnboardingScreen
+import com.anchor.app.feature.onboarding.ProfileSetupScreen
 import com.anchor.app.feature.settings.AppCategoriesScreen
 import com.anchor.app.feature.settings.BlockedAppsScreen
 import com.anchor.app.feature.settings.SettingsScreen
@@ -35,7 +35,7 @@ import com.anchor.app.platform.accessibility.AccessibilityStatus
 
 /** All routes (docs 07-screens.md §1: "Detail & modal as separate routes"). */
 object Routes {
-    const val ONBOARDING = "onboarding"
+    const val PROFILE_ONBOARDING = "onboarding/profile"
     const val PERMISSION_ONBOARDING = "onboarding/permissions"
     const val SETTINGS = "settings"
     const val SETTINGS_CATEGORIES = "settings/categories"
@@ -58,7 +58,7 @@ object Routes {
 /**
  * Navigation shell (docs/superpowers/design/07-screens.md §1, §6).
  *
- * On first launch the flow is 00 Onboarding → 00b Permission Onboarding → main shell.
+ * On first launch the flow is 00a Profile Setup → 00b Permission Onboarding → main shell.
  * The main shell has four top-level tabs (Tasks · Wellbeing · Focus · Insights). Detail
  * and Settings routes hide the bottom bar, as in the mockups (back header instead).
  */
@@ -76,13 +76,17 @@ fun AnchorNavHost(
     val deepLink = initialRoute?.takeIf { r -> TopLevelDestination.entries.any { it.route == r } }
     val startDestination = when (onboardingCompleted) {
         null -> null
-        false -> Routes.ONBOARDING
+        false -> Routes.PROFILE_ONBOARDING
         true -> deepLink ?: TopLevelDestination.TASKS.route
     }
 
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
-    val isTopLevel = TopLevelDestination.entries.any { it.route == currentRoute }
+    // Focus is reachable both as the bare tab ("focus") and with a preselected task
+    // ("focus?taskId={taskId}"), so match on the route *base* (before any query) — otherwise the
+    // bottom bar would disappear when Focus is opened for a specific task from Detail/FutureView.
+    val currentRouteBase = currentRoute?.substringBefore('?')
+    val isTopLevel = TopLevelDestination.entries.any { it.route == currentRouteBase }
 
     Scaffold(
         modifier = modifier,
@@ -90,7 +94,7 @@ fun AnchorNavHost(
             if (isTopLevel) {
                 AnchorNavBar(
                     destinations = TopLevelDestination.entries,
-                    currentRoute = currentRoute,
+                    currentRoute = currentRouteBase,
                     onNavigate = { destination ->
                         navController.navigate(destination.route) {
                             popUpTo(TopLevelDestination.TASKS.route) { saveState = true }
@@ -109,20 +113,32 @@ fun AnchorNavHost(
             startDestination = startDestination,
             modifier = Modifier.padding(innerPadding),
         ) {
-            composable(Routes.ONBOARDING) {
-                OnboardingScreen(
-                    onGetStarted = { navController.navigate(Routes.PERMISSION_ONBOARDING) },
-                    onSkip = {
-                        navController.navigate(TopLevelDestination.TASKS.route) {
-                            popUpTo(Routes.ONBOARDING) { inclusive = true }
+            composable(Routes.PROFILE_ONBOARDING) {
+                val finishOnboarding = {
+                    appViewModel.completeOnboarding()
+                    navController.navigate(TopLevelDestination.TASKS.route) {
+                        popUpTo(Routes.PROFILE_ONBOARDING) { inclusive = true }
+                    }
+                }
+                ProfileSetupScreen(
+                    onContinue = {
+                        // Skip the optional permission step when both permissions are already
+                        // granted (e.g. the OS kept the grants); otherwise let the user opt in
+                        // (PRD §14 — permissions are optional, never forced).
+                        if (appViewModel.optionalPermissionsGranted()) {
+                            finishOnboarding()
+                        } else {
+                            navController.navigate(Routes.PERMISSION_ONBOARDING)
                         }
                     },
+                    onSkip = finishOnboarding,
                 )
             }
             composable(Routes.PERMISSION_ONBOARDING) {
                 val finish = {
+                    appViewModel.completeOnboarding()
                     navController.navigate(TopLevelDestination.TASKS.route) {
-                        popUpTo(Routes.ONBOARDING) { inclusive = true }
+                        popUpTo(Routes.PROFILE_ONBOARDING) { inclusive = true }
                     }
                 }
                 PermissionOnboardingScreen(onContinue = finish, onSkip = finish)
@@ -137,14 +153,18 @@ fun AnchorNavHost(
             composable(TopLevelDestination.WELLBEING.route) {
                 WellbeingScreen(onOpenSettings = { navController.navigate(Routes.SETTINGS) })
             }
-            composable(TopLevelDestination.FOCUS.route) {
+            // Focus is registered twice by design: the bare tab route ("focus") for bottom-bar
+            // navigation, and the task-scoped route ("focus?taskId={taskId}") used when Focus is
+            // opened for a specific task from Detail/FutureView (PRD v0.5 §10.1). Both render the
+            // same screen; the shared content is factored into `focusContent` to avoid drift.
+            val focusContent: @Composable () -> Unit = {
                 val context = LocalContext.current
                 FocusScreen(
                     onManageBlockedApps = { navController.navigate(Routes.SETTINGS_BLOCKED) },
                     onOpenAccessibilitySettings = { AccessibilityStatus().open(context) },
                 )
             }
-            // Focus opened for a specific task (PRD v0.5 §10.1): same screen, task preselected.
+            composable(TopLevelDestination.FOCUS.route) { focusContent() }
             composable(
                 route = Routes.FOCUS,
                 arguments = listOf(
@@ -154,13 +174,7 @@ fun AnchorNavHost(
                         defaultValue = null
                     },
                 ),
-            ) {
-                val context = LocalContext.current
-                FocusScreen(
-                    onManageBlockedApps = { navController.navigate(Routes.SETTINGS_BLOCKED) },
-                    onOpenAccessibilitySettings = { AccessibilityStatus().open(context) },
-                )
-            }
+            ) { focusContent() }
             composable(TopLevelDestination.INSIGHTS.route) { InsightsScreen() }
 
             composable(

@@ -47,6 +47,9 @@ class TaskRepositoryImpl @Inject constructor(
 
     override suspend fun insert(task: Task) = taskDao.insert(task.toEntity())
 
+    override suspend fun insertIgnoringDuplicate(task: Task): Boolean =
+        taskDao.insertIgnoringDuplicate(task.toEntity()) != -1L
+
     override suspend fun update(task: Task) = taskDao.update(task.toEntity())
 
     override suspend fun delete(id: String) = taskDao.deleteById(id)

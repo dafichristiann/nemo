@@ -5,4 +5,6 @@
 -->
 <resources>
     <color name="surface">#FFFFFF</color>
+    <!-- Adaptive launcher icon background: white in light theme (values-night overrides to black). -->
+    <color name="ic_launcher_background">#FFFFFF</color>
 </resources>

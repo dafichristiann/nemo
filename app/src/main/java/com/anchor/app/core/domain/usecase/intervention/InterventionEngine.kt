@@ -74,7 +74,8 @@ class InterventionEngine @Inject constructor(
     /** Meaningful interventions already spent in today's local-day window (docs 04 §3.1). */
     suspend fun quotaUsedToday(now: Long = timeProvider.nowMillis()): Int {
         val startOfDay = timeProvider.startOfDayMillis(now)
-        val endOfDay = startOfDay + DAY_MS
+        // Next local midnight (not start + 24h) so the window is exact on DST-transition days.
+        val endOfDay = timeProvider.endOfDayMillis(now)
         return interventionRepository.quotaUsedBetween(startOfDay, endOfDay)
     }
 
@@ -181,8 +182,6 @@ class InterventionEngine @Inject constructor(
 
         /** LOCKED "Later" cooldown, per context/app (PRD §10.4 rule 4). */
         const val COOLDOWN_AFTER_LATER_MS = 2 * 60 * 60 * 1000L
-
-        private const val DAY_MS = 24 * 60 * 60 * 1000L
 
         /** Priorities that make a pending task "meaningful" for contextual interventions. */
         val MEANINGFUL_PRIORITIES = setOf(TaskPriority.HIGH, TaskPriority.URGENT)

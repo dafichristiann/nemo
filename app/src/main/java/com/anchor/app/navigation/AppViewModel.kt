@@ -3,6 +3,8 @@ package com.anchor.app.navigation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.anchor.app.core.domain.repository.SettingsRepository
+import com.anchor.app.platform.notification.NotificationPermissions
+import com.anchor.app.platform.usagestats.UsageStatsSource
 import com.anchor.app.worker.UsageWorkScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -22,8 +24,10 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class AppViewModel @Inject constructor(
-    settingsRepository: SettingsRepository,
+    private val settingsRepository: SettingsRepository,
     private val usageWorkScheduler: UsageWorkScheduler,
+    private val usageStats: UsageStatsSource,
+    private val notificationPermissions: NotificationPermissions,
 ) : ViewModel() {
 
     /** null = not yet known (show nothing / splash); true/false once loaded. */
@@ -35,15 +39,35 @@ class AppViewModel @Inject constructor(
         // Recurring tasks are core (Phase 1) and must run even without tracking (FR-T7).
         usageWorkScheduler.scheduleRecurringTasks()
 
-        // React to opt-in/opt-out of usage tracking. Enqueue is idempotent (KEEP).
+        // React to opt-in/opt-out of usage tracking. Enqueue is idempotent (KEEP); opting out
+        // cancels the pipeline so no background collection runs without consent (FR-S6).
         viewModelScope.launch {
             settingsRepository.observe()
                 .map { it.trackingEnabled }
                 .distinctUntilChanged()
                 .collect { enabled ->
                     if (enabled) usageWorkScheduler.schedulePeriodic()
+                    else usageWorkScheduler.cancelPeriodic()
                 }
         }
     }
-}
 
+    /**
+     * True when both optional permissions offered on the "Setup 1 of 2" screen are already
+     * granted (Usage Access + Notifications). When they are, the permission-setup step is
+     * skipped entirely so a returning user drops straight into the app; when either is
+     * missing, the setup screen is shown so they can still opt in (PRD §14 — permissions
+     * are optional, never forced).
+     */
+    fun optionalPermissionsGranted(): Boolean =
+        usageStats.hasPermission() && notificationPermissions.canPostNotifications()
+
+    /**
+     * Persists that the first-run flow is finished, so the splash/permission step never shows
+     * again (docs 07-screens.md §2.3: "tidak memaksa izin"). Called once the user leaves
+     * onboarding in either direction (Get started/Skip, Continue/Skip for now).
+     */
+    fun completeOnboarding() = viewModelScope.launch {
+        settingsRepository.setOnboardingCompleted(true)
+    }
+}

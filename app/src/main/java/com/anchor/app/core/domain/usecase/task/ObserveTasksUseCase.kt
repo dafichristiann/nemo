@@ -22,7 +22,9 @@ class ObserveTasksUseCase @Inject constructor(
     operator fun invoke(filter: TaskFilter): Flow<List<Task>> {
         val now = timeProvider.nowMillis()
         val startOfToday = timeProvider.startOfDayMillis(now)
-        val endOfToday = startOfToday + ONE_DAY_MS
+        // Derive the end of day from the next local midnight (not start + 24h) so the window stays
+        // correct on DST-transition days, when a local day is 23 or 25 hours long.
+        val endOfToday = timeProvider.endOfDayMillis(now)
         val todayEpochDay = timeProvider.epochDayOf(now)
 
         return when (filter) {
@@ -31,9 +33,5 @@ class ObserveTasksUseCase @Inject constructor(
             TaskFilter.UPCOMING -> taskRepository.observeUpcoming(endOfToday)
             TaskFilter.COMPLETED -> taskRepository.observeCompleted()
         }
-    }
-
-    private companion object {
-        const val ONE_DAY_MS = 24L * 60L * 60L * 1000L
     }
 }

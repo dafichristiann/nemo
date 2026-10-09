@@ -6,9 +6,14 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.anchor.app.core.design.theme.AnchorColors
 import com.anchor.app.core.design.theme.AnchorTheme
+import com.anchor.app.feature.splash.SplashScreen
 import com.anchor.app.navigation.AnchorNavHost
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -33,7 +38,14 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = AnchorColors.surface,
                 ) {
-                    AnchorNavHost(initialRoute = initialRoute)
+                    // Show the branded intro clip once per cold start, then the shell. Skipped on
+                    // configuration change so a rotation doesn't replay the splash.
+                    var showSplash by remember { mutableStateOf(savedInstanceState == null) }
+                    if (showSplash) {
+                        SplashScreen(onFinished = { showSplash = false })
+                    } else {
+                        AnchorNavHost(initialRoute = initialRoute)
+                    }
                 }
             }
         }

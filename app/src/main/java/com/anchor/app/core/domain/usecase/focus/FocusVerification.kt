@@ -5,13 +5,13 @@ package com.anchor.app.core.domain.usecase.focus
  * "Effort-based Completion [LOCKED v0.5]").
  *
  * A task is only completed by a **full** session: the recorded [actualDurationMs] must reach
- * the [plannedDurationMin] the user set. Finishing early or an emergency exit does not count.
+ * the [plannedDurationSec] the user set. Finishing early or an emergency exit does not count.
  * There is no tolerance band — a shorter session simply does not complete the task.
  *
  * Kept free of Android/Room so it can be unit-tested directly.
  */
-fun isFocusVerified(actualDurationMs: Long, plannedDurationMin: Int?): Boolean {
-    val planned = plannedDurationMin ?: return false
+fun isFocusVerified(actualDurationMs: Long, plannedDurationSec: Int?): Boolean {
+    val planned = plannedDurationSec ?: return false
     if (planned <= 0) return false
-    return actualDurationMs >= planned * 60_000L
+    return actualDurationMs >= planned * 1_000L
 }

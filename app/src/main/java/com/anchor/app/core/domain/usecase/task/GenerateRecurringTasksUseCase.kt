@@ -44,13 +44,13 @@ class GenerateRecurringTasksUseCase @Inject constructor(
             val alreadyIssued = taskRepository.countForDefinitionOnDate(definition.id, occurrenceDate)
             if (alreadyIssued > 0) continue
 
-            taskRepository.insert(
+            val inserted = taskRepository.insertIgnoringDuplicate(
                 Task(
                     id = idProvider.newId(),
                     definitionId = definition.id,
                     title = definition.title,
                     description = definition.description,
-                    deadline = deadlineFor(definition.id, today),
+                    deadline = deadlineFor(today),
                     priority = definition.defaultPriority,
                     estimatedDurationMin = definition.defaultDurationMin,
                     category = definition.category,
@@ -58,7 +58,7 @@ class GenerateRecurringTasksUseCase @Inject constructor(
                     definitionOccurrenceDate = occurrenceDate,
                 ),
             )
-            created++
+            if (inserted) created++
         }
         return created
     }
@@ -66,29 +66,31 @@ class GenerateRecurringTasksUseCase @Inject constructor(
     private suspend fun isDue(rule: RecurrenceRule, definitionId: String, today: LocalDate): Boolean =
         when (rule) {
             RecurrenceRule.DAILY -> true
-            RecurrenceRule.WEEKLY -> lastOccurrenceWeekday(definitionId)?.let { it == today.dayOfWeek } ?: true
+            RecurrenceRule.WEEKLY -> lastOccurrenceWeekday(definitionId, today)?.let { it == today.dayOfWeek } ?: true
             RecurrenceRule.NONE -> false
         }
 
     /** Weekday of the most recent prior instance within the last 7 days, if any. */
-    private suspend fun lastOccurrenceWeekday(definitionId: String): DayOfWeek? =
-        recentOccurrences(definitionId).maxOrNull()?.let { LocalDate.ofEpochDay(it).dayOfWeek }
+    private suspend fun lastOccurrenceWeekday(definitionId: String, today: LocalDate): DayOfWeek? =
+        recentOccurrences(definitionId, today).maxOrNull()?.let { LocalDate.ofEpochDay(it).dayOfWeek }
 
-    /** Occurrence epoch-days for [definitionId] within the last 7 days (excluding none). */
-    private suspend fun recentOccurrences(definitionId: String): List<Long> {
-        val today = timeProvider.today()
-        return (0..7).mapNotNull { back ->
+    /**
+     * Occurrence epoch-days for [definitionId] within the last 7 days. Uses the [today] threaded
+     * through [invoke] rather than re-reading the clock, so the scan and the "is due" decision
+     * can never disagree about what day it is (deterministic under a fake clock / around midnight).
+     */
+    private suspend fun recentOccurrences(definitionId: String, today: LocalDate): List<Long> =
+        (0..6).mapNotNull { back ->
             val epoch = today.minusDays(back.toLong()).toEpochDay()
             if (taskRepository.countForDefinitionOnDate(definitionId, epoch) > 0) epoch else null
         }
-    }
 
     /**
      * Deadline for a new instance: 23:59 on [today] (domain heuristic, PRD §10.6).
      * A per-instance time-of-day override would be layered here when the Add Task sheet
      * lets recurring definitions carry an explicit clock time.
      */
-    private suspend fun deadlineFor(definitionId: String, today: LocalDate): Long =
+    private fun deadlineFor(today: LocalDate): Long =
         timeProvider.toMillis(today.atTime(DEFAULT_DEADLINE_TIME))
 
     private companion object {

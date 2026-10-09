@@ -195,6 +195,8 @@
     <string name="onboarding_perm_usage_sub">Untuk Kesejahteraan &amp; deteksi drift</string>
     <string name="onboarding_perm_notif_title">Notifikasi</string>
     <string name="onboarding_perm_notif_sub">Intervensi lembut &amp; sesi fokus</string>
+    <string name="onboarding_perm_blocking_title">Pemblokiran aplikasi</string>
+    <string name="onboarding_perm_blocking_sub">Jeda aplikasi pilihan selama fokus Ketat/Kustom (butuh akses Aksesibilitas)</string>
     <string name="onboarding_perm_optional">Opsional</string>
     <string name="onboarding_perm_enable">Aktifkan</string>
     <string name="onboarding_perm_enabled">Aktif</string>

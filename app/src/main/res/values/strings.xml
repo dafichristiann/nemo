@@ -193,6 +193,8 @@
     <string name="onboarding_perm_usage_sub">For Wellbeing &amp; drift detection</string>
     <string name="onboarding_perm_notif_title">Notifications</string>
     <string name="onboarding_perm_notif_sub">Gentle interventions &amp; focus sessions</string>
+    <string name="onboarding_perm_blocking_title">App blocking</string>
+    <string name="onboarding_perm_blocking_sub">Pause chosen apps during Strict/Custom focus (needs Accessibility access)</string>
     <string name="onboarding_perm_optional">Optional</string>
     <string name="onboarding_perm_enable">Enable</string>
     <string name="onboarding_perm_enabled">Enabled</string>

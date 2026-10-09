@@ -72,6 +72,7 @@ import com.anchor.app.core.design.theme.Radius
 import com.anchor.app.core.design.theme.Spacing
 import com.anchor.app.core.domain.model.AppSettings
 import com.anchor.app.core.domain.model.FocusArea
+import com.anchor.app.platform.accessibility.AccessibilityStatus
 import com.anchor.app.platform.usagestats.UsageAccessSettings
 
 /**
@@ -95,13 +96,16 @@ fun PermissionOnboardingScreen(
         )
     }
     var usageGranted by remember { mutableStateOf(false) }
+    var blockingGranted by remember { mutableStateOf(AccessibilityStatus().isEnabled(context)) }
 
-    // Usage access is granted only in OS Settings, so re-check when we return (docs 08 §2).
+    // Usage access + App blocking are granted only in OS Settings, so re-check when we return
+    // (docs 08 §2).
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 usageGranted = usageAccessGranted(context)
+                blockingGranted = AccessibilityStatus().isEnabled(context)
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -161,6 +165,12 @@ fun PermissionOnboardingScreen(
             subtitle = stringResource(R.string.onboarding_perm_notif_sub),
             granted = notificationsGranted,
             onEnable = { requestNotifications(notifLauncher, context) },
+        )
+        PermissionCard(
+            title = stringResource(R.string.onboarding_perm_blocking_title),
+            subtitle = stringResource(R.string.onboarding_perm_blocking_sub),
+            granted = blockingGranted,
+            onEnable = { AccessibilityStatus().open(context) },
         )
 
         Banner {

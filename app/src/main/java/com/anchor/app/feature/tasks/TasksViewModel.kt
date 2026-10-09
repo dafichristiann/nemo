@@ -40,6 +40,8 @@ data class TaskRowUi(
 data class TasksUiState(
     val filter: TaskFilter = TaskFilter.TODAY,
     val rows: List<TaskRowUi> = emptyList(),
+    /** Overdue open tasks, shown in their own section — excluded from [rows] (no double entry). */
+    val overdueRows: List<TaskRowUi> = emptyList(),
     val overdueCount: Int = 0,
     val today: java.time.LocalDate = java.time.LocalDate.now(),
     val zone: java.time.ZoneId = java.time.ZoneId.systemDefault(),
@@ -76,9 +78,18 @@ class TasksViewModel @Inject constructor(
     ) { tasks, overdue, currentFilter, settings ->
         val now = timeProvider.nowMillis()
         val zone = timeProvider.zoneId()
+        // Overdue tasks get their own section, so they must NOT also appear in the normal list.
+        // (Overdue = deadline already passed, per user rule.) The Completed view keeps everything.
+        val overdueIds = overdue.map { it.id }.toSet()
+        val visibleTasks = if (currentFilter == TaskFilter.COMPLETED) {
+            tasks
+        } else {
+            tasks.filterNot { it.id in overdueIds }
+        }
         TasksUiState(
             filter = currentFilter,
-            rows = tasks.map { it.toRowUi(now, zone) },
+            rows = visibleTasks.map { it.toRowUi(now, zone) },
+            overdueRows = overdue.map { it.toRowUi(now, zone) },
             overdueCount = overdue.size,
             today = timeProvider.today(),
             zone = zone,

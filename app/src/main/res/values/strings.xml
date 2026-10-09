@@ -50,6 +50,7 @@
     <string name="task_filter_all">All</string>
     <string name="task_filter_today">Today</string>
     <string name="task_filter_upcoming">Upcoming</string>
+    <string name="task_filter_overdue">Overdue</string>
     <string name="task_filter_completed">Completed</string>
 
     <string name="home_empty_title">No tasks yet — plan your day.</string>
@@ -281,6 +282,9 @@
     <string name="focus_active_pause">Pause</string>
     <string name="focus_active_resume">Resume</string>
     <string name="focus_active_finish">Finish</string>
+    <string name="focus_finish_confirm_title">Finish this session?</string>
+    <string name="focus_finish_confirm_body">The session will end and the task will be marked as done.</string>
+    <string name="focus_finish_confirm_confirm">Finish &amp; complete</string>
     <string name="focus_active_remaining_label">remaining</string>
     <string name="focus_active_paused_label">paused</string>
     <string name="focus_emergency_exit">Emergency exit</string>

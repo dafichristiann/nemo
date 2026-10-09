@@ -96,7 +96,8 @@ class TasksViewModelTest {
     fun defaultFilter_isToday_andRowsReflectIt() = runTest(dispatcher) {
         val startOfDay = time.startOfDayMillis(fixedNow)
         tasks.tasks.value = listOf(
-            task("today", startOfDay + 3_600_000),
+            // 20:00 today — still in the future relative to `fixedNow` (09:30), so NOT overdue.
+            task("today", startOfDay + 20 * 3_600_000L),
             task("tomorrow", startOfDay + 86_400_000L),
         )
         val vm = viewModel()
@@ -136,7 +137,9 @@ class TasksViewModelTest {
     }
 
     @Test
-    fun overdueCount_reflectsOverdueOpenTasks() = runTest(dispatcher) {
+    fun overdueTasks_areMovedOutOfRowsIntoSeparateSection_noDouble() = runTest(dispatcher) {
+        // Regression: an overdue task must appear ONLY in the overdue section, never also in the
+        // normal list (deadline already passed). Here "late-1"/"late-2" are overdue; "future" is not.
         tasks.tasks.value = listOf(
             task("late-1", fixedNow - 1),
             task("late-2", fixedNow - 2),
@@ -146,8 +149,11 @@ class TasksViewModelTest {
         keepCollecting(vm)
         advanceUntilIdle()
 
-        assertEquals(2, vm.uiState.value.overdueCount)
-        assertTrue(vm.uiState.value.rows.find { it.task.id == "late-1" }?.overdue == true)
+        val state = vm.uiState.value
+        assertEquals(2, state.overdueCount)
+        assertEquals(setOf("late-1", "late-2"), state.overdueRows.map { it.task.id }.toSet())
+        // No double entry: overdue ids must not appear in the normal rows.
+        assertTrue("overdue must not appear in rows", state.rows.none { it.task.id.startsWith("late") })
     }
 
     @Test

@@ -54,7 +54,6 @@ import com.anchor.app.core.design.components.AnchorSwitch
 import com.anchor.app.core.design.components.Divider
 import com.anchor.app.core.design.components.SectionHeader
 import com.anchor.app.core.design.components.SegmentedChips
-import com.anchor.app.core.design.components.TextPill
 import com.anchor.app.core.design.components.minTouchTarget
 import com.anchor.app.core.design.components.pressable
 import com.anchor.app.core.design.theme.AnchorColors
@@ -424,15 +423,34 @@ private fun PermissionRow(
         }
         Spacer(modifier = Modifier.width(Spacing.x3))
         if (granted) {
-            TextPill(text = stringResource(R.string.settings_perm_granted), highlighted = true)
-        } else {
-            // Solid ink pill, sized to a comfortable touch target, with a subtle pressed scale —
-            // matches every other primary affordance in the app (no bare, cramped button).
+            // ON: solid ink pill — same size/shape as the "Enable" button, only the colors differ,
+            // so the row does not shrink when a permission flips to "On".
             Box(
                 modifier = Modifier
                     .heightIn(min = 36.dp)
                     .clip(RoundedCornerShape(Radius.button))
                     .background(AnchorColors.ink)
+                    .border(1.dp, AnchorColors.ink, RoundedCornerShape(Radius.button))
+                    .minTouchTarget()
+                    .padding(horizontal = Spacing.x4),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = stringResource(R.string.settings_perm_granted),
+                    fontFamily = InterFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 13.sp,
+                    color = AnchorColors.surface,
+                )
+            }
+        } else {
+            // OFF (not yet granted): muted neutral pill, same size — reads as available, not urgent.
+            Box(
+                modifier = Modifier
+                    .heightIn(min = 36.dp)
+                    .clip(RoundedCornerShape(Radius.button))
+                    .background(AnchorColors.surfaceMuted)
+                    .border(1.dp, AnchorColors.border, RoundedCornerShape(Radius.button))
                     .pressable(
                         shape = RoundedCornerShape(Radius.button),
                         pressedScale = 0.96f,
@@ -447,7 +465,7 @@ private fun PermissionRow(
                     fontFamily = InterFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 13.sp,
-                    color = AnchorColors.surface,
+                    color = AnchorColors.textSecondary,
                 )
             }
         }

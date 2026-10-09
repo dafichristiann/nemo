@@ -16,7 +16,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -64,6 +66,7 @@ fun FocusScreen(
     modifier: Modifier = Modifier,
     onManageBlockedApps: () -> Unit = {},
     onOpenAccessibilitySettings: () -> Unit = {},
+    onFinished: () -> Unit = {},
     viewModel: FocusViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -80,7 +83,7 @@ fun FocusScreen(
     }
 
     if (state.isRunning) {
-        FocusActiveContent(state = state, viewModel = viewModel, modifier = modifier)
+        FocusActiveContent(state = state, viewModel = viewModel, onFinished = onFinished, modifier = modifier)
     } else {
         FocusSetupContent(
             state = state,
@@ -261,9 +264,13 @@ private fun FocusSetupContent(
 private fun FocusActiveContent(
     state: FocusUiState,
     viewModel: FocusViewModel,
+    onFinished: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val active = state.active ?: return
+    // Confirmation gate for Finish: pressing Finish completes the task and leaves the screen, so
+    // we confirm intent first (accidental taps would otherwise end the session and mark it done).
+    var showFinishConfirm by remember { mutableStateOf(false) }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -336,7 +343,7 @@ private fun FocusActiveContent(
             Box(modifier = Modifier.weight(1f)) {
                 PrimaryButton(
                     label = stringResource(R.string.focus_active_finish),
-                    onClick = viewModel::onFinish,
+                    onClick = { showFinishConfirm = true },
                 )
             }
         }
@@ -381,6 +388,56 @@ private fun FocusActiveContent(
                     .padding(vertical = Spacing.x2),
             )
         }
+    }
+
+    // Finish confirmation: finishing ends the session and marks the task done, then we hand off
+    // to the caller (which navigates back to the Tasks tab).
+    if (showFinishConfirm) {
+        AlertDialog(
+            onDismissRequest = { showFinishConfirm = false },
+            containerColor = AnchorColors.surfaceCard,
+            title = {
+                Text(
+                    text = stringResource(R.string.focus_finish_confirm_title),
+                    fontFamily = InterFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = AnchorColors.textPrimary,
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.focus_finish_confirm_body),
+                    fontFamily = InterFamily,
+                    fontSize = 14.sp,
+                    color = AnchorColors.textSecondary,
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showFinishConfirm = false
+                    viewModel.onFinish()
+                    onFinished()
+                }) {
+                    Text(
+                        text = stringResource(R.string.focus_finish_confirm_confirm),
+                        fontFamily = InterFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        color = AnchorColors.ink,
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showFinishConfirm = false }) {
+                    Text(
+                        text = stringResource(R.string.dialog_cancel),
+                        fontFamily = InterFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        color = AnchorColors.textMuted,
+                    )
+                }
+            },
+        )
     }
 }
 

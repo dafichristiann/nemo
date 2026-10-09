@@ -162,6 +162,16 @@ fun AnchorNavHost(
                 FocusScreen(
                     onManageBlockedApps = { navController.navigate(Routes.SETTINGS_BLOCKED) },
                     onOpenAccessibilitySettings = { AccessibilityStatus().open(context) },
+                    // After finishing a session (the task is now done) land the user on Tasks so
+                    // they immediately see the completed item — no dead-end on the Focus tab.
+                    onFinished = {
+                        navController.navigate(TopLevelDestination.TASKS.route) {
+                            // Pop back to the Tasks tab without leaving a stale Focus entry behind,
+                            // whether Focus was reached from the bar or a task-scoped deep link.
+                            popUpTo(TopLevelDestination.TASKS.route) { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    },
                 )
             }
             composable(TopLevelDestination.FOCUS.route) { focusContent() }

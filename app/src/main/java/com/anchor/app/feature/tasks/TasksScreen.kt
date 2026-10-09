@@ -122,7 +122,7 @@ fun TasksScreen(
 
                 if (showOverdue && state.overdueCount > 0) {
                     items(
-                        items = state.rows.filter { it.overdue },
+                        items = state.overdueRows,
                         key = { "overdue-${it.task.id}" },
                     ) { row ->
                         OverdueTaskRow(
@@ -137,7 +137,7 @@ fun TasksScreen(
                 item {
                     SummaryCard(
                         completed = state.rows.count { it.task.isDone },
-                        total = state.rows.size,
+                        total = state.rows.size + state.overdueRows.size,
                     )
                 }
 
@@ -406,9 +406,9 @@ private fun SummaryCard(completed: Int, total: Int) {
 @Composable
 private fun FilterSegmented(selected: TaskFilter, onSelect: (TaskFilter) -> Unit) {
     val tabs = listOf(
-        TaskFilter.ALL to R.string.task_filter_all,
         TaskFilter.TODAY to R.string.task_filter_today,
         TaskFilter.UPCOMING to R.string.task_filter_upcoming,
+        TaskFilter.OVERDUE to R.string.task_filter_overdue,
         TaskFilter.COMPLETED to R.string.task_filter_completed,
     )
     Row(

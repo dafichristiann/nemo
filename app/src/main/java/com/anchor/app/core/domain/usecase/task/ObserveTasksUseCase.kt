@@ -6,8 +6,8 @@ import com.anchor.app.core.domain.repository.TaskRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
-/** Task list filters from PRD FR-T10. */
-enum class TaskFilter { ALL, TODAY, UPCOMING, COMPLETED }
+/** Task list filters (PRD FR-T10). Order shown in the UI: Today, Upcoming, Overdue, Completed. */
+enum class TaskFilter { TODAY, UPCOMING, OVERDUE, COMPLETED }
 
 /**
  * Observes the task list for a given [TaskFilter] (PRD FR-T10).
@@ -28,9 +28,10 @@ class ObserveTasksUseCase @Inject constructor(
         val todayEpochDay = timeProvider.epochDayOf(now)
 
         return when (filter) {
-            TaskFilter.ALL -> taskRepository.observeAll()
             TaskFilter.TODAY -> taskRepository.observeToday(startOfToday, endOfToday, todayEpochDay)
             TaskFilter.UPCOMING -> taskRepository.observeUpcoming(endOfToday)
+            // Overdue: open tasks whose deadline is already in the past (FR-T11).
+            TaskFilter.OVERDUE -> taskRepository.observeOverdue(now)
             TaskFilter.COMPLETED -> taskRepository.observeCompleted()
         }
     }

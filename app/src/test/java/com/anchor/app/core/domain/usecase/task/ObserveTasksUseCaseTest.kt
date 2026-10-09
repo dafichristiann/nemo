@@ -43,16 +43,16 @@ class ObserveTasksUseCaseTest {
     }
 
     @Test
-    fun all_returnsEveryTask() = runTest {
+    fun overdue_returnsOpenTasksPastDeadline() = runTest {
         val (repo, time) = setup()
-        val startOfDay = time.startOfDayMillis(fixedNow)
         repo.tasks.value = listOf(
-            task("today", startOfDay + 3_600_000),
-            task("done", startOfDay + 7_200_000, TaskStatus.DONE),
+            task("late", fixedNow - 1),
+            task("future", fixedNow + 3_600_000),
+            task("done-late", fixedNow - 1, TaskStatus.DONE),
         )
 
         val useCase = ObserveTasksUseCase(repo, time)
-        assertEquals(setOf("today", "done"), useCase(TaskFilter.ALL).first().map { it.id }.toSet())
+        assertEquals(setOf("late"), useCase(TaskFilter.OVERDUE).first().map { it.id }.toSet())
     }
 
     @Test

@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -41,8 +42,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.BarChart
 import com.anchor.app.R
 import com.anchor.app.core.common.DateTimeFormatter
 import com.anchor.app.core.common.short
@@ -58,11 +57,11 @@ import com.anchor.app.core.design.theme.Spacing
 import com.anchor.app.platform.usagestats.UsageAccessSettings
 
 /**
- * 03 Digital Wellbeing (docs/superpowers/design/07-screens.md §2.7, PRD §10.2).
+ * 03 Digital Wellbeing (docs/superpowers/design/07-screens.md Â§2.7, PRD Â§10.2).
  *
  * Screen-time card, top apps, and a 7-day bar chart. All numbers come from Android usage
- * data (FR-W7). Honest states: permission missing → a Settings guide; no data → empty
- * message. Never crashes, never fakes a number (AC §10.2).
+ * data (FR-W7). Honest states: permission missing â†’ a Settings guide; no data â†’ empty
+ * message. Never crashes, never fakes a number (AC Â§10.2).
  */
 @Composable
 fun WellbeingScreen(
@@ -85,7 +84,7 @@ fun WellbeingScreen(
     }
 
     // The Usage-access permission is granted only in OS Settings, so the CTA opens the system
-    // screen directly (PRD §14); the in-app settings remain reachable separately.
+    // screen directly (PRD Â§14); the in-app settings remain reachable separately.
     val openUsageAccess: () -> Unit = { UsageAccessSettings.open(context) }
 
     Column(
@@ -465,7 +464,7 @@ private fun PermissionEmptyState(onOpenSettings: () -> Unit, onOpenAppSettings: 
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                imageVector = Icons.Rounded.BarChart,
+                painter = painterResource(R.drawable.ic_wellbeing),
                 contentDescription = null,
                 tint = Nemo.colors.mute,
                 modifier = Modifier.size(28.dp),
@@ -521,7 +520,7 @@ private fun NoDataEmptyState() {
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                imageVector = Icons.Rounded.BarChart,
+                painter = painterResource(R.drawable.ic_wellbeing),
                 contentDescription = null,
                 tint = Nemo.colors.mute,
                 modifier = Modifier.size(28.dp),

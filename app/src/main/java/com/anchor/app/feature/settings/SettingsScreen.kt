@@ -23,8 +23,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -66,11 +65,11 @@ import com.anchor.app.core.domain.model.FocusArea
 import com.anchor.app.platform.usagestats.UsageAccessSettings
 
 /**
- * 09 Settings & Privacy (docs/superpowers/design/07-screens.md §2.13).
+ * 09 Settings & Privacy (docs/superpowers/design/07-screens.md Â§2.13).
  *
  * Deliberately short: toggles (FR-S6), live permission status with shortcuts (FR-S1), and
- * compact summaries that link to the dedicated sub-screens for the long lists — app
- * categories (FR-S3) and blocked apps (FR-S4) — plus data controls (FR-S5).
+ * compact summaries that link to the dedicated sub-screens for the long lists â€” app
+ * categories (FR-S3) and blocked apps (FR-S4) â€” plus data controls (FR-S5).
  */
 @Composable
 fun SettingsScreen(
@@ -85,7 +84,7 @@ fun SettingsScreen(
     val categories by viewModel.categories.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    // Re-check OS permission state whenever we return to this screen (FR-S1, docs 08 §2 flow).
+    // Re-check OS permission state whenever we return to this screen (FR-S1, docs 08 Â§2 flow).
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -121,7 +120,7 @@ fun SettingsScreen(
             horizontalArrangement = Arrangement.spacedBy(Spacing.x1),
         ) {
             Icon(
-                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                painter = painterResource(R.drawable.ic_back),
                 contentDescription = null,
                 tint = Nemo.colors.ink,
                 modifier = Modifier.size(18.dp),
@@ -135,7 +134,7 @@ fun SettingsScreen(
             )
         }
 
-        // --- Profile (nickname · main focus · default focus length) ---
+        // --- Profile (nickname Â· main focus Â· default focus length) ---
         SectionHeader(title = stringResource(R.string.settings_section_profile))
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.x1)) {
             Text(
@@ -229,7 +228,7 @@ fun SettingsScreen(
 
         Divider()
 
-        // --- App categories summary (FR-S3) → sub-screen ---
+        // --- App categories summary (FR-S3) â†’ sub-screen ---
         SectionHeader(title = stringResource(R.string.settings_section_categories))
         ManageRow(
             summary = if (categories.isEmpty()) {
@@ -242,7 +241,7 @@ fun SettingsScreen(
 
         Divider()
 
-        // --- Blocked apps summary (FR-S4) → sub-screen ---
+        // --- Blocked apps summary (FR-S4) â†’ sub-screen ---
         SectionHeader(title = stringResource(R.string.settings_section_blocked))
         ManageRow(
             summary = if (settings.blockedApps.isEmpty()) {
@@ -253,7 +252,7 @@ fun SettingsScreen(
             onManage = onManageBlocked,
         )
 
-        // --- Focus blocking opt-in (FR-F4/F8, PRD v0.4 §10.5) ---
+        // --- Focus blocking opt-in (FR-F4/F8, PRD v0.4 Â§10.5) ---
         Divider()
         SectionHeader(title = stringResource(R.string.settings_section_focus_blocking))
         SettingRow(
@@ -300,13 +299,13 @@ fun SettingsScreen(
 }
 
 /**
- * Soft single-line nickname input matching the app's other fields (AddTaskSheet §Field).
+ * Soft single-line nickname input matching the app's other fields (AddTaskSheet Â§Field).
  *
  * The field keeps its own local text state while the user types, then persists on each change.
  * Binding the value straight to the persisted setting caused dropped characters and a jumping
  * cursor: every keystroke round-tripped through Room (which also trims), so the field re-rendered
  * with a stale value mid-typing. The local state is re-synced from [value] only when the incoming
- * value genuinely differs from what is shown (e.g. the first load, or an external change) — never
+ * value genuinely differs from what is shown (e.g. the first load, or an external change) â€” never
  * while the user is actively composing.
  */
 @Composable
@@ -316,7 +315,7 @@ private fun SettingsNicknameField(
     hint: String,
     modifier: Modifier = Modifier,
 ) {
-    // Local editing buffer — the single source of truth for what's on screen.
+    // Local editing buffer â€” the single source of truth for what's on screen.
     var text by rememberSaveable { mutableStateOf(value) }
     // Keep in sync when the persisted value changes externally (not from our own typing).
     // Compare against the trimmed persisted value so the repository's trim doesn't fight the buffer.
@@ -424,7 +423,7 @@ private fun PermissionRow(
         }
         Spacer(modifier = Modifier.width(Spacing.x3))
         if (granted) {
-            // ON: solid ink pill — same size/shape as the "Enable" button, only the colors differ,
+            // ON: solid ink pill â€” same size/shape as the "Enable" button, only the colors differ,
             // so the row does not shrink when a permission flips to "On".
             Box(
                 modifier = Modifier
@@ -445,7 +444,7 @@ private fun PermissionRow(
                 )
             }
         } else {
-            // OFF (not yet granted): muted neutral pill, same size — reads as available, not urgent.
+            // OFF (not yet granted): muted neutral pill, same size â€” reads as available, not urgent.
             Box(
                 modifier = Modifier
                     .heightIn(min = 36.dp)

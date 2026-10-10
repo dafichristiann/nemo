@@ -23,10 +23,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Checklist
-import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -71,7 +68,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 
 /**
- * 01 Home — Smart Todo (docs/superpowers/design/07-screens.md §2.5).
+ * 01 Home â€” Smart Todo (docs/superpowers/design/07-screens.md Â§2.5).
  *
  * Layout refreshed to a calmer, editorial "planner" look (monochrome, high-contrast):
  *  - an oversized greeting header with a compact week strip (today highlighted);
@@ -206,7 +203,7 @@ fun TasksScreen(
 
 /**
  * Oversized greeting + a compact week strip. Today is highlighted with an ink pill, the way a
- * planner marks the current day — quiet but confident.
+ * planner marks the current day â€” quiet but confident.
  */
 @Composable
 private fun HomeHeader(state: TasksUiState, onOpenSettings: () -> Unit) {
@@ -258,7 +255,7 @@ private fun HomeHeader(state: TasksUiState, onOpenSettings: () -> Unit) {
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.Tune,
+                    painter = painterResource(R.drawable.ic_tune),
                     contentDescription = stringResource(R.string.settings_open),
                     tint = Nemo.colors.inkSecondary,
                     modifier = Modifier.size(20.dp),
@@ -271,7 +268,7 @@ private fun HomeHeader(state: TasksUiState, onOpenSettings: () -> Unit) {
 
 /**
  * Compact 7-day strip (Mon..Sun of today's week). Today gets an ink pill; every other day is a
- * quiet numeral. Purely a date reference for now — the list itself is filtered by the tabs below.
+ * quiet numeral. Purely a date reference for now â€” the list itself is filtered by the tabs below.
  */
 @Composable
 private fun WeekStrip(today: LocalDate) {
@@ -321,7 +318,7 @@ private fun WeekStrip(today: LocalDate) {
     }
 }
 
-/** "M","T",… single-letter weekday index for the compact strip. */
+/** "M","T",â€¦ single-letter weekday index for the compact strip. */
 private fun LocalDate.dayOfWeekLabel(): String = dayOfWeek.name.take(1)
 
 /**
@@ -399,7 +396,7 @@ private fun SummaryCard(completed: Int, total: Int) {
 
 /**
  * Segmented filter control: a soft track holding equal-width segments. The active segment gets
- * an ink pill that slides/animates — a cleaner alternative to the previous underline tabs.
+ * an ink pill that slides/animates â€” a cleaner alternative to the previous underline tabs.
  */
 @Composable
 private fun FilterSegmented(selected: TaskFilter, onSelect: (TaskFilter) -> Unit) {
@@ -490,7 +487,7 @@ private fun TimelineTaskRow(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            val metaLine = listOfNotNull(row.metaLabel, row.deadlineLabel).joinToString("  ·  ")
+            val metaLine = listOfNotNull(row.metaLabel, row.deadlineLabel).joinToString("  Â·  ")
             if (metaLine.isNotBlank()) {
                 Text(
                     text = metaLine,
@@ -531,14 +528,14 @@ private fun TimelineNode(done: Boolean) {
         ) {
             if (done) {
                 Icon(
-                    imageVector = Icons.Rounded.Check,
+                    painter = painterResource(R.drawable.ic_tasks),
                     contentDescription = null,
                     tint = Nemo.colors.onInk,
                     modifier = Modifier.size(11.dp),
                 )
             }
         }
-        // Connector stub — implies the timeline even on the last row, subtly.
+        // Connector stub â€” implies the timeline even on the last row, subtly.
         Box(
             modifier = Modifier
                 .padding(top = Spacing.x1)
@@ -550,7 +547,7 @@ private fun TimelineNode(done: Boolean) {
     }
 }
 
-/** Thin priority bar under a task title — soft tone, never a red block. */
+/** Thin priority bar under a task title â€” soft tone, never a red block. */
 @Composable
 private fun PriorityBar(priority: TaskPriority) {
     val width by animateDpAsState(
@@ -634,7 +631,7 @@ private fun OverdueTaskRow(
         ) {
             SmallAction(stringResource(R.string.overdue_action_reschedule), onReschedule)
             SmallAction(stringResource(R.string.overdue_action_keep), onKeep)
-            // Completion now requires a focus session (PRD v0.5 §10.1) — open the task to start one.
+            // Completion now requires a focus session (PRD v0.5 Â§10.1) â€” open the task to start one.
             SmallAction(stringResource(R.string.overdue_action_open), onOpen)
         }
     }
@@ -676,7 +673,7 @@ private fun EmptyState() {
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                imageVector = Icons.Rounded.Checklist,
+                painter = painterResource(R.drawable.ic_tasks),
                 contentDescription = null,
                 tint = Nemo.colors.mute,
                 modifier = Modifier.size(30.dp),
@@ -701,7 +698,7 @@ private fun EmptyState() {
     }
 }
 
-/** Priority → soft left-bar color. Never a glowing red (06-design-system.md §2.3). */
+/** Priority â†’ soft left-bar color. Never a glowing red (06-design-system.md Â§2.3). */
 @Composable
 private fun TaskPriority.barColor(): Color = when (this) {
     TaskPriority.URGENT -> Nemo.colors.inkSecondary
@@ -711,9 +708,9 @@ private fun TaskPriority.barColor(): Color = when (this) {
 }
 
 /**
- * Interactive round checkbox — kept for the subtask list on the Task Detail screen
- * (docs 07-screens.md §2.6). The Home list itself uses the passive [TimelineNode], since a task
- * is completed only by finishing a full Focus session (PRD v0.5 §10.1).
+ * Interactive round checkbox â€” kept for the subtask list on the Task Detail screen
+ * (docs 07-screens.md Â§2.6). The Home list itself uses the passive [TimelineNode], since a task
+ * is completed only by finishing a full Focus session (PRD v0.5 Â§10.1).
  */
 @Composable
 internal fun RoundCheckbox(checked: Boolean, onToggle: () -> Unit, modifier: Modifier = Modifier) {
@@ -732,7 +729,7 @@ internal fun RoundCheckbox(checked: Boolean, onToggle: () -> Unit, modifier: Mod
     ) {
         if (checked) {
             Icon(
-                imageVector = Icons.Rounded.Check,
+                painter = painterResource(R.drawable.ic_tasks),
                 contentDescription = null,
                 tint = Nemo.colors.onInk,
                 modifier = Modifier.size(14.dp),

@@ -14,14 +14,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Insights
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -42,12 +41,12 @@ import com.anchor.app.core.domain.model.Insight
 import java.time.format.DateTimeFormatter as JavaDateTimeFormatter
 
 /**
- * Screen 08 — Insights / Daily Reflection (docs/superpowers/design/07-screens.md §2.12,
- * PRD §10.8-10.9).
+ * Screen 08 â€” Insights / Daily Reflection (docs/superpowers/design/07-screens.md Â§2.12,
+ * PRD Â§10.8-10.9).
  *
  * A calm, supportive summary: tasks, focus, screen time (hidden when there is no usage data),
  * longest distraction, then the INSIGHT and SUGGESTION blocks with an honest source attribution.
- * Tone is non-judgmental throughout (PRD §10.9).
+ * Tone is non-judgmental throughout (PRD Â§10.9).
  */
 @Composable
 fun InsightsScreen(
@@ -74,7 +73,7 @@ fun InsightsScreen(
         )
         state.dateLabel?.let {
             Text(
-                text = it.format(JAVA_DATE) + " — " + stringResource(R.string.insights_day_label),
+                text = it.format(JAVA_DATE) + " â€” " + stringResource(R.string.insights_day_label),
                 fontFamily = ManropeFamily,
                 fontSize = 13.sp,
                 color = Nemo.colors.mute,
@@ -106,7 +105,7 @@ fun InsightsScreen(
         state.longestDistractionMs?.let { ms ->
             StatRow(
                 label = stringResource(R.string.insights_longest_distraction),
-                value = (state.longestDistractionLabel ?: "") + " · " + formatDuration(ms),
+                value = (state.longestDistractionLabel ?: "") + " Â· " + formatDuration(ms),
             )
         }
 
@@ -193,7 +192,7 @@ private fun TaggedBlock(tag: String, body: String) {
 @Composable
 private fun PatternLine(text: String) {
     Text(
-        text = "· $text",
+        text = "Â· $text",
         fontFamily = ManropeFamily,
         fontSize = 13.sp,
         color = Nemo.colors.inkSecondary,
@@ -239,7 +238,7 @@ private fun EmptyState() {
             contentAlignment = androidx.compose.ui.Alignment.Center,
         ) {
             Icon(
-                imageVector = Icons.Rounded.Insights,
+                painter = painterResource(R.drawable.ic_insights),
                 contentDescription = null,
                 tint = Nemo.colors.mute,
                 modifier = Modifier.size(28.dp),

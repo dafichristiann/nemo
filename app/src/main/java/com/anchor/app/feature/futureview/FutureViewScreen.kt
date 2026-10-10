@@ -12,8 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.ui.res.painterResource
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -86,7 +85,7 @@ fun FutureViewScreen(
             horizontalArrangement = Arrangement.spacedBy(Spacing.x1),
         ) {
             Icon(
-                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                painter = painterResource(R.drawable.ic_back),
                 contentDescription = stringResource(R.string.detail_back),
                 tint = Nemo.colors.ink,
                 modifier = Modifier.size(20.dp),

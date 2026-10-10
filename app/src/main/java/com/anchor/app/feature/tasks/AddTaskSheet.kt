@@ -17,8 +17,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -32,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -65,17 +64,17 @@ data class TaskDraft(
     val recurrence: RecurrenceRule = RecurrenceRule.NONE,
 )
 
-/** Estimated-duration options (minutes) offered on the Add Task wheel: 5–240 in 5-min steps. */
+/** Estimated-duration options (minutes) offered on the Add Task wheel: 5â€“240 in 5-min steps. */
 private val DURATION_OPTIONS_MIN: List<Int> = (1..48).map { it * 5 }
 
-/** Deadline hour options (whole hours, 0–23) offered on the Add Task deadline wheel. */
+/** Deadline hour options (whole hours, 0â€“23) offered on the Add Task deadline wheel. */
 private val DEADLINE_HOUR_OPTIONS: List<Int> = (0..23).toList()
 
 /**
- * 02 Add Task bottom sheet (docs/superpowers/design/07-screens.md §2.6).
+ * 02 Add Task bottom sheet (docs/superpowers/design/07-screens.md Â§2.6).
  *
  * Title is the only required field; everything else is optional (PRD FR-T1..T5, Quick-add
- * UX). Empty titles cannot be saved (FR §10.1 Edge Cases). Calls [onSave] with the draft
+ * UX). Empty titles cannot be saved (FR Â§10.1 Edge Cases). Calls [onSave] with the draft
  * and a completion callback that receives the create result.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -118,7 +117,7 @@ fun AddTaskSheet(
                     color = Nemo.colors.ink,
                 )
                 Icon(
-                    imageVector = Icons.Rounded.Close,
+                    painter = painterResource(R.drawable.ic_close),
                     contentDescription = stringResource(R.string.cd_close_sheet),
                     tint = Nemo.colors.mute,
                     modifier = Modifier
@@ -160,7 +159,7 @@ fun AddTaskSheet(
             }
 
             LabeledSection(stringResource(R.string.add_task_deadline_label)) {
-                // Tap the field → a centered AlertDialog opens with an hour wheel; "Set" commits,
+                // Tap the field â†’ a centered AlertDialog opens with an hour wheel; "Set" commits,
                 // "Cancel" discards. Index 0 is "No deadline"; the rest are whole hours.
                 var dialogOpen by remember { mutableStateOf(false) }
                 val options: List<Int?> = remember { listOf(null) + DEADLINE_HOUR_OPTIONS }
@@ -214,7 +213,7 @@ fun AddTaskSheet(
             }
 
             LabeledSection(stringResource(R.string.add_task_duration_label)) {
-                // Tap the field → a centered AlertDialog opens with a scroll wheel to pick the
+                // Tap the field â†’ a centered AlertDialog opens with a scroll wheel to pick the
                 // minutes, then "Set" commits (Cancel discards). Metadata is edited in the small
                 // dialog instead of bloating the form, and the wheel reuses the shared,
                 // dependency-free WheelPicker.
@@ -295,14 +294,14 @@ fun AddTaskSheet(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
-                                text = "• $sub",
+                                text = "â€¢ $sub",
                                 fontFamily = ManropeFamily,
                                 fontSize = 13.sp,
                                 color = Nemo.colors.inkSecondary,
                                 modifier = Modifier.weight(1f),
                             )
                             Icon(
-                                imageVector = Icons.Rounded.Close,
+                                painter = painterResource(R.drawable.ic_close),
                                 contentDescription = null,
                                 tint = Nemo.colors.placeholder,
                                 modifier = Modifier

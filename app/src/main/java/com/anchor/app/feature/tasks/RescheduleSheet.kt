@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -25,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -42,7 +41,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 
 /**
- * Reschedule picker (07-screens.md §2.5/§2.14, FR-T12).
+ * Reschedule picker (07-screens.md Â§2.5/Â§2.14, FR-T12).
  *
  * A calm, non-blocking way to move a deadline: pick a day offset (Today / Tomorrow /
  * +3 Days / +7 Days) and a time-of-day. Days are computed from a [today] anchor passed
@@ -102,7 +101,7 @@ fun RescheduleSheet(
                     color = Nemo.colors.ink,
                 )
                 Icon(
-                    imageVector = Icons.Rounded.Close,
+                    painter = painterResource(R.drawable.ic_close),
                     contentDescription = stringResource(R.string.cd_close_sheet),
                     tint = Nemo.colors.mute,
                     modifier = Modifier.clickable(onClick = onDismiss),

@@ -19,8 +19,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -56,7 +55,7 @@ import com.anchor.app.core.design.theme.Spacing
 import com.anchor.app.core.domain.model.TaskPriority
 
 /**
- * 10 Task Detail (docs/superpowers/design/07-screens.md §2.14).
+ * 10 Task Detail (docs/superpowers/design/07-screens.md Â§2.14).
  *
  * Priority bar, title, badges, meta, progress track, subtasks (check/order), a Future
  * View callout (wired in Sprint 6), and the actions: Start Focus, Reschedule, Mark Done.
@@ -97,7 +96,7 @@ fun TaskDetailScreen(
             horizontalArrangement = Arrangement.spacedBy(Spacing.x1),
         ) {
             Icon(
-                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                painter = painterResource(R.drawable.ic_back),
                 contentDescription = stringResource(R.string.detail_back),
                 tint = Nemo.colors.ink,
                 modifier = Modifier.size(20.dp),
@@ -255,7 +254,7 @@ fun TaskDetailScreen(
             }
         }
 
-        // Future View callout (07-screens.md §2.14; opens screen 07)
+        // Future View callout (07-screens.md Â§2.14; opens screen 07)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -273,7 +272,7 @@ fun TaskDetailScreen(
             )
         }
 
-        // Actions. Completion requires a focus session (PRD v0.5 §10.1), so the primary action
+        // Actions. Completion requires a focus session (PRD v0.5 Â§10.1), so the primary action
         // opens Focus for this task instead of completing it directly.
         PrimaryButton(
             label = stringResource(R.string.detail_action_complete_via_focus),

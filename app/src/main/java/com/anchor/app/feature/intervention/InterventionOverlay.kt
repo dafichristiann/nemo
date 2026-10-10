@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,9 +34,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.anchor.app.R
 import com.anchor.app.core.design.components.PrimaryButton
 import com.anchor.app.core.design.components.pressable
-import com.anchor.app.core.design.theme.AnchorColors
-import com.anchor.app.core.design.theme.InterFamily
+import com.anchor.app.core.design.theme.ManropeFamily
 import com.anchor.app.core.design.theme.Motion
+import com.anchor.app.core.design.theme.Nemo
+import com.anchor.app.core.design.theme.PillShape
 import com.anchor.app.core.design.theme.Radius
 import com.anchor.app.core.design.theme.Spacing
 import com.anchor.app.core.domain.model.InterventionLevel
@@ -69,7 +69,7 @@ fun InterventionOverlay(
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.4f))
+                .background(Nemo.colors.scrim.copy(alpha = Nemo.colors.scrimAlpha))
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
@@ -93,7 +93,7 @@ fun InterventionOverlay(
                         .fillMaxWidth()
                         .padding(Spacing.x4)
                         .clip(Radius.panelShape)
-                        .background(AnchorColors.surface)
+                        .background(Nemo.colors.surface)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
@@ -103,16 +103,16 @@ fun InterventionOverlay(
                 ) {
                     Text(
                         text = stringResource(titleFor(v.level)),
-                        fontFamily = InterFamily,
+                        fontFamily = ManropeFamily,
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
-                        color = AnchorColors.textPrimary,
+                        color = Nemo.colors.ink,
                     )
                     Text(
                         text = stringResource(R.string.intervention_overlay_body),
-                        fontFamily = InterFamily,
+                        fontFamily = ManropeFamily,
                         fontSize = 15.sp,
-                        color = AnchorColors.textSecondary,
+                        color = Nemo.colors.inkSecondary,
                     )
 
                     Box(modifier = Modifier.padding(top = Spacing.x2)) {
@@ -128,13 +128,13 @@ fun InterventionOverlay(
                     ) {
                         OverlayTextAction(
                             label = stringResource(R.string.intervention_action_later),
-                            color = AnchorColors.textSecondary,
+                            color = Nemo.colors.inkSecondary,
                             onClick = { viewModel.onLater() },
                             modifier = Modifier.weight(1f),
                         )
                         OverlayTextAction(
                             label = stringResource(R.string.intervention_action_dismiss),
-                            color = AnchorColors.textFaint,
+                            color = Nemo.colors.placeholder,
                             onClick = { viewModel.onDismiss() },
                             modifier = Modifier.weight(1f),
                         )
@@ -142,9 +142,9 @@ fun InterventionOverlay(
 
                     Text(
                         text = stringResource(R.string.intervention_overlay_later_hint),
-                        fontFamily = InterFamily,
+                        fontFamily = ManropeFamily,
                         fontSize = 12.sp,
-                        color = AnchorColors.textFaint,
+                        color = Nemo.colors.placeholder,
                     )
                 }
             }
@@ -163,9 +163,9 @@ private fun OverlayTextAction(
     Box(
         modifier = modifier
             .heightIn(min = 48.dp)
-            .clip(RoundedCornerShape(Radius.chip))
+            .clip(PillShape)
             .pressable(
-                shape = RoundedCornerShape(Radius.chip),
+                shape = PillShape,
                 pressedScale = 0.97f,
                 onClick = onClick,
             ),
@@ -173,7 +173,7 @@ private fun OverlayTextAction(
     ) {
         Text(
             text = label,
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.SemiBold,
             fontSize = 15.sp,
             color = color,

@@ -24,7 +24,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -50,11 +49,10 @@ import com.anchor.app.core.common.short
 import com.anchor.app.core.design.components.PrimaryButton
 import com.anchor.app.core.design.components.SectionHeader
 import com.anchor.app.core.design.components.pressable
-import com.anchor.app.core.design.theme.AnchorColors
-import com.anchor.app.core.design.theme.AnchorElevation
-import com.anchor.app.core.design.theme.InterFamily
-import com.anchor.app.core.design.theme.LocalAnchorElevation
+import com.anchor.app.core.design.theme.ManropeFamily
 import com.anchor.app.core.design.theme.Motion
+import com.anchor.app.core.design.theme.Nemo
+import com.anchor.app.core.design.theme.PillShape
 import com.anchor.app.core.design.theme.Radius
 import com.anchor.app.core.design.theme.Spacing
 import com.anchor.app.platform.usagestats.UsageAccessSettings
@@ -93,7 +91,7 @@ fun WellbeingScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(AnchorColors.surface)
+            .background(Nemo.colors.background)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = Spacing.screenHorizontal)
             .padding(top = Spacing.x6, bottom = Spacing.x8),
@@ -101,10 +99,10 @@ fun WellbeingScreen(
     ) {
         Text(
             text = stringResource(R.string.wellbeing_title),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.Bold,
             fontSize = 28.sp,
-            color = AnchorColors.textPrimary,
+            color = Nemo.colors.ink,
         )
 
         when (state.availability) {
@@ -139,9 +137,9 @@ fun WellbeingScreen(
                 WeeklyChart(week = state.week, onSelectDay = viewModel::onSelectDay)
                 Text(
                     text = stringResource(R.string.wellbeing_local_only),
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontSize = 12.sp,
-                    color = AnchorColors.textFaint,
+                    color = Nemo.colors.mute,
                 )
             }
         }
@@ -155,19 +153,12 @@ private fun ScreenTimeCard(
     previousMs: Long,
     previousLabel: String,
 ) {
-    val elevation: AnchorElevation = LocalAnchorElevation.current
     val delta = totalMs - previousMs
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(
-                elevation = elevation.card.dp,
-                shape = RoundedCornerShape(Radius.card),
-                ambientColor = Color.Black.copy(alpha = 0.06f),
-                spotColor = Color.Black.copy(alpha = 0.06f),
-            )
             .clip(RoundedCornerShape(Radius.card))
-            .background(AnchorColors.surfaceCard)
+            .background(Nemo.colors.surface)
             .padding(Spacing.cardHorizontal),
         verticalArrangement = Arrangement.spacedBy(Spacing.x2),
     ) {
@@ -178,25 +169,25 @@ private fun ScreenTimeCard(
         ) {
             Text(
                 text = stringResource(R.string.wellbeing_screen_time),
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 13.sp,
-                color = AnchorColors.textSecondary,
+                color = Nemo.colors.inkSecondary,
             )
             Text(
                 text = label,
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = 12.sp,
-                color = AnchorColors.textMuted,
+                color = Nemo.colors.mute,
             )
         }
         Text(
             text = formatDuration(totalMs),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.Bold,
             fontSize = 34.sp,
-            color = AnchorColors.textPrimary,
+            color = Nemo.colors.ink,
         )
         val comparison = when {
             previousMs <= 0L -> stringResource(R.string.wellbeing_no_comparison)
@@ -206,9 +197,9 @@ private fun ScreenTimeCard(
         }
         Text(
             text = comparison,
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontSize = 12.sp,
-            color = AnchorColors.textMuted,
+            color = Nemo.colors.mute,
         )
     }
 }
@@ -221,27 +212,20 @@ private fun StatsOverview(state: WellbeingUiState, previousLabel: String) {
     val hasDistraction = state.distractionDeltaPctPoints != null
     if (!hasVsYesterday && !hasVsAverage && !hasDistraction) return
 
-    val elevation: AnchorElevation = LocalAnchorElevation.current
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(
-                elevation = elevation.card.dp,
-                shape = RoundedCornerShape(Radius.card),
-                ambientColor = Color.Black.copy(alpha = 0.06f),
-                spotColor = Color.Black.copy(alpha = 0.06f),
-            )
             .clip(RoundedCornerShape(Radius.card))
-            .background(AnchorColors.surfaceCard)
+            .background(Nemo.colors.surface)
             .padding(Spacing.cardHorizontal),
         verticalArrangement = Arrangement.spacedBy(Spacing.x3),
     ) {
         Text(
             text = stringResource(R.string.wellbeing_stats_title),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.SemiBold,
             fontSize = 13.sp,
-            color = AnchorColors.textSecondary,
+            color = Nemo.colors.inkSecondary,
         )
         state.vsYesterday?.let { cmp ->
             StatRow(
@@ -270,16 +254,16 @@ private fun StatRow(label: String, comparison: StatComparison) {
     ) {
         Text(
             text = label,
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontSize = 13.sp,
-            color = AnchorColors.textMuted,
+            color = Nemo.colors.mute,
             modifier = Modifier.weight(1f),
         )
         Spacer(modifier = Modifier.width(Spacing.x2))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = trendGlyph(comparison.direction),
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = 13.sp,
                 color = trendColor(comparison.direction),
@@ -290,7 +274,7 @@ private fun StatRow(label: String, comparison: StatComparison) {
                 // baseline was zero (no percentage is defined).
                 text = comparison.deltaPct?.let { "${if (it > 0) "+" else ""}$it%" }
                     ?: formatDelta(comparison.deltaMs),
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 13.sp,
                 color = trendColor(comparison.direction),
@@ -313,16 +297,16 @@ private fun DistractionRow(points: Float, previousLabel: String) {
     ) {
         Text(
             text = stringResource(R.string.wellbeing_stats_distraction, previousLabel),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontSize = 13.sp,
-            color = AnchorColors.textMuted,
+            color = Nemo.colors.mute,
             modifier = Modifier.weight(1f),
         )
         Spacer(modifier = Modifier.width(Spacing.x2))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = trendGlyph(direction),
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = 13.sp,
                 color = trendColor(direction),
@@ -330,7 +314,7 @@ private fun DistractionRow(points: Float, previousLabel: String) {
             Spacer(modifier = Modifier.width(Spacing.x1))
             Text(
                 text = "${if (points > 0f) "+" else ""}${kotlin.math.round(points)}pp",
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 13.sp,
                 color = trendColor(direction),
@@ -348,9 +332,9 @@ private fun trendGlyph(direction: TrendDirection): String = when (direction) {
 /** Up = more screen time (a nudge, not a scold); down = less. Neutral grey when flat. */
 @Composable
 private fun trendColor(direction: TrendDirection): Color = when (direction) {
-    TrendDirection.UP -> AnchorColors.textPrimary
-    TrendDirection.DOWN -> AnchorColors.textMuted
-    TrendDirection.FLAT -> AnchorColors.textFaint
+    TrendDirection.UP -> Nemo.colors.ink
+    TrendDirection.DOWN -> Nemo.colors.mute
+    TrendDirection.FLAT -> Nemo.colors.mute
 }
 
 /** "+25m" / "-1h 5m" for the absolute-delta fallback. */
@@ -371,25 +355,25 @@ private fun TopApps(apps: List<TopAppRow>) {
                     modifier = Modifier
                         .size(32.dp)
                         .clip(CircleShape)
-                        .background(AnchorColors.surfaceMuted),
+                        .background(Nemo.colors.fog),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = app.label.take(1),
-                        fontFamily = InterFamily,
+                        fontFamily = ManropeFamily,
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
-                        color = AnchorColors.textStrongAlt,
+                        color = Nemo.colors.inkSecondary,
                     )
                 }
                 Spacer(modifier = Modifier.width(Spacing.x3))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = app.label,
-                        fontFamily = InterFamily,
+                        fontFamily = ManropeFamily,
                         fontWeight = FontWeight.Medium,
                         fontSize = 14.sp,
-                        color = AnchorColors.textPrimary,
+                        color = Nemo.colors.ink,
                     )
                     Spacer(modifier = Modifier.height(Spacing.x1))
                     Box(
@@ -397,15 +381,15 @@ private fun TopApps(apps: List<TopAppRow>) {
                             .fillMaxWidth(app.totalMs.toFloat() / maxMs)
                             .height(3.dp)
                             .clip(RoundedCornerShape(Radius.track))
-                            .background(AnchorColors.ink),
+                            .background(Nemo.colors.ink),
                     )
                 }
                 Spacer(modifier = Modifier.width(Spacing.x3))
                 Text(
                     text = formatDuration(app.totalMs),
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontSize = 13.sp,
-                    color = AnchorColors.textMuted,
+                    color = Nemo.colors.mute,
                 )
             }
         }
@@ -438,8 +422,8 @@ private fun WeeklyChart(week: List<DayBar>, onSelectDay: (Long) -> Unit) {
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(Radius.chip))
-                    .pressable(shape = RoundedCornerShape(Radius.chip)) { onSelectDay(day.epochDay) }
+                    .clip(PillShape)
+                    .pressable(shape = PillShape) { onSelectDay(day.epochDay) }
                     .padding(vertical = Spacing.x1),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Bottom,
@@ -449,15 +433,15 @@ private fun WeeklyChart(week: List<DayBar>, onSelectDay: (Long) -> Unit) {
                         .fillMaxWidth(0.6f)
                         .height(animatedHeight)
                         .clip(RoundedCornerShape(Radius.track))
-                        .background(if (emphasized) AnchorColors.ink else AnchorColors.trackAlt),
+                        .background(if (emphasized) Nemo.colors.ink else Nemo.colors.fog),
                 )
                 Spacer(modifier = Modifier.height(Spacing.x2))
                 Text(
                     text = day.label,
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontWeight = if (emphasized) FontWeight.SemiBold else FontWeight.Normal,
                     fontSize = 11.sp,
-                    color = if (emphasized) AnchorColors.textPrimary else AnchorColors.textMutedAlt,
+                    color = if (emphasized) Nemo.colors.ink else Nemo.colors.mute,
                 )
             }
         }
@@ -477,29 +461,29 @@ private fun PermissionEmptyState(onOpenSettings: () -> Unit, onOpenAppSettings: 
             modifier = Modifier
                 .size(64.dp)
                 .clip(CircleShape)
-                .background(AnchorColors.surfaceMuted),
+                .background(Nemo.colors.fog),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = Icons.Rounded.BarChart,
                 contentDescription = null,
-                tint = AnchorColors.textFaintAlt,
+                tint = Nemo.colors.mute,
                 modifier = Modifier.size(28.dp),
             )
         }
         Text(
             text = stringResource(R.string.wellbeing_perm_title),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.SemiBold,
             fontSize = 16.sp,
-            color = AnchorColors.textPrimary,
+            color = Nemo.colors.ink,
             textAlign = TextAlign.Center,
         )
         Text(
             text = stringResource(R.string.wellbeing_perm_body),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontSize = 13.sp,
-            color = AnchorColors.textMuted,
+            color = Nemo.colors.mute,
             textAlign = TextAlign.Center,
         )
         PrimaryButton(
@@ -508,13 +492,13 @@ private fun PermissionEmptyState(onOpenSettings: () -> Unit, onOpenAppSettings: 
         )
         Text(
             text = stringResource(R.string.wellbeing_perm_app_settings),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 13.sp,
-            color = AnchorColors.textMuted,
+            color = Nemo.colors.mute,
             modifier = Modifier
-                .clip(RoundedCornerShape(Radius.chip))
-                .pressable(shape = RoundedCornerShape(Radius.chip), onClick = onOpenAppSettings)
+                .clip(PillShape)
+                .pressable(shape = PillShape, onClick = onOpenAppSettings)
                 .padding(horizontal = Spacing.x3, vertical = Spacing.x2),
         )
     }
@@ -533,29 +517,29 @@ private fun NoDataEmptyState() {
             modifier = Modifier
                 .size(64.dp)
                 .clip(CircleShape)
-                .background(AnchorColors.surfaceMuted),
+                .background(Nemo.colors.fog),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = Icons.Rounded.BarChart,
                 contentDescription = null,
-                tint = AnchorColors.textFaintAlt,
+                tint = Nemo.colors.mute,
                 modifier = Modifier.size(28.dp),
             )
         }
         Text(
             text = stringResource(R.string.wellbeing_nodata_title),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.SemiBold,
             fontSize = 15.sp,
-            color = AnchorColors.textSecondary,
+            color = Nemo.colors.inkSecondary,
             textAlign = TextAlign.Center,
         )
         Text(
             text = stringResource(R.string.wellbeing_nodata_body),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontSize = 13.sp,
-            color = AnchorColors.textMuted,
+            color = Nemo.colors.mute,
             textAlign = TextAlign.Center,
         )
     }

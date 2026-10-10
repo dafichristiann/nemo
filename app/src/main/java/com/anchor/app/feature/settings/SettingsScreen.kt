@@ -50,14 +50,15 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.anchor.app.R
-import com.anchor.app.core.design.components.AnchorSwitch
 import com.anchor.app.core.design.components.Divider
+import com.anchor.app.core.design.components.NemoSwitch
 import com.anchor.app.core.design.components.SectionHeader
 import com.anchor.app.core.design.components.SegmentedChips
 import com.anchor.app.core.design.components.minTouchTarget
 import com.anchor.app.core.design.components.pressable
-import com.anchor.app.core.design.theme.AnchorColors
-import com.anchor.app.core.design.theme.InterFamily
+import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.Nemo
+import com.anchor.app.core.design.theme.PillShape
 import com.anchor.app.core.design.theme.Radius
 import com.anchor.app.core.design.theme.Spacing
 import com.anchor.app.core.domain.model.AppSettings
@@ -105,7 +106,7 @@ fun SettingsScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(AnchorColors.surface)
+            .background(Nemo.colors.background)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = Spacing.screenHorizontal)
             .padding(top = Spacing.x6, bottom = Spacing.x8),
@@ -113,8 +114,8 @@ fun SettingsScreen(
     ) {
         Row(
             modifier = Modifier
-                .clip(RoundedCornerShape(Radius.chip))
-                .pressable(shape = RoundedCornerShape(Radius.chip), pressedScale = 0.96f, onClick = onBack)
+                .clip(PillShape)
+                .pressable(shape = PillShape, pressedScale = 0.96f, onClick = onBack)
                 .padding(vertical = Spacing.x1, horizontal = Spacing.x1),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Spacing.x1),
@@ -122,15 +123,15 @@ fun SettingsScreen(
             Icon(
                 imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                 contentDescription = null,
-                tint = AnchorColors.textPrimary,
+                tint = Nemo.colors.ink,
                 modifier = Modifier.size(18.dp),
             )
             Text(
                 text = stringResource(R.string.settings_title),
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = 28.sp,
-                color = AnchorColors.textPrimary,
+                color = Nemo.colors.ink,
             )
         }
 
@@ -139,10 +140,10 @@ fun SettingsScreen(
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.x1)) {
             Text(
                 text = stringResource(R.string.settings_profile_nickname_title),
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = 14.sp,
-                color = AnchorColors.textPrimary,
+                color = Nemo.colors.ink,
             )
             SettingsNicknameField(
                 value = settings.nickname,
@@ -153,10 +154,10 @@ fun SettingsScreen(
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
             Text(
                 text = stringResource(R.string.settings_profile_focus_area_title),
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = 14.sp,
-                color = AnchorColors.textPrimary,
+                color = Nemo.colors.ink,
             )
             SegmentedChips(
                 options = listOf(
@@ -171,10 +172,10 @@ fun SettingsScreen(
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
             Text(
                 text = stringResource(R.string.settings_profile_duration_title),
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = 14.sp,
-                color = AnchorColors.textPrimary,
+                color = Nemo.colors.ink,
             )
             SegmentedChips(
                 options = AppSettings.FOCUS_DURATION_OPTIONS_MIN
@@ -268,32 +269,32 @@ fun SettingsScreen(
         SectionHeader(title = stringResource(R.string.settings_section_data))
         Text(
             text = stringResource(R.string.settings_retention_label, settings.usageRetentionDays),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontSize = 13.sp,
-            color = AnchorColors.textSecondary,
+            color = Nemo.colors.inkSecondary,
         )
         Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(Radius.chip))
-                .border(1.dp, AnchorColors.accentDanger, RoundedCornerShape(Radius.chip))
-                .pressable(shape = RoundedCornerShape(Radius.chip), onClick = { viewModel.onDeleteAllData() })
+                .clip(PillShape)
+                .border(1.dp, Nemo.colors.dangerLine, PillShape)
+                .pressable(shape = PillShape, onClick = { viewModel.onDeleteAllData() })
                 .padding(horizontal = Spacing.x4, vertical = Spacing.x3),
         ) {
             Text(
                 text = stringResource(R.string.settings_delete_all),
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 13.sp,
-                color = AnchorColors.accentDanger,
+                color = Nemo.colors.danger,
             )
         }
 
         Divider()
         Text(
             text = stringResource(R.string.settings_assurance),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontSize = 12.sp,
-            color = AnchorColors.textMuted,
+            color = Nemo.colors.mute,
         )
     }
 }
@@ -327,16 +328,16 @@ private fun SettingsNicknameField(
             .fillMaxWidth()
             .height(48.dp)
             .clip(RoundedCornerShape(Radius.field))
-            .background(AnchorColors.surfaceSunken)
+            .background(Nemo.colors.fog)
             .padding(horizontal = Spacing.x4),
         contentAlignment = Alignment.CenterStart,
     ) {
         if (text.isEmpty()) {
             Text(
                 text = hint,
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontSize = 14.sp,
-                color = AnchorColors.textFaint,
+                color = Nemo.colors.mute,
             )
         }
         BasicTextField(
@@ -348,11 +349,11 @@ private fun SettingsNicknameField(
             },
             singleLine = true,
             textStyle = TextStyle(
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontSize = 14.sp,
-                color = AnchorColors.textPrimary,
+                color = Nemo.colors.ink,
             ),
-            cursorBrush = androidx.compose.ui.graphics.SolidColor(AnchorColors.ink),
+            cursorBrush = androidx.compose.ui.graphics.SolidColor(Nemo.colors.ink),
             modifier = Modifier.fillMaxWidth(),
         )
     }
@@ -396,8 +397,8 @@ private fun PermissionRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(Radius.card))
-            .border(1.dp, AnchorColors.border, RoundedCornerShape(Radius.card))
-            .background(AnchorColors.surfaceCard)
+            .border(1.dp, Nemo.colors.line, RoundedCornerShape(Radius.card))
+            .background(Nemo.colors.surface)
             .padding(Spacing.cardHorizontal),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
@@ -408,17 +409,17 @@ private fun PermissionRow(
         ) {
             Text(
                 text = title,
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp,
-                color = AnchorColors.textPrimary,
+                color = Nemo.colors.ink,
             )
             Text(
                 text = description,
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontSize = 12.sp,
                 lineHeight = 16.sp,
-                color = AnchorColors.textMuted,
+                color = Nemo.colors.mute,
             )
         }
         Spacer(modifier = Modifier.width(Spacing.x3))
@@ -428,19 +429,19 @@ private fun PermissionRow(
             Box(
                 modifier = Modifier
                     .heightIn(min = 36.dp)
-                    .clip(RoundedCornerShape(Radius.button))
-                    .background(AnchorColors.ink)
-                    .border(1.dp, AnchorColors.ink, RoundedCornerShape(Radius.button))
+                    .clip(PillShape)
+                    .background(Nemo.colors.ink)
+                    .border(1.dp, Nemo.colors.ink, PillShape)
                     .minTouchTarget()
                     .padding(horizontal = Spacing.x4),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = stringResource(R.string.settings_perm_granted),
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 13.sp,
-                    color = AnchorColors.surface,
+                    color = Nemo.colors.onInk,
                 )
             }
         } else {
@@ -448,11 +449,11 @@ private fun PermissionRow(
             Box(
                 modifier = Modifier
                     .heightIn(min = 36.dp)
-                    .clip(RoundedCornerShape(Radius.button))
-                    .background(AnchorColors.surfaceMuted)
-                    .border(1.dp, AnchorColors.border, RoundedCornerShape(Radius.button))
+                    .clip(PillShape)
+                    .background(Nemo.colors.fog)
+                    .border(1.dp, Nemo.colors.line, PillShape)
                     .pressable(
-                        shape = RoundedCornerShape(Radius.button),
+                        shape = PillShape,
                         pressedScale = 0.96f,
                         onClick = onEnable,
                     )
@@ -462,10 +463,10 @@ private fun PermissionRow(
             ) {
                 Text(
                     text = stringResource(R.string.settings_perm_enable),
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 13.sp,
-                    color = AnchorColors.textSecondary,
+                    color = Nemo.colors.inkSecondary,
                 )
             }
         }
@@ -486,18 +487,18 @@ private fun ManageRow(summary: String, onManage: () -> Unit) {
     ) {
         Text(
             text = summary,
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontSize = 13.sp,
-            color = AnchorColors.textSecondary,
+            color = Nemo.colors.inkSecondary,
             modifier = Modifier.weight(1f),
         )
         Spacer(modifier = Modifier.width(Spacing.x3))
         Text(
             text = stringResource(R.string.settings_manage),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.SemiBold,
             fontSize = 13.sp,
-            color = AnchorColors.ink,
+            color = Nemo.colors.ink,
         )
     }
 }
@@ -515,10 +516,10 @@ private fun SettingRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.x1)) {
-            Text(text = title, fontFamily = InterFamily, fontWeight = FontWeight.Medium, fontSize = 14.sp, color = AnchorColors.textPrimary)
-            Text(text = subtitle, fontFamily = InterFamily, fontSize = 12.sp, color = AnchorColors.textMuted)
+            Text(text = title, fontFamily = ManropeFamily, fontWeight = FontWeight.Medium, fontSize = 14.sp, color = Nemo.colors.ink)
+            Text(text = subtitle, fontFamily = ManropeFamily, fontSize = 12.sp, color = Nemo.colors.mute)
         }
-        AnchorSwitch(
+        NemoSwitch(
             checked = checked,
             onCheckedChange = onCheckedChange,
         )

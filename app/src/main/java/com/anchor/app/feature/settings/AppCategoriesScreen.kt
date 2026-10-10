@@ -34,11 +34,12 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.anchor.app.R
-import com.anchor.app.core.design.components.AnchorSwitch
 import com.anchor.app.core.design.components.AppIcon
+import com.anchor.app.core.design.components.NemoSwitch
 import com.anchor.app.core.design.components.pressable
-import com.anchor.app.core.design.theme.AnchorColors
-import com.anchor.app.core.design.theme.InterFamily
+import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.Nemo
+import com.anchor.app.core.design.theme.PillShape
 import com.anchor.app.core.design.theme.Radius
 import com.anchor.app.core.design.theme.Spacing
 import com.anchor.app.core.domain.model.AppCategory
@@ -59,7 +60,7 @@ fun AppCategoriesScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(AnchorColors.surface)
+            .background(Nemo.colors.background)
             .padding(horizontal = Spacing.screenHorizontal)
             .padding(top = Spacing.x6),
         verticalArrangement = Arrangement.spacedBy(Spacing.x4),
@@ -75,9 +76,9 @@ fun AppCategoriesScreen(
         if (categories.isEmpty()) {
             Text(
                 text = stringResource(R.string.settings_categories_empty),
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontSize = 13.sp,
-                color = AnchorColors.textFaint,
+                color = Nemo.colors.mute,
             )
         } else {
             LazyColumn(
@@ -116,16 +117,16 @@ private fun CategoryManageRow(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = label,
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontWeight = FontWeight.Medium,
                     fontSize = 14.sp,
-                    color = AnchorColors.textPrimary,
+                    color = Nemo.colors.ink,
                 )
                 Text(
                     text = category.packageName,
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontSize = 11.sp,
-                    color = AnchorColors.textFaint,
+                    color = Nemo.colors.mute,
                 )
             }
         }
@@ -136,41 +137,41 @@ private fun CategoryManageRow(
                     .weight(1f)
                     .height(40.dp)
                     .clip(RoundedCornerShape(Radius.field))
-                    .background(AnchorColors.surfaceSunken)
+                    .background(Nemo.colors.fog)
                     .padding(horizontal = Spacing.x3),
                 contentAlignment = Alignment.CenterStart,
             ) {
                 if (name.isEmpty()) {
                     Text(
                         text = stringResource(R.string.settings_category_name_hint),
-                        fontFamily = InterFamily,
+                        fontFamily = ManropeFamily,
                         fontSize = 12.sp,
-                        color = AnchorColors.textFaint,
+                        color = Nemo.colors.mute,
                     )
                 }
                 BasicTextField(
                     value = name,
                     onValueChange = { name = it },
                     singleLine = true,
-                    textStyle = TextStyle(fontFamily = InterFamily, fontSize = 13.sp, color = AnchorColors.textPrimary),
+                    textStyle = TextStyle(fontFamily = ManropeFamily, fontSize = 13.sp, color = Nemo.colors.ink),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
             Box(
                 modifier = Modifier
                     .heightIn(min = 44.dp)
-                    .clip(RoundedCornerShape(Radius.chip))
-                    .background(AnchorColors.ink)
-                    .pressable(shape = RoundedCornerShape(Radius.chip), onClick = { onRename(name) })
+                    .clip(PillShape)
+                    .background(Nemo.colors.ink)
+                    .pressable(shape = PillShape, onClick = { onRename(name) })
                     .padding(horizontal = Spacing.x4),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = stringResource(R.string.settings_category_save),
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 12.sp,
-                    color = AnchorColors.surface,
+                    color = Nemo.colors.onInk,
                 )
             }
         }
@@ -178,12 +179,12 @@ private fun CategoryManageRow(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = stringResource(R.string.settings_category_distraction),
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontSize = 12.sp,
-                color = AnchorColors.textSecondary,
+                color = Nemo.colors.inkSecondary,
                 modifier = Modifier.weight(1f),
             )
-            AnchorSwitch(
+            NemoSwitch(
                 checked = category.isDistraction,
                 onCheckedChange = { onToggleDistraction() },
             )

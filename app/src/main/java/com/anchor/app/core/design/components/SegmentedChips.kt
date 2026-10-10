@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -22,11 +21,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.anchor.app.core.design.theme.AnchorColors
-import com.anchor.app.core.design.theme.AnchorTheme
-import com.anchor.app.core.design.theme.InterFamily
+import com.anchor.app.core.design.theme.ManropeFamily
 import com.anchor.app.core.design.theme.Motion
-import com.anchor.app.core.design.theme.Radius
+import com.anchor.app.core.design.theme.Nemo
+import com.anchor.app.core.design.theme.NemoTheme
+import com.anchor.app.core.design.theme.PillShape
 import com.anchor.app.core.design.theme.Spacing
 
 /**
@@ -53,12 +52,12 @@ fun SegmentedChips(
         options.forEachIndexed { index, label ->
             val selected = index == selectedIndex
             val background by animateColorAsState(
-                targetValue = if (selected) AnchorColors.ink else AnchorColors.surfaceMuted,
+                targetValue = if (selected) Nemo.colors.ink else Nemo.colors.fog,
                 animationSpec = Motion.standardSpec(),
                 label = "chip-bg",
             )
             val contentColor by animateColorAsState(
-                targetValue = if (selected) AnchorColors.surface else AnchorColors.textSecondary,
+                targetValue = if (selected) Nemo.colors.onInk else Nemo.colors.inkSecondary,
                 animationSpec = Motion.standardSpec(),
                 label = "chip-fg",
             )
@@ -68,7 +67,7 @@ fun SegmentedChips(
                     // never wraps or clips on narrow screens; each chip stays a >= 48 dp target.
                     .weight(1f)
                     .heightIn(min = 48.dp)
-                    .clip(RoundedCornerShape(Radius.chip))
+                    .clip(PillShape)
                     .background(background)
                     .then(
                         if (selected) {
@@ -76,8 +75,8 @@ fun SegmentedChips(
                         } else {
                             Modifier.border(
                                 width = 1.dp,
-                                color = AnchorColors.border,
-                                shape = RoundedCornerShape(Radius.chip),
+                                color = Nemo.colors.line,
+                                shape = PillShape,
                             )
                         },
                     )
@@ -91,7 +90,7 @@ fun SegmentedChips(
             ) {
                 Text(
                     text = label,
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontWeight = FontWeight.Medium,
                     fontSize = 13.sp,
                     color = contentColor,
@@ -108,7 +107,7 @@ fun SegmentedChips(
 @Preview(showBackground = true)
 @Composable
 private fun SegmentedChipsPreview() {
-    AnchorTheme {
+    NemoTheme {
         SegmentedChips(
             options = listOf("Low", "Medium", "High", "Urgent"),
             selectedIndex = 2,

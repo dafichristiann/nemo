@@ -17,23 +17,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.anchor.app.core.design.theme.AnchorColors
-import com.anchor.app.core.design.theme.AnchorTheme
+import com.anchor.app.core.design.theme.Nemo
+import com.anchor.app.core.design.theme.NemoTheme
 import com.anchor.app.core.design.theme.Radius
 import com.anchor.app.core.design.theme.Spacing
 
 /**
  * Bottom sheet wrapper (docs/superpowers/design/06-design-system.md §7.9).
  *
- * White sheet with rounded top corners + a small centered drag handle. Used for the
+ * `surface` sheet with rounded top corners + a small centered drag handle. Used for the
  * Add Task sheet and future modal flows.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AnchorBottomSheet(
+fun NemoBottomSheet(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -44,14 +43,14 @@ fun AnchorBottomSheet(
         sheetState = sheetState,
         modifier = modifier,
         shape = RoundedCornerShape(topStart = Radius.sheet, topEnd = Radius.sheet),
-        containerColor = AnchorColors.surface,
-        scrimColor = Color.Black.copy(alpha = 0.4f),
+        containerColor = Nemo.colors.surface,
+        scrimColor = Nemo.colors.scrim.copy(alpha = Nemo.colors.scrimAlpha),
         dragHandle = { SheetHandle() },
         content = content,
     )
 }
 
-/** The small 48x4 centered handle (`#E0E0E0`). */
+/** The small 48x4 centered handle (`line`). */
 @Composable
 fun SheetHandle(modifier: Modifier = Modifier) {
     Box(
@@ -65,7 +64,7 @@ fun SheetHandle(modifier: Modifier = Modifier) {
                 .width(48.dp)
                 .height(4.dp)
                 .clip(RoundedCornerShape(Radius.track))
-                .background(AnchorColors.border),
+                .background(Nemo.colors.line),
         )
     }
 }
@@ -73,7 +72,7 @@ fun SheetHandle(modifier: Modifier = Modifier) {
 @Preview(showBackground = true)
 @Composable
 private fun SheetHandlePreview() {
-    AnchorTheme {
+    NemoTheme {
         Column { SheetHandle() }
     }
 }

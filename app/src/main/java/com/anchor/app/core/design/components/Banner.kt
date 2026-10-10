@@ -12,8 +12,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.anchor.app.core.design.theme.AnchorColors
-import com.anchor.app.core.design.theme.AnchorTheme
+import com.anchor.app.core.design.theme.Nemo
+import com.anchor.app.core.design.theme.NemoTheme
 import com.anchor.app.core.design.theme.Radius
 import com.anchor.app.core.design.theme.Spacing
 
@@ -27,16 +27,18 @@ import com.anchor.app.core.design.theme.Spacing
 @Composable
 fun Banner(
     modifier: Modifier = Modifier,
-    background: Color = AnchorColors.surfaceSunken,
-    borderColor: Color = AnchorColors.border,
+    background: Color = Color.Unspecified,
+    borderColor: Color = Color.Unspecified,
     content: @Composable () -> Unit,
 ) {
+    val resolvedBackground = if (background == Color.Unspecified) Nemo.colors.fog else background
+    val resolvedBorder = if (borderColor == Color.Unspecified) Nemo.colors.line else borderColor
     Column(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(Radius.card))
-            .background(background)
-            .border(1.dp, borderColor, RoundedCornerShape(Radius.card))
+            .background(resolvedBackground)
+            .border(1.dp, resolvedBorder, RoundedCornerShape(Radius.card))
             .padding(horizontal = Spacing.cardHorizontal, vertical = Spacing.x4),
     ) {
         content()
@@ -46,7 +48,7 @@ fun Banner(
 @Preview(showBackground = true)
 @Composable
 private fun BannerPreview() {
-    AnchorTheme {
+    NemoTheme {
         Banner(
             modifier = Modifier.padding(Spacing.x4),
         ) {

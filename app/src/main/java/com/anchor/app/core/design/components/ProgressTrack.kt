@@ -17,9 +17,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.width
-import com.anchor.app.core.design.theme.AnchorColors
-import com.anchor.app.core.design.theme.AnchorTheme
 import com.anchor.app.core.design.theme.Motion
+import com.anchor.app.core.design.theme.Nemo
+import com.anchor.app.core.design.theme.NemoTheme
 import com.anchor.app.core.design.theme.Radius
 
 /**
@@ -37,8 +37,9 @@ fun ProgressTrack(
     modifier: Modifier = Modifier,
     trackHeight: Dp = 4.dp,
     animate: Boolean = true,
-    fillColor: Color = AnchorColors.ink,
+    fillColor: Color = Color.Unspecified,
 ) {
+    val resolvedFill = if (fillColor == Color.Unspecified) Nemo.colors.ink else fillColor
     val clamped = progress.coerceIn(0f, 1f)
     val animated by animateFloatAsState(
         targetValue = clamped,
@@ -52,7 +53,7 @@ fun ProgressTrack(
             .fillMaxWidth()
             .height(trackHeight)
             .clip(RoundedCornerShape(Radius.track))
-            .background(AnchorColors.track),
+            .background(Nemo.colors.fog),
     ) {
         if (fraction > 0f) {
             Box(
@@ -60,7 +61,7 @@ fun ProgressTrack(
                     .fillMaxHeight()
                     .fillMaxWidth(fraction)
                     .clip(RoundedCornerShape(Radius.track))
-                    .background(fillColor),
+                    .background(resolvedFill),
             )
         }
     }
@@ -69,7 +70,7 @@ fun ProgressTrack(
 @Preview(showBackground = true)
 @Composable
 private fun ProgressTrackPreview() {
-    AnchorTheme {
+    NemoTheme {
         Box(modifier = Modifier.width(311.dp), contentAlignment = Alignment.Center) {
             ProgressTrack(progress = 0.33f)
         }

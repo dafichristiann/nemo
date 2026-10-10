@@ -11,8 +11,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.anchor.app.R
-import com.anchor.app.core.design.theme.AnchorColors
-import com.anchor.app.core.design.theme.AnchorTheme
+import com.anchor.app.core.design.theme.Nemo
+import com.anchor.app.core.design.theme.NemoTheme
 
 /**
  * Circular add FAB (docs/superpowers/design/06-design-system.md §7.11).
@@ -28,8 +28,8 @@ fun AddTaskFab(
     FloatingActionButton(
         onClick = onClick,
         modifier = modifier.size(56.dp),
-        containerColor = AnchorColors.ink,
-        contentColor = AnchorColors.surface,
+        containerColor = Nemo.colors.ink,
+        contentColor = Nemo.colors.onInk,
         shape = androidx.compose.foundation.shape.CircleShape,
     ) {
         Icon(
@@ -42,5 +42,5 @@ fun AddTaskFab(
 @Preview(showBackground = true)
 @Composable
 private fun AddTaskFabPreview() {
-    AnchorTheme { AddTaskFab(onClick = {}) }
+    NemoTheme { AddTaskFab(onClick = {}) }
 }

@@ -31,7 +31,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -45,13 +44,13 @@ import com.anchor.app.R
 import com.anchor.app.core.design.components.Divider
 import com.anchor.app.core.design.components.PrimaryButton
 import com.anchor.app.core.design.components.ProgressTrack
+import com.anchor.app.core.design.components.NemoPill
 import com.anchor.app.core.design.components.SectionHeader
-import com.anchor.app.core.design.components.TextPill
 import com.anchor.app.core.design.components.pressable
-import com.anchor.app.core.design.theme.AnchorColors
-import com.anchor.app.core.design.theme.AnchorElevation
-import com.anchor.app.core.design.theme.InterFamily
-import com.anchor.app.core.design.theme.LocalAnchorElevation
+import com.anchor.app.core.design.theme.FrauncesFamily
+import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.Nemo
+import com.anchor.app.core.design.theme.PillShape
 import com.anchor.app.core.design.theme.Radius
 import com.anchor.app.core.design.theme.Spacing
 import com.anchor.app.core.domain.model.TaskPriority
@@ -78,7 +77,7 @@ fun TaskDetailScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(AnchorColors.surface)
+            .background(Nemo.colors.background)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = Spacing.screenHorizontal)
             .padding(top = Spacing.x6, bottom = Spacing.x8),
@@ -87,9 +86,9 @@ fun TaskDetailScreen(
         // Header: back + title
         Row(
             modifier = Modifier
-                .clip(RoundedCornerShape(Radius.chip))
+                .clip(PillShape)
                 .pressable(
-                    shape = RoundedCornerShape(Radius.chip),
+                    shape = PillShape,
                     pressedScale = 0.96f,
                     onClick = onBack,
                 )
@@ -100,24 +99,24 @@ fun TaskDetailScreen(
             Icon(
                 imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                 contentDescription = stringResource(R.string.detail_back),
-                tint = AnchorColors.textPrimary,
+                tint = Nemo.colors.ink,
                 modifier = Modifier.size(20.dp),
             )
             Text(
                 text = stringResource(R.string.detail_back),
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp,
-                color = AnchorColors.textPrimary,
+                color = Nemo.colors.ink,
             )
         }
 
         if (task == null) {
             Text(
                 text = stringResource(R.string.home_empty_title),
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontSize = 14.sp,
-                color = AnchorColors.textMuted,
+                color = Nemo.colors.mute,
             )
             return@Column
         }
@@ -128,32 +127,32 @@ fun TaskDetailScreen(
                 .fillMaxWidth()
                 .height(3.dp)
                 .clip(RoundedCornerShape(Radius.track))
-                .background(AnchorColors.ink),
+                .background(Nemo.colors.ink),
         )
 
         Text(
             text = task.title,
-            fontFamily = InterFamily,
-            fontWeight = FontWeight.Bold,
+            fontFamily = FrauncesFamily,
+            fontWeight = FontWeight.Normal,
             fontSize = 26.sp,
-            color = AnchorColors.textPrimary,
+            color = Nemo.colors.ink,
         )
 
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.x2)) {
-            TextPill(text = priorityLabel(task.priority), highlighted = task.priority == TaskPriority.HIGH)
-            TextPill(text = stringResource(R.string.detail_status_in_progress))
+            NemoPill(text = priorityLabel(task.priority), highlighted = task.priority == TaskPriority.HIGH)
+            NemoPill(text = stringResource(R.string.detail_status_in_progress))
         }
 
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.x1)) {
             state.deadlineLabel?.let {
-                Text(it, fontFamily = InterFamily, fontSize = 13.sp, color = AnchorColors.textMuted)
+                Text(it, fontFamily = ManropeFamily, fontSize = 13.sp, color = Nemo.colors.mute)
             }
             state.estimatedLabel?.let {
                 Text(
                     text = stringResource(R.string.detail_meta_estimated, it),
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontSize = 13.sp,
-                    color = AnchorColors.textMuted,
+                    color = Nemo.colors.mute,
                 )
             }
             if (state.subtasks.isNotEmpty()) {
@@ -164,9 +163,9 @@ fun TaskDetailScreen(
                         state.doneSubtaskCount,
                         state.subtasks.size,
                     ),
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontSize = 13.sp,
-                    color = AnchorColors.textMuted,
+                    color = Nemo.colors.mute,
                 )
             }
         }
@@ -180,9 +179,9 @@ fun TaskDetailScreen(
         if (state.subtasks.isEmpty()) {
             Text(
                 text = stringResource(R.string.detail_no_subtasks),
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontSize = 13.sp,
-                color = AnchorColors.textFaint,
+                color = Nemo.colors.placeholder,
             )
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
@@ -197,9 +196,9 @@ fun TaskDetailScreen(
                         Spacer(modifier = Modifier.width(Spacing.x3))
                         Text(
                             text = sub.title,
-                            fontFamily = InterFamily,
+                            fontFamily = ManropeFamily,
                             fontSize = 14.sp,
-                            color = if (sub.isDone) AnchorColors.textMuted else AnchorColors.textPrimary,
+                            color = if (sub.isDone) Nemo.colors.mute else Nemo.colors.ink,
                             textDecoration = if (sub.isDone) TextDecoration.LineThrough else null,
                             modifier = Modifier.weight(1f),
                         )
@@ -215,31 +214,31 @@ fun TaskDetailScreen(
                     .weight(1f)
                     .height(44.dp)
                     .clip(RoundedCornerShape(Radius.field))
-                    .background(AnchorColors.surfaceSunken)
+                    .background(Nemo.colors.fog)
                     .padding(horizontal = Spacing.x3),
                 contentAlignment = Alignment.CenterStart,
             ) {
                 if (newSubtask.isEmpty()) {
                     Text(
                         text = stringResource(R.string.add_task_subtask_hint),
-                        fontFamily = InterFamily,
+                        fontFamily = ManropeFamily,
                         fontSize = 13.sp,
-                        color = AnchorColors.textFaint,
+                        color = Nemo.colors.placeholder,
                     )
                 }
                 BasicTextField(
                     value = newSubtask,
                     onValueChange = { newSubtask = it },
                     singleLine = true,
-                    textStyle = TextStyle(fontFamily = InterFamily, fontSize = 13.sp, color = AnchorColors.textPrimary),
+                    textStyle = TextStyle(fontFamily = ManropeFamily, fontSize = 13.sp, color = Nemo.colors.ink),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
             Spacer(modifier = Modifier.width(Spacing.x2))
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(Radius.chip))
-                    .background(AnchorColors.ink)
+                    .clip(PillShape)
+                    .background(Nemo.colors.ink)
                     .clickable {
                         viewModel.onAddSubtask(newSubtask)
                         newSubtask = ""
@@ -248,10 +247,10 @@ fun TaskDetailScreen(
             ) {
                 Text(
                     text = stringResource(R.string.detail_add_subtask),
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 12.sp,
-                    color = AnchorColors.surface,
+                    color = Nemo.colors.onInk,
                 )
             }
         }
@@ -261,16 +260,16 @@ fun TaskDetailScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(Radius.card))
-                .background(AnchorColors.surfaceSunken)
+                .background(Nemo.colors.fog)
                 .clickable { onOpenFutureView(task.id) }
                 .padding(Spacing.x4),
         ) {
             Text(
                 text = stringResource(R.string.detail_future_callout),
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = 13.sp,
-                color = AnchorColors.textSecondary,
+                color = Nemo.colors.inkSecondary,
             )
         }
 
@@ -310,18 +309,18 @@ private fun SecondaryAction(label: String, danger: Boolean = false, onClick: () 
     Box(
         modifier = Modifier
             .heightIn(min = 40.dp)
-            .clip(RoundedCornerShape(Radius.chip))
-            .border(1.dp, if (danger) AnchorColors.accentDanger else AnchorColors.border, RoundedCornerShape(Radius.chip))
-            .pressable(shape = RoundedCornerShape(Radius.chip), onClick = onClick)
+            .clip(PillShape)
+            .border(1.dp, if (danger) Nemo.colors.dangerLine else Nemo.colors.line, PillShape)
+            .pressable(shape = PillShape, onClick = onClick)
             .padding(horizontal = Spacing.x3),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = label,
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 12.sp,
-            color = if (danger) AnchorColors.accentDanger else AnchorColors.textSecondary,
+            color = if (danger) Nemo.colors.danger else Nemo.colors.inkSecondary,
         )
     }
 }

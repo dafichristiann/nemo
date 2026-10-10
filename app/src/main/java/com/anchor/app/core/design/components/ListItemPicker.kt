@@ -33,10 +33,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.anchor.app.R
-import com.anchor.app.core.design.theme.AnchorColors
-import com.anchor.app.core.design.theme.AnchorTheme
-import com.anchor.app.core.design.theme.InterFamily
+import com.anchor.app.core.design.theme.ManropeFamily
 import com.anchor.app.core.design.theme.Motion
+import com.anchor.app.core.design.theme.Nemo
+import com.anchor.app.core.design.theme.NemoTheme
 import com.anchor.app.core.design.theme.Radius
 import com.anchor.app.core.design.theme.Spacing
 
@@ -69,7 +69,7 @@ fun <T> ListItemPicker(
             .fillMaxWidth()
             .heightIn(max = maxHeight)
             .clip(RoundedCornerShape(Radius.card))
-            .background(AnchorColors.surfaceSunken),
+            .background(Nemo.colors.fog),
         verticalArrangement = Arrangement.spacedBy(1.dp),
     ) {
         itemsIndexed(options) { index, option ->
@@ -85,12 +85,12 @@ fun <T> ListItemPicker(
 @Composable
 private fun ListPickerRow(label: String, selected: Boolean, onClick: () -> Unit) {
     val background by animateColorAsState(
-        targetValue = if (selected) AnchorColors.surface else AnchorColors.surfaceSunken,
+        targetValue = if (selected) Nemo.colors.surface else Nemo.colors.fog,
         animationSpec = Motion.standardSpec(),
         label = "list-picker-bg",
     )
     val foreground by animateColorAsState(
-        targetValue = if (selected) AnchorColors.textPrimary else AnchorColors.textSecondary,
+        targetValue = if (selected) Nemo.colors.ink else Nemo.colors.inkSecondary,
         animationSpec = Motion.standardSpec(),
         label = "list-picker-fg",
     )
@@ -103,7 +103,7 @@ private fun ListPickerRow(label: String, selected: Boolean, onClick: () -> Unit)
                 if (selected) {
                     Modifier.border(
                         width = 1.5.dp,
-                        color = AnchorColors.ink,
+                        color = Nemo.colors.ink,
                         shape = RoundedCornerShape(Radius.field),
                     )
                 } else {
@@ -121,7 +121,7 @@ private fun ListPickerRow(label: String, selected: Boolean, onClick: () -> Unit)
     ) {
         Text(
             text = label,
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
             fontSize = 14.sp,
             color = foreground,
@@ -132,7 +132,7 @@ private fun ListPickerRow(label: String, selected: Boolean, onClick: () -> Unit)
                 Icon(
                     imageVector = Icons.Rounded.Check,
                     contentDescription = stringResource(R.string.cd_selected),
-                    tint = AnchorColors.ink,
+                    tint = Nemo.colors.ink,
                     modifier = Modifier.size(18.dp),
                 )
             }
@@ -143,7 +143,7 @@ private fun ListPickerRow(label: String, selected: Boolean, onClick: () -> Unit)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 private fun ListItemPickerPreview() {
-    AnchorTheme {
+    NemoTheme {
         ListItemPicker(
             options = listOf("Not set", "15 min", "30 min", "45 min", "60 min", "90 min", "120 min"),
             selectedIndex = 3,

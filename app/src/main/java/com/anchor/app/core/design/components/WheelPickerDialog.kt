@@ -14,8 +14,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.anchor.app.R
-import com.anchor.app.core.design.theme.AnchorColors
-import com.anchor.app.core.design.theme.InterFamily
+import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.Nemo
 
 /**
  * Centered [AlertDialog] with a scroll [WheelPicker] to pick a single value, committed on "Set".
@@ -48,10 +48,10 @@ fun <T> WheelPickerDialog(
         title = {
             Text(
                 text = title,
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
-                color = AnchorColors.textPrimary,
+                color = Nemo.colors.ink,
             )
         },
         text = {
@@ -67,9 +67,9 @@ fun <T> WheelPickerDialog(
             TextButton(onClick = { onConfirm(pendingIndex) }) {
                 Text(
                     text = stringResource(R.string.dialog_set),
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontWeight = FontWeight.SemiBold,
-                    color = AnchorColors.ink,
+                    color = Nemo.colors.ink,
                 )
             }
         },
@@ -77,12 +77,12 @@ fun <T> WheelPickerDialog(
             TextButton(onClick = onDismiss) {
                 Text(
                     text = stringResource(R.string.dialog_cancel),
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontWeight = FontWeight.Medium,
-                    color = AnchorColors.textMuted,
+                    color = Nemo.colors.mute,
                 )
             }
         },
-        containerColor = AnchorColors.surface,
+        containerColor = Nemo.colors.surface,
     )
 }

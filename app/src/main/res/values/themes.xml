@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Window theme. The in-app look is fully driven by Compose (AnchorTheme).
+  Window theme. The in-app look is fully driven by Compose (NemoTheme).
   This XML theme only controls the pre-Compose window background so there is no
-  color flash: light-first, monochrome (06-design-system.md §2).
+  color flash. NEMO follows the system theme (Day / Night) — see values-night.
 -->
 <resources>
-    <style name="Theme.Anchor" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:windowBackground">@color/surface</item>
-        <item name="android:statusBarColor">@color/surface</item>
-        <item name="android:navigationBarColor">@color/surface</item>
+    <style name="Theme.Nemo" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/nemo_background</item>
+        <item name="android:statusBarColor">@color/nemo_background</item>
+        <item name="android:navigationBarColor">@color/nemo_background</item>
         <item name="android:windowLightStatusBar">true</item>
     </style>
 </resources>

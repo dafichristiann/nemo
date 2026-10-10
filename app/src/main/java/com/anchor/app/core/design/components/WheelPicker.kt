@@ -25,9 +25,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.anchor.app.core.design.theme.AnchorColors
-import com.anchor.app.core.design.theme.AnchorTheme
-import com.anchor.app.core.design.theme.InterFamily
+import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.Nemo
+import com.anchor.app.core.design.theme.NemoTheme
 import com.anchor.app.core.design.theme.Radius
 import com.anchor.app.core.design.theme.Spacing
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -91,7 +91,7 @@ fun <T> WheelPicker(
         modifier = modifier
             .height(RowHeight * VisibleRows)
             .clip(RoundedCornerShape(Radius.card))
-            .background(AnchorColors.surfaceSunken),
+            .background(Nemo.colors.fog),
         contentAlignment = Alignment.Center,
     ) {
         // Center highlight band behind the rows.
@@ -101,7 +101,7 @@ fun <T> WheelPicker(
                 .height(RowHeight)
                 .padding(horizontal = Spacing.x4)
                 .clip(RoundedCornerShape(Radius.field))
-                .background(AnchorColors.surface),
+                .background(Nemo.colors.surface),
         )
 
         LazyColumn(
@@ -120,11 +120,11 @@ fun <T> WheelPicker(
                 ) {
                     Text(
                         text = formatValue(value),
-                        fontFamily = InterFamily,
+                        fontFamily = ManropeFamily,
                         fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                         fontSize = if (selected) 20.sp else 15.sp,
                         textAlign = TextAlign.Center,
-                        color = if (selected) AnchorColors.textPrimary else AnchorColors.textFaint,
+                        color = if (selected) Nemo.colors.ink else Nemo.colors.mute,
                     )
                 }
             }
@@ -148,7 +148,7 @@ fun formatDurationSeconds(seconds: Int): String {
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 private fun WheelPickerPreview() {
-    AnchorTheme {
+    NemoTheme {
         WheelPicker(
             values = (1..120).map { it * 5 },
             selectedIndex = 4,

@@ -11,7 +11,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
@@ -21,6 +20,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import com.anchor.app.R
+import com.anchor.app.core.design.theme.Nemo
 import kotlinx.coroutines.delay
 
 /**
@@ -39,7 +39,7 @@ fun SplashScreen(
 ) {
     val context = LocalContext.current
     val isDark = isSystemInDarkTheme()
-    val background = if (isDark) Color(0xFF0A0A0A) else Color(0xFFFFFFFF)
+    val background = Nemo.colors.background
     val videoRes = if (isDark) R.raw.nemo_splash_dark else R.raw.nemo_splash_light
 
     // Single player for the lifetime of the splash. Muted is not wanted here — the clip has its

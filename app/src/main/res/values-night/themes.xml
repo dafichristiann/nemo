@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Night window theme: dark status/navigation bars and dark status-bar icons. -->
+<resources>
+    <style name="Theme.Nemo" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/nemo_background</item>
+        <item name="android:statusBarColor">@color/nemo_background</item>
+        <item name="android:navigationBarColor">@color/nemo_background</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

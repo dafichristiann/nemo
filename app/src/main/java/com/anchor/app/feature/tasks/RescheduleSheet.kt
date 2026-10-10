@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
@@ -31,11 +30,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.anchor.app.R
-import com.anchor.app.core.design.components.AnchorBottomSheet
+import com.anchor.app.core.design.components.NemoBottomSheet
 import com.anchor.app.core.design.components.PrimaryButton
-import com.anchor.app.core.design.theme.AnchorColors
-import com.anchor.app.core.design.theme.InterFamily
-import com.anchor.app.core.design.theme.Radius
+import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.Nemo
+import com.anchor.app.core.design.theme.PillShape
 import com.anchor.app.core.design.theme.Spacing
 import java.time.Instant
 import java.time.LocalDate
@@ -81,7 +80,7 @@ fun RescheduleSheet(
         RescheduleDay.PLUS_7 to stringResource(R.string.reschedule_day_plus7),
     )
 
-    AnchorBottomSheet(onDismissRequest = onDismiss, modifier = modifier) {
+    NemoBottomSheet(onDismissRequest = onDismiss, modifier = modifier) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -97,15 +96,15 @@ fun RescheduleSheet(
             ) {
                 Text(
                     text = stringResource(R.string.reschedule_title),
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
-                    color = AnchorColors.textPrimary,
+                    color = Nemo.colors.ink,
                 )
                 Icon(
                     imageVector = Icons.Rounded.Close,
                     contentDescription = stringResource(R.string.cd_close_sheet),
-                    tint = AnchorColors.textMuted,
+                    tint = Nemo.colors.mute,
                     modifier = Modifier.clickable(onClick = onDismiss),
                 )
             }
@@ -145,18 +144,18 @@ fun RescheduleSheet(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(Radius.chip))
-                        .border(1.dp, AnchorColors.border, RoundedCornerShape(Radius.chip))
+                        .clip(PillShape)
+                        .border(1.dp, Nemo.colors.line, PillShape)
                         .clickable { onConfirm(null) }
                         .padding(vertical = Spacing.x3),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = stringResource(R.string.reschedule_clear),
-                        fontFamily = InterFamily,
+                        fontFamily = ManropeFamily,
                         fontWeight = FontWeight.Medium,
                         fontSize = 13.sp,
-                        color = AnchorColors.textSecondary,
+                        color = Nemo.colors.inkSecondary,
                     )
                 }
             }
@@ -169,10 +168,10 @@ private fun LabeledRow(label: String, content: @Composable () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
         Text(
             text = label,
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.SemiBold,
             fontSize = 12.sp,
-            color = AnchorColors.textMutedAlt,
+            color = Nemo.colors.mute,
         )
         content()
     }
@@ -182,17 +181,17 @@ private fun LabeledRow(label: String, content: @Composable () -> Unit) {
 private fun ChoiceChip(label: String, selected: Boolean, onClick: () -> Unit) {
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(Radius.chip))
-            .background(if (selected) AnchorColors.ink else AnchorColors.surfaceMuted)
+            .clip(PillShape)
+            .background(if (selected) Nemo.colors.ink else Nemo.colors.fog)
             .clickable(onClick = onClick)
             .padding(horizontal = Spacing.x4, vertical = Spacing.x2),
     ) {
         Text(
             text = label,
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 13.sp,
-            color = if (selected) AnchorColors.surface else AnchorColors.textSecondary,
+            color = if (selected) Nemo.colors.onInk else Nemo.colors.inkSecondary,
         )
     }
 }

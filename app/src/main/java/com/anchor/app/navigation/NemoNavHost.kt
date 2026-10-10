@@ -15,7 +15,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.anchor.app.core.design.components.AnchorNavBar
+import com.anchor.app.core.design.components.NemoNavBar
 import com.anchor.app.core.design.navigation.TopLevelDestination
 import com.anchor.app.feature.focus.FocusScreen
 import com.anchor.app.feature.futureview.FutureViewScreen
@@ -63,7 +63,7 @@ object Routes {
  * and Settings routes hide the bottom bar, as in the mockups (back header instead).
  */
 @Composable
-fun AnchorNavHost(
+fun NemoNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
     initialRoute: String? = null,
@@ -92,7 +92,7 @@ fun AnchorNavHost(
         modifier = modifier,
         bottomBar = {
             if (isTopLevel) {
-                AnchorNavBar(
+                NemoNavBar(
                     destinations = TopLevelDestination.entries,
                     currentRoute = currentRouteBase,
                     onNavigate = { destination ->

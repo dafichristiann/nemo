@@ -11,10 +11,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.anchor.app.core.design.theme.AnchorColors
-import com.anchor.app.core.design.theme.AnchorTheme
+import com.anchor.app.core.design.theme.Nemo
+import com.anchor.app.core.design.theme.NemoTheme
 import com.anchor.app.feature.splash.SplashScreen
-import com.anchor.app.navigation.AnchorNavHost
+import com.anchor.app.navigation.NemoNavHost
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
@@ -33,10 +33,10 @@ class MainActivity : ComponentActivity() {
         // Optional deep-link from the focus-block overlay ("Back to focus" → Focus tab).
         val initialRoute = intent?.getStringExtra(EXTRA_OPEN_ROUTE)
         setContent {
-            AnchorTheme {
+            NemoTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = AnchorColors.surface,
+                    color = Nemo.colors.background,
                 ) {
                     // Show the branded intro clip once per cold start, then the shell. Skipped on
                     // configuration change so a rotation doesn't replay the splash.
@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
                     if (showSplash) {
                         SplashScreen(onFinished = { showSplash = false })
                     } else {
-                        AnchorNavHost(initialRoute = initialRoute)
+                        NemoNavHost(initialRoute = initialRoute)
                     }
                 }
             }

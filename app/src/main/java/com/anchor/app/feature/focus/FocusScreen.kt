@@ -42,14 +42,16 @@ import com.anchor.app.R
 import com.anchor.app.core.design.components.Divider
 import com.anchor.app.core.design.components.PrimaryButton
 import com.anchor.app.core.design.components.SecondaryButton
+import com.anchor.app.core.design.components.NemoPill
 import com.anchor.app.core.design.components.SectionHeader
-import com.anchor.app.core.design.components.TextPill
 import com.anchor.app.core.design.components.TimerRing
 import com.anchor.app.core.design.components.WheelPickerDialog
 import com.anchor.app.core.design.components.formatDurationSeconds
 import com.anchor.app.core.design.components.pressable
-import com.anchor.app.core.design.theme.AnchorColors
-import com.anchor.app.core.design.theme.InterFamily
+import com.anchor.app.core.design.theme.FrauncesFamily
+import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.Nemo
+import com.anchor.app.core.design.theme.PillShape
 import com.anchor.app.core.design.theme.Radius
 import com.anchor.app.core.design.theme.Spacing
 import com.anchor.app.core.domain.model.FocusMode
@@ -106,7 +108,7 @@ private fun FocusSetupContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(AnchorColors.surface)
+            .background(Nemo.colors.background)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = Spacing.screenHorizontal)
             .padding(top = Spacing.x6, bottom = Spacing.x8),
@@ -114,10 +116,10 @@ private fun FocusSetupContent(
     ) {
         Text(
             text = stringResource(R.string.focus_setup_title),
-            fontFamily = InterFamily,
-            fontWeight = FontWeight.Bold,
+            fontFamily = FrauncesFamily,
+            fontWeight = FontWeight.Light,
             fontSize = 28.sp,
-            color = AnchorColors.textPrimary,
+            color = Nemo.colors.ink,
         )
 
         if (state.lastFallbackReason != null) {
@@ -129,9 +131,9 @@ private fun FocusSetupContent(
         if (state.taskOptions.isEmpty()) {
             Text(
                 text = stringResource(R.string.focus_none_scheduled),
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontSize = 13.sp,
-                color = AnchorColors.textFaint,
+                color = Nemo.colors.placeholder,
             )
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
@@ -173,13 +175,13 @@ private fun FocusSetupContent(
                 Notice(text = stringResource(R.string.focus_blocked_empty))
                 Text(
                     text = stringResource(R.string.focus_blocked_manage),
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontWeight = FontWeight.Medium,
                     fontSize = 13.sp,
-                    color = AnchorColors.textPrimary,
+                    color = Nemo.colors.ink,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .pressable(shape = RoundedCornerShape(Radius.chip), onClick = onManageBlockedApps)
+                        .pressable(shape = PillShape, onClick = onManageBlockedApps)
                         .padding(vertical = Spacing.x1),
                 )
             }
@@ -191,13 +193,13 @@ private fun FocusSetupContent(
                 Notice(text = stringResource(R.string.focus_blocking_setup_body))
                 Text(
                     text = stringResource(R.string.focus_blocking_setup_cta),
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontWeight = FontWeight.Medium,
                     fontSize = 13.sp,
-                    color = AnchorColors.textPrimary,
+                    color = Nemo.colors.ink,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .pressable(shape = RoundedCornerShape(Radius.chip), onClick = onOpenAccessibilitySettings)
+                        .pressable(shape = PillShape, onClick = onOpenAccessibilitySettings)
                         .padding(vertical = Spacing.x1),
                 )
             }
@@ -215,7 +217,7 @@ private fun FocusSetupContent(
                 .fillMaxWidth()
                 .heightIn(min = 48.dp)
                 .clip(RoundedCornerShape(Radius.field))
-                .background(AnchorColors.surfaceSunken)
+                .background(Nemo.colors.fog)
                 .pressable(
                     shape = RoundedCornerShape(Radius.field),
                     onClick = { durationDialogOpen = true },
@@ -226,16 +228,16 @@ private fun FocusSetupContent(
         ) {
             Text(
                 text = formatDurationSeconds(state.selectedDurationSec),
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontSize = 14.sp,
-                color = AnchorColors.textPrimary,
+                color = Nemo.colors.ink,
             )
             Text(
                 text = stringResource(R.string.add_task_duration_choose),
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = 12.sp,
-                color = AnchorColors.textMuted,
+                color = Nemo.colors.mute,
             )
         }
         if (durationDialogOpen) {
@@ -274,7 +276,7 @@ private fun FocusActiveContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(AnchorColors.surface)
+            .background(Nemo.colors.background)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = Spacing.screenHorizontal)
             .padding(top = Spacing.x6, bottom = Spacing.x8),
@@ -283,15 +285,15 @@ private fun FocusActiveContent(
     ) {
         // Header row: status pill on the left so the ring below can be centered.
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
-            TextPill(text = stringResource(R.string.focus_active_tag), highlighted = true)
+            NemoPill(text = stringResource(R.string.focus_active_tag), highlighted = true)
         }
 
         Text(
             text = active.taskTitle ?: stringResource(R.string.focus_task_none),
-            fontFamily = InterFamily,
-            fontWeight = FontWeight.Bold,
+            fontFamily = FrauncesFamily,
+            fontWeight = FontWeight.Normal,
             fontSize = 22.sp,
-            color = AnchorColors.textPrimary,
+            color = Nemo.colors.ink,
             textAlign = TextAlign.Center,
         )
 
@@ -322,9 +324,9 @@ private fun FocusActiveContent(
                         active.doneSteps,
                         active.totalSteps,
                     ),
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontSize = 14.sp,
-                color = AnchorColors.textSecondary,
+                color = Nemo.colors.inkSecondary,
             )
         }
 
@@ -351,15 +353,15 @@ private fun FocusActiveContent(
         // Emergency exit — always available (PRD §10.5)
         Text(
             text = stringResource(R.string.focus_emergency_exit),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 13.sp,
-            color = AnchorColors.textSecondary,
+            color = Nemo.colors.inkSecondary,
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
                 .pressable(
-                    shape = RoundedCornerShape(Radius.chip),
+                    shape = PillShape,
                     onClick = viewModel::onEmergencyExit,
                 )
                 .padding(vertical = Spacing.x3),
@@ -377,14 +379,14 @@ private fun FocusActiveContent(
             )
             Text(
                 text = stringResource(R.string.overdue_action_dismiss),
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = 13.sp,
-                color = AnchorColors.textSecondary,
+                color = Nemo.colors.inkSecondary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .pressable(shape = RoundedCornerShape(Radius.chip), onClick = viewModel::onDismissCompletion)
+                    .pressable(shape = PillShape, onClick = viewModel::onDismissCompletion)
                     .padding(vertical = Spacing.x2),
             )
         }
@@ -395,22 +397,22 @@ private fun FocusActiveContent(
     if (showFinishConfirm) {
         AlertDialog(
             onDismissRequest = { showFinishConfirm = false },
-            containerColor = AnchorColors.surfaceCard,
+            containerColor = Nemo.colors.surface,
             title = {
                 Text(
                     text = stringResource(R.string.focus_finish_confirm_title),
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
-                    color = AnchorColors.textPrimary,
+                    color = Nemo.colors.ink,
                 )
             },
             text = {
                 Text(
                     text = stringResource(R.string.focus_finish_confirm_body),
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontSize = 14.sp,
-                    color = AnchorColors.textSecondary,
+                    color = Nemo.colors.inkSecondary,
                 )
             },
             confirmButton = {
@@ -421,9 +423,9 @@ private fun FocusActiveContent(
                 }) {
                     Text(
                         text = stringResource(R.string.focus_finish_confirm_confirm),
-                        fontFamily = InterFamily,
+                        fontFamily = ManropeFamily,
                         fontWeight = FontWeight.SemiBold,
-                        color = AnchorColors.ink,
+                        color = Nemo.colors.ink,
                     )
                 }
             },
@@ -431,9 +433,9 @@ private fun FocusActiveContent(
                 TextButton(onClick = { showFinishConfirm = false }) {
                     Text(
                         text = stringResource(R.string.dialog_cancel),
-                        fontFamily = InterFamily,
+                        fontFamily = ManropeFamily,
                         fontWeight = FontWeight.SemiBold,
-                        color = AnchorColors.textMuted,
+                        color = Nemo.colors.mute,
                     )
                 }
             },
@@ -444,12 +446,12 @@ private fun FocusActiveContent(
 @Composable
 private fun SelectableRow(label: String, selected: Boolean, onClick: () -> Unit) {
     val background by androidx.compose.animation.animateColorAsState(
-        targetValue = if (selected) AnchorColors.ink else AnchorColors.surfaceSunken,
+        targetValue = if (selected) Nemo.colors.ink else Nemo.colors.fog,
         animationSpec = com.anchor.app.core.design.theme.Motion.standardSpec(),
         label = "selectable-bg",
     )
     val contentColor by androidx.compose.animation.animateColorAsState(
-        targetValue = if (selected) AnchorColors.surface else AnchorColors.textPrimary,
+        targetValue = if (selected) Nemo.colors.onInk else Nemo.colors.ink,
         animationSpec = com.anchor.app.core.design.theme.Motion.standardSpec(),
         label = "selectable-fg",
     )
@@ -463,7 +465,7 @@ private fun SelectableRow(label: String, selected: Boolean, onClick: () -> Unit)
     ) {
         Text(
             text = label,
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 14.sp,
             color = contentColor,
@@ -474,12 +476,12 @@ private fun SelectableRow(label: String, selected: Boolean, onClick: () -> Unit)
 @Composable
 private fun ModeCard(title: String, hint: String, selected: Boolean, onClick: () -> Unit) {
     val background by androidx.compose.animation.animateColorAsState(
-        targetValue = if (selected) AnchorColors.surfaceMuted else AnchorColors.surfaceSunken,
+        targetValue = if (selected) Nemo.colors.fog else Nemo.colors.background,
         animationSpec = com.anchor.app.core.design.theme.Motion.standardSpec(),
         label = "mode-bg",
     )
     val borderColor by androidx.compose.animation.animateColorAsState(
-        targetValue = if (selected) AnchorColors.ink else AnchorColors.border,
+        targetValue = if (selected) Nemo.colors.ink else Nemo.colors.line,
         animationSpec = com.anchor.app.core.design.theme.Motion.standardSpec(),
         label = "mode-border",
     )
@@ -499,16 +501,16 @@ private fun ModeCard(title: String, hint: String, selected: Boolean, onClick: ()
     ) {
         Text(
             text = title,
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.SemiBold,
             fontSize = 15.sp,
-            color = AnchorColors.textPrimary,
+            color = Nemo.colors.ink,
         )
         Text(
             text = hint,
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontSize = 12.sp,
-            color = AnchorColors.textSecondary,
+            color = Nemo.colors.inkSecondary,
         )
     }
 }
@@ -519,15 +521,15 @@ private fun Notice(text: String) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(Radius.card))
-            .background(AnchorColors.surfaceSunken)
+            .background(Nemo.colors.fog)
             .padding(Spacing.x4),
     ) {
         Text(
             text = text,
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 13.sp,
-            color = AnchorColors.textSecondary,
+            color = Nemo.colors.inkSecondary,
         )
     }
 }

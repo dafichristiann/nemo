@@ -6,83 +6,67 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 
 /**
- * Anchor is **light-first, monochrome** (docs 06-design-system.md §1, §2).
- *
- * The token→Material mapping follows 06-design-system.md §10, e.g.
- * `ink #0A0A0A → onSurface`, `surface #FFFFFF → background/surface`,
- * `surface-sunken #F8F8F8 → surfaceVariant`.
+ * NEMO spacing data holder (mirrors docs/superpowers/newdesign/nemo-design-kit/nemo-kit
+ * design-spec.md §5). Screens may read this via [Nemo.spacing] or use [Spacing] directly.
  */
-private val AnchorLightColorScheme = lightColorScheme(
-    primary = AnchorColors.ink,
-    onPrimary = AnchorColors.surface,
-    primaryContainer = AnchorColors.inkAlt,
-    onPrimaryContainer = AnchorColors.surface,
-
-    secondary = AnchorColors.textSecondary,
-    onSecondary = AnchorColors.surface,
-
-    background = AnchorColors.surface,
-    onBackground = AnchorColors.textPrimary,
-    surface = AnchorColors.surface,
-    onSurface = AnchorColors.ink,
-    surfaceVariant = AnchorColors.surfaceSunken,
-    onSurfaceVariant = AnchorColors.textSecondaryAlt,
-
-    outline = AnchorColors.border,
-    outlineVariant = AnchorColors.borderSoft,
-
-    error = AnchorColors.accentDanger,
-    onError = AnchorColors.surface,
-    errorContainer = AnchorColors.dangerSurface,
-    onErrorContainer = AnchorColors.accentDanger,
+data class NemoSpacing(
+    val xs: Dp = 4.dp, val sm: Dp = 8.dp, val md: Dp = 12.dp, val lg: Dp = 16.dp,
+    val xl: Dp = 24.dp, val xxl: Dp = 32.dp, val xxxl: Dp = 48.dp,
+    val screenH: Dp = 24.dp, val section: Dp = 28.dp,
 )
+
+val LocalNemoColors = staticCompositionLocalOf { NemoDay }
+val LocalNemoSpacing = staticCompositionLocalOf { NemoSpacing() }
+
+/** Access point for NEMO tokens: `Nemo.colors`, `Nemo.spacing`. */
+object Nemo {
+    val colors: NemoColors @Composable @ReadOnlyComposable get() = LocalNemoColors.current
+    val spacing: NemoSpacing @Composable @ReadOnlyComposable get() = LocalNemoSpacing.current
+}
 
 /**
- * A dark scheme is not part of the MVP design (monochrome, light-first), but we keep a
- * sensible fallback so the app never renders unstyled if the system is in dark mode.
- */
-private val AnchorDarkColorScheme = darkColorScheme(
-    primary = AnchorColors.surface,
-    onPrimary = AnchorColors.ink,
-    background = AnchorColors.ink,
-    onBackground = AnchorColors.surface,
-    surface = AnchorColors.ink,
-    onSurface = AnchorColors.surface,
-    surfaceVariant = AnchorColors.inkAlt,
-    onSurfaceVariant = AnchorColors.textFaintSoft2,
-    outline = AnchorColors.textStrongAlt,
-    error = AnchorColors.accentDanger,
-    onError = AnchorColors.surface,
-)
-
-/** Soft-3D shadow tokens (docs 06-design-system.md §6). */
-data class AnchorElevation(
-    val card: Int = 6,
-    val cardRaised: Int = 8,
-    val button: Int = 10,
-    val screen: Int = 20,
-    val avatar: Int = 16,
-)
-
-val LocalAnchorElevation = staticCompositionLocalOf { AnchorElevation() }
-
-/**
- * Root theme. Defaults to the light monochrome scheme regardless of system setting
- * (light-first), but can be forced dark if ever needed.
+ * Root theme. NEMO supports a Day and a Night palette and follows the **system** setting
+ * (`design-spec.md` §7 Screens #1 "Ikuti tema sistem"); Night is the recommended theme.
  */
 @Composable
-fun AnchorTheme(
-    darkTheme: Boolean = false && isSystemInDarkTheme(),
+fun NemoTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {
-    val colorScheme = if (darkTheme) AnchorDarkColorScheme else AnchorLightColorScheme
-    CompositionLocalProvider(LocalAnchorElevation provides AnchorElevation()) {
+    val c = if (darkTheme) NemoNight else NemoDay
+    val scheme = if (darkTheme) {
+        darkColorScheme(
+            primary = c.ink, onPrimary = c.onInk,
+            background = c.background, onBackground = c.ink,
+            surface = c.surface, onSurface = c.ink,
+            surfaceVariant = c.fog, onSurfaceVariant = c.inkSecondary,
+            outline = c.line, outlineVariant = c.line,
+            error = c.danger, onError = c.onInk, scrim = c.scrim,
+        )
+    } else {
+        lightColorScheme(
+            primary = c.ink, onPrimary = c.onInk,
+            background = c.background, onBackground = c.ink,
+            surface = c.surface, onSurface = c.ink,
+            surfaceVariant = c.fog, onSurfaceVariant = c.inkSecondary,
+            outline = c.line, outlineVariant = c.line,
+            error = c.danger, onError = c.onInk, scrim = c.scrim,
+        )
+    }
+    CompositionLocalProvider(
+        LocalNemoColors provides c,
+        LocalNemoSpacing provides NemoSpacing(),
+    ) {
         MaterialTheme(
-            colorScheme = colorScheme,
-            typography = AnchorTypography,
+            colorScheme = scheme,
+            typography = NemoTypography,
+            shapes = NemoShapes,
             content = content,
         )
     }

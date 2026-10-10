@@ -33,8 +33,9 @@ import com.anchor.app.R
 import com.anchor.app.core.design.components.Divider
 import com.anchor.app.core.design.components.SectionHeader
 import com.anchor.app.core.design.components.pressable
-import com.anchor.app.core.design.theme.AnchorColors
-import com.anchor.app.core.design.theme.InterFamily
+import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.Nemo
+import com.anchor.app.core.design.theme.PillShape
 import com.anchor.app.core.design.theme.Radius
 import com.anchor.app.core.design.theme.Spacing
 import com.anchor.app.core.domain.model.Insight
@@ -58,7 +59,7 @@ fun InsightsScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(AnchorColors.surface)
+            .background(Nemo.colors.background)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = Spacing.screenHorizontal)
             .padding(top = Spacing.x6, bottom = Spacing.x8),
@@ -66,17 +67,17 @@ fun InsightsScreen(
     ) {
         Text(
             text = stringResource(R.string.insights_title),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.Bold,
             fontSize = 28.sp,
-            color = AnchorColors.textPrimary,
+            color = Nemo.colors.ink,
         )
         state.dateLabel?.let {
             Text(
                 text = it.format(JAVA_DATE) + " — " + stringResource(R.string.insights_day_label),
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontSize = 13.sp,
-                color = AnchorColors.textMuted,
+                color = Nemo.colors.mute,
             )
         }
 
@@ -115,13 +116,13 @@ fun InsightsScreen(
 
         Text(
             text = stringResource(R.string.insights_refresh),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 13.sp,
-            color = AnchorColors.textSecondary,
+            color = Nemo.colors.inkSecondary,
             modifier = Modifier
-                .clip(RoundedCornerShape(Radius.chip))
-                .pressable(shape = RoundedCornerShape(Radius.chip), onClick = viewModel::refresh)
+                .clip(PillShape)
+                .pressable(shape = PillShape, onClick = viewModel::refresh)
                 .padding(horizontal = Spacing.x3, vertical = Spacing.x2),
         )
     }
@@ -154,9 +155,9 @@ private fun InsightBlock(insight: Insight, fromAi: Boolean) {
             text = stringResource(
                 if (fromAi) R.string.insights_source_ai else R.string.insights_source_rule,
             ),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontSize = 11.sp,
-            color = AnchorColors.textFaint,
+            color = Nemo.colors.mute,
         )
     }
 }
@@ -166,24 +167,24 @@ private fun TaggedBlock(tag: String, body: String) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
         Text(
             text = tag,
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.Bold,
             fontSize = 11.sp,
-            color = AnchorColors.textFaint,
+            color = Nemo.colors.mute,
         )
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(Radius.card))
-                .background(AnchorColors.surfaceSunken)
+                .background(Nemo.colors.fog)
                 .padding(Spacing.x4),
         ) {
             Text(
                 text = body,
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = 14.sp,
-                color = AnchorColors.textStrongAlt,
+                color = Nemo.colors.inkSecondary,
             )
         }
     }
@@ -193,9 +194,9 @@ private fun TaggedBlock(tag: String, body: String) {
 private fun PatternLine(text: String) {
     Text(
         text = "· $text",
-        fontFamily = InterFamily,
+        fontFamily = ManropeFamily,
         fontSize = 13.sp,
-        color = AnchorColors.textSecondary,
+        color = Nemo.colors.inkSecondary,
     )
 }
 
@@ -207,16 +208,16 @@ private fun StatRow(label: String, value: String) {
     ) {
         Text(
             text = label,
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontSize = 14.sp,
-            color = AnchorColors.textSecondary,
+            color = Nemo.colors.inkSecondary,
         )
         Text(
             text = value,
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.SemiBold,
             fontSize = 14.sp,
-            color = AnchorColors.textPrimary,
+            color = Nemo.colors.ink,
         )
     }
 }
@@ -234,29 +235,29 @@ private fun EmptyState() {
             modifier = Modifier
                 .size(64.dp)
                 .clip(androidx.compose.foundation.shape.CircleShape)
-                .background(AnchorColors.surfaceMuted),
+                .background(Nemo.colors.fog),
             contentAlignment = androidx.compose.ui.Alignment.Center,
         ) {
             Icon(
                 imageVector = Icons.Rounded.Insights,
                 contentDescription = null,
-                tint = AnchorColors.textFaintAlt,
+                tint = Nemo.colors.mute,
                 modifier = Modifier.size(28.dp),
             )
         }
         Text(
             text = stringResource(R.string.insights_empty_title),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.SemiBold,
             fontSize = 15.sp,
-            color = AnchorColors.textSecondary,
+            color = Nemo.colors.inkSecondary,
             textAlign = TextAlign.Center,
         )
         Text(
             text = stringResource(R.string.insights_empty_body),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontSize = 13.sp,
-            color = AnchorColors.textMuted,
+            color = Nemo.colors.mute,
             textAlign = TextAlign.Center,
         )
     }

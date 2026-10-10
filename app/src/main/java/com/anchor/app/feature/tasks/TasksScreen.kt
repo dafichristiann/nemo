@@ -37,7 +37,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -54,15 +53,15 @@ import com.anchor.app.R
 import com.anchor.app.core.common.DateTimeFormatter
 import com.anchor.app.core.design.components.AddTaskFab
 import com.anchor.app.core.design.components.Banner
-import com.anchor.app.core.design.components.TextPill
+import com.anchor.app.core.design.components.NemoPill
 import com.anchor.app.core.design.components.minTouchTarget
 import com.anchor.app.core.design.components.pressable
-import com.anchor.app.core.design.theme.AnchorColors
-import com.anchor.app.core.design.theme.AnchorElevation
-import com.anchor.app.core.design.theme.AnchorTheme
-import com.anchor.app.core.design.theme.InterFamily
-import com.anchor.app.core.design.theme.LocalAnchorElevation
+import com.anchor.app.core.design.theme.FrauncesFamily
+import com.anchor.app.core.design.theme.ManropeFamily
 import com.anchor.app.core.design.theme.Motion
+import com.anchor.app.core.design.theme.Nemo
+import com.anchor.app.core.design.theme.NemoTheme
+import com.anchor.app.core.design.theme.PillShape
 import com.anchor.app.core.design.theme.Radius
 import com.anchor.app.core.design.theme.Spacing
 import com.anchor.app.core.domain.model.Task
@@ -96,7 +95,7 @@ fun TasksScreen(
     var bannerDismissed by remember { mutableStateOf(false) }
     var rescheduling by remember { mutableStateOf<TaskRowUi?>(null) }
 
-    Box(modifier = modifier.fillMaxSize().background(AnchorColors.surface)) {
+    Box(modifier = modifier.fillMaxSize().background(Nemo.colors.background)) {
         Column(modifier = Modifier.fillMaxSize()) {
             LazyColumn(
                 modifier = Modifier.weight(1f).fillMaxWidth(),
@@ -236,32 +235,32 @@ private fun HomeHeader(state: TasksUiState, onOpenSettings: () -> Unit) {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.x1)) {
                 Text(
                     text = greeting,
-                    fontFamily = InterFamily,
-                    fontWeight = FontWeight.Bold,
+                    fontFamily = FrauncesFamily,
+                    fontWeight = FontWeight.Normal,
                     fontSize = 30.sp,
                     letterSpacing = (-0.5).sp,
-                    color = AnchorColors.textPrimary,
+                    color = Nemo.colors.ink,
                 )
                 Text(
                     text = stringResource(R.string.home_subtitle_plan),
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontWeight = FontWeight.Normal,
                     fontSize = 14.sp,
-                    color = AnchorColors.textMuted,
+                    color = Nemo.colors.mute,
                 )
             }
             Box(
                 modifier = Modifier
                     .minTouchTarget()
                     .clip(CircleShape)
-                    .border(1.dp, AnchorColors.border, CircleShape)
+                    .border(1.dp, Nemo.colors.line, CircleShape)
                     .pressable(shape = CircleShape, onClick = onOpenSettings),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Tune,
                     contentDescription = stringResource(R.string.settings_open),
-                    tint = AnchorColors.textStrongAlt,
+                    tint = Nemo.colors.inkSecondary,
                     modifier = Modifier.size(20.dp),
                 )
             }
@@ -288,15 +287,15 @@ private fun WeekStrip(today: LocalDate) {
         days.forEach { date ->
             val isToday = date == today
             val bg by animateColorAsState(
-                targetValue = if (isToday) AnchorColors.ink else Color.Transparent,
+                targetValue = if (isToday) Nemo.colors.ink else Color.Transparent,
                 animationSpec = Motion.standardSpec(),
                 label = "day-bg",
             )
-            val fg = if (isToday) AnchorColors.surface else AnchorColors.textMutedAlt
+            val fg = if (isToday) Nemo.colors.onInk else Nemo.colors.mute
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(Radius.chip))
+                    .clip(PillShape)
                     .background(bg)
                     .padding(vertical = Spacing.x2),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -304,7 +303,7 @@ private fun WeekStrip(today: LocalDate) {
             ) {
                 Text(
                     text = date.dayOfWeekLabel(),
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontWeight = FontWeight.Medium,
                     fontSize = 10.sp,
                     letterSpacing = 0.5.sp,
@@ -312,7 +311,7 @@ private fun WeekStrip(today: LocalDate) {
                 )
                 Text(
                     text = date.dayOfMonth.toString(),
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontWeight = if (isToday) FontWeight.Bold else FontWeight.SemiBold,
                     fontSize = 15.sp,
                     color = fg,
@@ -331,7 +330,6 @@ private fun LocalDate.dayOfWeekLabel(): String = dayOfWeek.name.take(1)
  */
 @Composable
 private fun SummaryCard(completed: Int, total: Int) {
-    val elevation: AnchorElevation = LocalAnchorElevation.current
     val fraction = if (total == 0) 0f else completed.toFloat() / total
     val percent = Math.round(fraction * 100f)
     val animatedFraction by animateFloatAsState(
@@ -343,14 +341,8 @@ private fun SummaryCard(completed: Int, total: Int) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(
-                elevation = elevation.card.dp,
-                shape = RoundedCornerShape(Radius.card),
-                ambientColor = Color.Black.copy(alpha = 0.05f),
-                spotColor = Color.Black.copy(alpha = 0.05f),
-            )
             .clip(RoundedCornerShape(Radius.card))
-            .background(AnchorColors.surfaceCard)
+            .background(Nemo.colors.surface)
             .padding(horizontal = Spacing.cardHorizontal, vertical = Spacing.x5),
         verticalArrangement = Arrangement.spacedBy(Spacing.x3),
     ) {
@@ -362,26 +354,26 @@ private fun SummaryCard(completed: Int, total: Int) {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.x1)) {
                 Text(
                     text = stringResource(R.string.home_progress_title),
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 13.sp,
-                    color = AnchorColors.textMutedAlt,
+                    color = Nemo.colors.mute,
                 )
                 Text(
                     text = stringResource(R.string.home_progress_count, completed, total),
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontWeight = FontWeight.Normal,
                     fontSize = 12.sp,
-                    color = AnchorColors.textMuted,
+                    color = Nemo.colors.mute,
                 )
             }
             Text(
                 text = stringResource(R.string.home_progress_percent, percent),
-                fontFamily = InterFamily,
-                fontWeight = FontWeight.Bold,
+                fontFamily = FrauncesFamily,
+                fontWeight = FontWeight.Light,
                 fontSize = 34.sp,
                 letterSpacing = (-1).sp,
-                color = AnchorColors.textPrimary,
+                color = Nemo.colors.ink,
             )
         }
         // Hairline track with a smooth sweep.
@@ -390,7 +382,7 @@ private fun SummaryCard(completed: Int, total: Int) {
                 .fillMaxWidth()
                 .height(4.dp)
                 .clip(RoundedCornerShape(Radius.track))
-                .background(AnchorColors.track),
+                .background(Nemo.colors.fog),
         ) {
             if (animatedFraction > 0f) {
                 Box(
@@ -398,7 +390,7 @@ private fun SummaryCard(completed: Int, total: Int) {
                         .fillMaxWidth(animatedFraction)
                         .height(4.dp)
                         .clip(RoundedCornerShape(Radius.track))
-                        .background(AnchorColors.ink),
+                        .background(Nemo.colors.ink),
                 )
             }
         }
@@ -420,8 +412,8 @@ private fun FilterSegmented(selected: TaskFilter, onSelect: (TaskFilter) -> Unit
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(Radius.button))
-            .background(AnchorColors.surfaceMuted)
+            .clip(PillShape)
+            .background(Nemo.colors.fog)
             .horizontalScroll(rememberScrollState())
             .padding(Spacing.x1),
         horizontalArrangement = Arrangement.spacedBy(Spacing.x1),
@@ -429,21 +421,21 @@ private fun FilterSegmented(selected: TaskFilter, onSelect: (TaskFilter) -> Unit
         tabs.forEach { (filter, labelRes) ->
             val isSelected = filter == selected
             val bg by animateColorAsState(
-                targetValue = if (isSelected) AnchorColors.ink else Color.Transparent,
+                targetValue = if (isSelected) Nemo.colors.ink else Color.Transparent,
                 animationSpec = Motion.standardSpec(),
                 label = "seg-bg",
             )
             val fg by animateColorAsState(
-                targetValue = if (isSelected) AnchorColors.surface else AnchorColors.textMuted,
+                targetValue = if (isSelected) Nemo.colors.onInk else Nemo.colors.mute,
                 animationSpec = Motion.standardSpec(),
                 label = "seg-fg",
             )
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(Radius.field))
+                    .clip(PillShape)
                     .background(bg)
                     .pressable(
-                        shape = RoundedCornerShape(Radius.field),
+                        shape = PillShape,
                         pressedScale = 0.97f,
                         onClick = { onSelect(filter) },
                     )
@@ -452,7 +444,7 @@ private fun FilterSegmented(selected: TaskFilter, onSelect: (TaskFilter) -> Unit
             ) {
                 Text(
                     text = stringResource(labelRes),
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                     fontSize = 12.sp,
                     color = fg,
@@ -490,10 +482,10 @@ private fun TimelineTaskRow(
         ) {
             Text(
                 text = row.task.title,
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 15.sp,
-                color = if (row.task.isDone) AnchorColors.textMuted else AnchorColors.textPrimary,
+                color = if (row.task.isDone) Nemo.colors.mute else Nemo.colors.ink,
                 textDecoration = if (row.task.isDone) TextDecoration.LineThrough else null,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
@@ -502,10 +494,10 @@ private fun TimelineTaskRow(
             if (metaLine.isNotBlank()) {
                 Text(
                     text = metaLine,
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontWeight = FontWeight.Normal,
                     fontSize = 12.sp,
-                    color = AnchorColors.textMuted,
+                    color = Nemo.colors.mute,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -531,17 +523,17 @@ private fun TimelineNode(done: Boolean) {
                 .clip(CircleShape)
                 .border(
                     width = 1.5.dp,
-                    color = if (done) AnchorColors.ink else AnchorColors.borderSoftAlt,
+                    color = if (done) Nemo.colors.ink else Nemo.colors.line,
                     shape = CircleShape,
                 )
-                .background(if (done) AnchorColors.ink else Color.Transparent),
+                .background(if (done) Nemo.colors.ink else Color.Transparent),
             contentAlignment = Alignment.Center,
         ) {
             if (done) {
                 Icon(
                     imageVector = Icons.Rounded.Check,
                     contentDescription = null,
-                    tint = AnchorColors.surface,
+                    tint = Nemo.colors.onInk,
                     modifier = Modifier.size(11.dp),
                 )
             }
@@ -553,7 +545,7 @@ private fun TimelineNode(done: Boolean) {
                 .width(1.5.dp)
                 .height(20.dp)
                 .clip(RoundedCornerShape(Radius.track))
-                .background(AnchorColors.borderSoft),
+                .background(Nemo.colors.line),
         )
     }
 }
@@ -588,7 +580,7 @@ private fun PriorityPill(priority: TaskPriority) {
         TaskPriority.HIGH -> R.string.task_priority_high
         TaskPriority.URGENT -> R.string.task_priority_urgent
     }
-    TextPill(text = stringResource(labelRes), highlighted = priority == TaskPriority.HIGH)
+    NemoPill(text = stringResource(labelRes), highlighted = priority == TaskPriority.HIGH)
 }
 
 @Composable
@@ -597,26 +589,26 @@ private fun OverdueBanner(count: Int, onReview: () -> Unit, onDismiss: () -> Uni
     Banner {
         Text(
             text = title,
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 14.sp,
-            color = AnchorColors.textStrongAlt,
+            color = Nemo.colors.inkSecondary,
         )
         Spacer(modifier = Modifier.height(Spacing.x3))
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.x2)) {
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(Radius.chip))
-                    .border(1.dp, AnchorColors.border, RoundedCornerShape(Radius.chip))
-                    .pressable(shape = RoundedCornerShape(Radius.chip), onClick = onReview)
+                    .clip(PillShape)
+                    .border(1.dp, Nemo.colors.line, PillShape)
+                    .pressable(shape = PillShape, onClick = onReview)
                     .padding(horizontal = Spacing.x4, vertical = Spacing.x2),
             ) {
                 Text(
                     text = stringResource(R.string.overdue_banner_review),
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 13.sp,
-                    color = AnchorColors.textPrimary,
+                    color = Nemo.colors.ink,
                 )
             }
             SmallAction(stringResource(R.string.overdue_action_dismiss), onDismiss)
@@ -652,17 +644,17 @@ private fun OverdueTaskRow(
 private fun SmallAction(label: String, onClick: () -> Unit) {
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(Radius.chip))
-            .background(AnchorColors.surfaceMuted)
-            .pressable(shape = RoundedCornerShape(Radius.chip), onClick = onClick)
+            .clip(PillShape)
+            .background(Nemo.colors.fog)
+            .pressable(shape = PillShape, onClick = onClick)
             .padding(horizontal = Spacing.x3, vertical = Spacing.x2),
     ) {
         Text(
             text = label,
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 12.sp,
-            color = AnchorColors.textSecondary,
+            color = Nemo.colors.inkSecondary,
         )
     }
 }
@@ -680,41 +672,42 @@ private fun EmptyState() {
             modifier = Modifier
                 .size(72.dp)
                 .clip(CircleShape)
-                .border(1.dp, AnchorColors.border, CircleShape),
+                .border(1.dp, Nemo.colors.line, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = Icons.Rounded.Checklist,
                 contentDescription = null,
-                tint = AnchorColors.textFaintAlt,
+                tint = Nemo.colors.mute,
                 modifier = Modifier.size(30.dp),
             )
         }
         Text(
             text = stringResource(R.string.home_empty_title),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.SemiBold,
             fontSize = 16.sp,
-            color = AnchorColors.textPrimary,
+            color = Nemo.colors.ink,
             textAlign = TextAlign.Center,
         )
         Text(
             text = stringResource(R.string.home_empty_body),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.Normal,
             fontSize = 13.sp,
-            color = AnchorColors.textMuted,
+            color = Nemo.colors.mute,
             textAlign = TextAlign.Center,
         )
     }
 }
 
 /** Priority → soft left-bar color. Never a glowing red (06-design-system.md §2.3). */
+@Composable
 private fun TaskPriority.barColor(): Color = when (this) {
-    TaskPriority.URGENT -> AnchorColors.textStrongAlt
-    TaskPriority.HIGH -> AnchorColors.textSecondary
-    TaskPriority.MEDIUM -> AnchorColors.textMutedAlt
-    TaskPriority.LOW -> AnchorColors.border
+    TaskPriority.URGENT -> Nemo.colors.inkSecondary
+    TaskPriority.HIGH -> Nemo.colors.inkSecondary
+    TaskPriority.MEDIUM -> Nemo.colors.mute
+    TaskPriority.LOW -> Nemo.colors.line
 }
 
 /**
@@ -730,10 +723,10 @@ internal fun RoundCheckbox(checked: Boolean, onToggle: () -> Unit, modifier: Mod
             .clip(CircleShape)
             .border(
                 width = 1.5.dp,
-                color = if (checked) AnchorColors.ink else AnchorColors.border,
+                color = if (checked) Nemo.colors.ink else Nemo.colors.line,
                 shape = CircleShape,
             )
-            .background(if (checked) AnchorColors.ink else Color.Transparent)
+            .background(if (checked) Nemo.colors.ink else Color.Transparent)
             .pressable(shape = CircleShape, onClick = onToggle),
         contentAlignment = Alignment.Center,
     ) {
@@ -741,7 +734,7 @@ internal fun RoundCheckbox(checked: Boolean, onToggle: () -> Unit, modifier: Mod
             Icon(
                 imageVector = Icons.Rounded.Check,
                 contentDescription = null,
-                tint = AnchorColors.surface,
+                tint = Nemo.colors.onInk,
                 modifier = Modifier.size(14.dp),
             )
         }
@@ -751,5 +744,5 @@ internal fun RoundCheckbox(checked: Boolean, onToggle: () -> Unit, modifier: Mod
 @Preview(showBackground = true)
 @Composable
 private fun SummaryCardPreview() {
-    AnchorTheme { SummaryCard(completed = 2, total = 5) }
+    NemoTheme { SummaryCard(completed = 2, total = 5) }
 }

@@ -17,8 +17,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
-import com.anchor.app.core.design.theme.AnchorColors
-import com.anchor.app.core.design.theme.InterFamily
+import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.Nemo
 
 /**
  * Renders an app's launcher icon (from a [Drawable]) as a small rounded square, with a
@@ -54,15 +54,15 @@ fun AppIcon(
             modifier = modifier
                 .size(size.dp)
                 .clip(shape)
-                .background(AnchorColors.surfaceMuted),
+                .background(Nemo.colors.fog),
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = fallbackLabel.take(1).uppercase(),
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
-                color = AnchorColors.textStrongAlt,
+                color = Nemo.colors.inkSecondary,
             )
         }
     }

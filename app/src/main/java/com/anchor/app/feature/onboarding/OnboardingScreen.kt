@@ -61,13 +61,14 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.anchor.app.R
 import com.anchor.app.core.design.components.Banner
+import com.anchor.app.core.design.components.NemoPill
 import com.anchor.app.core.design.components.PrimaryButton
 import com.anchor.app.core.design.components.ProgressTrack
 import com.anchor.app.core.design.components.SectionHeader
 import com.anchor.app.core.design.components.SegmentedChips
-import com.anchor.app.core.design.components.TextPill
-import com.anchor.app.core.design.theme.AnchorColors
-import com.anchor.app.core.design.theme.InterFamily
+import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.Nemo
+import com.anchor.app.core.design.theme.PillShape
 import com.anchor.app.core.design.theme.Radius
 import com.anchor.app.core.design.theme.Spacing
 import com.anchor.app.core.domain.model.AppSettings
@@ -124,7 +125,7 @@ fun PermissionOnboardingScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(AnchorColors.surface)
+            .background(Nemo.colors.background)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = Spacing.screenHorizontal)
             .padding(vertical = Spacing.x6),
@@ -132,26 +133,26 @@ fun PermissionOnboardingScreen(
     ) {
         Text(
             text = stringResource(R.string.onboarding_perm_step, 3, 3),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 12.sp,
-            color = AnchorColors.textMutedAlt,
+            color = Nemo.colors.mute,
         )
         ProgressTrack(progress = 1f)
 
         Text(
             text = stringResource(R.string.onboarding_perm_headline),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.Bold,
             fontSize = 28.sp,
-            color = AnchorColors.textPrimary,
+            color = Nemo.colors.ink,
         )
         Text(
             text = stringResource(R.string.onboarding_perm_sub),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontSize = 14.sp,
             lineHeight = 20.sp,
-            color = AnchorColors.textSecondary,
+            color = Nemo.colors.inkSecondary,
         )
 
         PermissionCard(
@@ -178,15 +179,15 @@ fun PermissionOnboardingScreen(
                 Icon(
                     imageVector = Icons.Rounded.Lock,
                     contentDescription = null,
-                    tint = AnchorColors.textSecondary,
+                    tint = Nemo.colors.inkSecondary,
                     modifier = Modifier.size(18.dp),
                 )
                 Spacer(modifier = Modifier.width(Spacing.x2))
                 Text(
                     text = stringResource(R.string.onboarding_privacy_card),
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontSize = 13.sp,
-                    color = AnchorColors.textSecondary,
+                    color = Nemo.colors.inkSecondary,
                 )
             }
         }
@@ -197,10 +198,10 @@ fun PermissionOnboardingScreen(
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             Text(
                 text = stringResource(R.string.onboarding_skip_for_now),
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = 14.sp,
-                color = AnchorColors.textMuted,
+                color = Nemo.colors.mute,
                 modifier = Modifier.clickable(onClick = onSkip),
             )
         }
@@ -227,7 +228,7 @@ fun ProfileSetupScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(AnchorColors.surface)
+            .background(Nemo.colors.background)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = Spacing.screenHorizontal)
             .padding(vertical = Spacing.x6),
@@ -235,26 +236,26 @@ fun ProfileSetupScreen(
     ) {
         Text(
             text = stringResource(R.string.onboarding_profile_step, 2, 3),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 12.sp,
-            color = AnchorColors.textMutedAlt,
+            color = Nemo.colors.mute,
         )
         ProgressTrack(progress = 2f / 3f)
 
         Text(
             text = stringResource(R.string.onboarding_profile_headline),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.Bold,
             fontSize = 28.sp,
-            color = AnchorColors.textPrimary,
+            color = Nemo.colors.ink,
         )
         Text(
             text = stringResource(R.string.onboarding_profile_sub),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontSize = 14.sp,
             lineHeight = 20.sp,
-            color = AnchorColors.textSecondary,
+            color = Nemo.colors.inkSecondary,
         )
 
         // Field 1 — nickname (personalizes the mascot greeting).
@@ -297,10 +298,10 @@ fun ProfileSetupScreen(
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             Text(
                 text = stringResource(R.string.onboarding_profile_skip),
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = 14.sp,
-                color = AnchorColors.textMuted,
+                color = Nemo.colors.mute,
                 modifier = Modifier.clickable(onClick = onSkip),
             )
         }
@@ -339,25 +340,25 @@ private fun NicknameField(
         placeholder = {
             Text(
                 text = hint,
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontSize = 14.sp,
-                color = AnchorColors.textFaint,
+                color = Nemo.colors.mute,
             )
         },
         textStyle = androidx.compose.ui.text.TextStyle(
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontSize = 14.sp,
-            color = AnchorColors.textPrimary,
+            color = Nemo.colors.ink,
         ),
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(onDone = { keyboard?.hide() }),
         shape = RoundedCornerShape(Radius.field),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = AnchorColors.surfaceSunken,
-            unfocusedContainerColor = AnchorColors.surfaceSunken,
-            focusedBorderColor = AnchorColors.ink,
-            unfocusedBorderColor = AnchorColors.border,
-            cursorColor = AnchorColors.ink,
+            focusedContainerColor = Nemo.colors.fog,
+            unfocusedContainerColor = Nemo.colors.fog,
+            focusedBorderColor = Nemo.colors.ink,
+            unfocusedBorderColor = Nemo.colors.line,
+            cursorColor = Nemo.colors.ink,
         ),
     )
 }
@@ -412,33 +413,33 @@ private fun PermissionCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(Radius.card))
-            .border(1.dp, AnchorColors.border, RoundedCornerShape(Radius.card))
-            .background(AnchorColors.surfaceCard)
+            .border(1.dp, Nemo.colors.line, RoundedCornerShape(Radius.card))
+            .background(Nemo.colors.surface)
             .padding(Spacing.cardHorizontal),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.x1)) {
-            Text(text = title, fontFamily = InterFamily, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = AnchorColors.textPrimary)
-            Text(text = subtitle, fontFamily = InterFamily, fontSize = 12.sp, color = AnchorColors.textMuted)
+            Text(text = title, fontFamily = ManropeFamily, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Nemo.colors.ink)
+            Text(text = subtitle, fontFamily = ManropeFamily, fontSize = 12.sp, color = Nemo.colors.mute)
         }
         Spacer(modifier = Modifier.width(Spacing.x2))
         if (granted) {
-            TextPill(text = stringResource(R.string.onboarding_perm_enabled), highlighted = true)
+            NemoPill(text = stringResource(R.string.onboarding_perm_enabled), highlighted = true)
         } else {
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(Radius.chip))
-                    .background(AnchorColors.ink)
+                    .clip(PillShape)
+                    .background(Nemo.colors.ink)
                     .clickable(onClick = onEnable)
                     .padding(horizontal = Spacing.x3, vertical = Spacing.x2),
             ) {
                 Text(
                     text = stringResource(R.string.onboarding_perm_enable),
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 12.sp,
-                    color = AnchorColors.surface,
+                    color = Nemo.colors.onInk,
                 )
             }
         }

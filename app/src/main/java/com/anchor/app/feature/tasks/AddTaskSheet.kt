@@ -38,15 +38,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.anchor.app.R
-import com.anchor.app.core.design.components.AnchorBottomSheet
-import com.anchor.app.core.design.components.AnchorSwitch
+import com.anchor.app.core.design.components.NemoBottomSheet
+import com.anchor.app.core.design.components.NemoSwitch
 import com.anchor.app.core.design.components.PrimaryButton
 import com.anchor.app.core.design.components.SegmentedChips
 import com.anchor.app.core.design.components.WheelPickerDialog
 import com.anchor.app.core.design.components.minTouchTarget
 import com.anchor.app.core.design.components.pressable
-import com.anchor.app.core.design.theme.AnchorColors
-import com.anchor.app.core.design.theme.InterFamily
+import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.Nemo
 import com.anchor.app.core.design.theme.Radius
 import com.anchor.app.core.design.theme.Spacing
 import com.anchor.app.core.domain.model.RecurrenceRule
@@ -95,7 +95,7 @@ fun AddTaskSheet(
     var subtaskInput by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<CreateTaskResult?>(null) }
 
-    AnchorBottomSheet(onDismissRequest = onDismiss) {
+    NemoBottomSheet(onDismissRequest = onDismiss) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -112,15 +112,15 @@ fun AddTaskSheet(
             ) {
                 Text(
                     text = stringResource(R.string.add_task_title),
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
-                    color = AnchorColors.textPrimary,
+                    color = Nemo.colors.ink,
                 )
                 Icon(
                     imageVector = Icons.Rounded.Close,
                     contentDescription = stringResource(R.string.cd_close_sheet),
-                    tint = AnchorColors.textMuted,
+                    tint = Nemo.colors.mute,
                     modifier = Modifier
                         .minTouchTarget()
                         .clip(CircleShape)
@@ -172,7 +172,7 @@ fun AddTaskSheet(
                         .fillMaxWidth()
                         .heightIn(min = 48.dp)
                         .clip(RoundedCornerShape(Radius.field))
-                        .background(AnchorColors.surfaceSunken)
+                        .background(Nemo.colors.fog)
                         .pressable(
                             shape = RoundedCornerShape(Radius.field),
                             onClick = { dialogOpen = true },
@@ -183,16 +183,16 @@ fun AddTaskSheet(
                 ) {
                     Text(
                         text = displayText,
-                        fontFamily = InterFamily,
+                        fontFamily = ManropeFamily,
                         fontSize = 14.sp,
-                        color = if (deadlineHours == null) AnchorColors.textFaint else AnchorColors.textPrimary,
+                        color = if (deadlineHours == null) Nemo.colors.placeholder else Nemo.colors.ink,
                     )
                     Text(
                         text = stringResource(R.string.add_task_duration_choose),
-                        fontFamily = InterFamily,
+                        fontFamily = ManropeFamily,
                         fontWeight = FontWeight.Medium,
                         fontSize = 12.sp,
-                        color = AnchorColors.textMuted,
+                        color = Nemo.colors.mute,
                     )
                 }
 
@@ -237,7 +237,7 @@ fun AddTaskSheet(
                         .fillMaxWidth()
                         .heightIn(min = 48.dp)
                         .clip(RoundedCornerShape(Radius.field))
-                        .background(AnchorColors.surfaceSunken)
+                        .background(Nemo.colors.fog)
                         .pressable(
                             shape = RoundedCornerShape(Radius.field),
                             onClick = { dialogOpen = true },
@@ -248,16 +248,16 @@ fun AddTaskSheet(
                 ) {
                     Text(
                         text = displayText,
-                        fontFamily = InterFamily,
+                        fontFamily = ManropeFamily,
                         fontSize = 14.sp,
-                        color = if (durationMinutes == null) AnchorColors.textFaint else AnchorColors.textPrimary,
+                        color = if (durationMinutes == null) Nemo.colors.placeholder else Nemo.colors.ink,
                     )
                     Text(
                         text = stringResource(R.string.add_task_duration_choose),
-                        fontFamily = InterFamily,
+                        fontFamily = ManropeFamily,
                         fontWeight = FontWeight.Medium,
                         fontSize = 12.sp,
-                        color = AnchorColors.textMuted,
+                        color = Nemo.colors.mute,
                     )
                 }
 
@@ -296,15 +296,15 @@ fun AddTaskSheet(
                         ) {
                             Text(
                                 text = "• $sub",
-                                fontFamily = InterFamily,
+                                fontFamily = ManropeFamily,
                                 fontSize = 13.sp,
-                                color = AnchorColors.textSecondary,
+                                color = Nemo.colors.inkSecondary,
                                 modifier = Modifier.weight(1f),
                             )
                             Icon(
                                 imageVector = Icons.Rounded.Close,
                                 contentDescription = null,
-                                tint = AnchorColors.textFaint,
+                                tint = Nemo.colors.placeholder,
                                 modifier = Modifier
                                     .width(16.dp)
                                     .clickable { subtasks.removeAt(index) },
@@ -329,10 +329,10 @@ fun AddTaskSheet(
                         }) {
                             Text(
                                 text = stringResource(R.string.add_task_subtask_add),
-                                fontFamily = InterFamily,
+                                fontFamily = ManropeFamily,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 13.sp,
-                                color = AnchorColors.ink,
+                                color = Nemo.colors.ink,
                             )
                         }
                     }
@@ -342,9 +342,9 @@ fun AddTaskSheet(
             if (error is CreateTaskResult.EmptyTitle) {
                 Text(
                     text = stringResource(R.string.home_empty_title),
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontSize = 12.sp,
-                    color = AnchorColors.accentDanger,
+                    color = Nemo.colors.danger,
                 )
             }
 
@@ -382,10 +382,10 @@ private fun LabeledSection(label: String, content: @Composable () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
         Text(
             text = label,
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.SemiBold,
             fontSize = 12.sp,
-            color = AnchorColors.textMutedAlt,
+            color = Nemo.colors.mute,
         )
         content()
     }
@@ -403,16 +403,16 @@ private fun Field(
             .fillMaxWidth()
             .height(48.dp)
             .clip(RoundedCornerShape(Radius.field))
-            .background(AnchorColors.surfaceSunken)
+            .background(Nemo.colors.fog)
             .padding(horizontal = Spacing.x4),
         contentAlignment = Alignment.CenterStart,
     ) {
         if (value.isEmpty()) {
             Text(
                 text = hint,
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontSize = 14.sp,
-                color = AnchorColors.textFaint,
+                color = Nemo.colors.placeholder,
             )
         }
         BasicTextField(
@@ -420,9 +420,9 @@ private fun Field(
             onValueChange = onValueChange,
             singleLine = true,
             textStyle = TextStyle(
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontSize = 14.sp,
-                color = AnchorColors.textPrimary,
+                color = Nemo.colors.ink,
             ),
             modifier = Modifier.fillMaxWidth(),
         )
@@ -437,7 +437,7 @@ fun ToggleRow(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Uni
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(text = label, fontFamily = InterFamily, fontSize = 14.sp, color = AnchorColors.textPrimary)
-        AnchorSwitch(checked = checked, onCheckedChange = onCheckedChange)
+        Text(text = label, fontFamily = ManropeFamily, fontSize = 14.sp, color = Nemo.colors.ink)
+        NemoSwitch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }

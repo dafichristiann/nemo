@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -13,7 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
@@ -22,10 +22,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.anchor.app.core.design.theme.AnchorColors
-import com.anchor.app.core.design.theme.AnchorTheme
-import com.anchor.app.core.design.theme.InterFamily
+import com.anchor.app.core.design.theme.FrauncesFamily
 import com.anchor.app.core.design.theme.Motion
+import com.anchor.app.core.design.theme.Nemo
+import com.anchor.app.core.design.theme.NemoTheme
 
 /**
  * Ring Timer for Focus Active (docs/superpowers/design/06-design-system.md §7.13).
@@ -55,6 +55,9 @@ fun TimerRing(
         label = "timer-ring-progress",
     )
 
+    val ringInk = Nemo.colors.ink
+    val ringTrack = Nemo.colors.fog
+
     Box(
         modifier = modifier.size(diameter),
         contentAlignment = Alignment.Center,
@@ -67,7 +70,7 @@ fun TimerRing(
             // Soft outer glow ring (very low alpha — §7.13 "glow sangat halus"). Kept only
             // slightly larger than the stroke so it reads as a faint halo, not a heavy band.
             drawArc(
-                color = AnchorColors.ink.copy(alpha = 0.035f),
+                color = ringInk.copy(alpha = 0.035f),
                 startAngle = -90f,
                 sweepAngle = 360f,
                 useCenter = false,
@@ -78,7 +81,7 @@ fun TimerRing(
 
             // Track.
             drawArc(
-                color = AnchorColors.track,
+                color = ringTrack,
                 startAngle = -90f,
                 sweepAngle = 360f,
                 useCenter = false,
@@ -91,7 +94,7 @@ fun TimerRing(
             // visible at the very start so the arc never disappears entirely.
             if (animated > 0f) {
                 drawArc(
-                    color = AnchorColors.ink,
+                    color = ringInk,
                     startAngle = -90f,
                     sweepAngle = 360f * animated.coerceAtLeast(0.02f),
                     useCenter = false,
@@ -108,19 +111,17 @@ fun TimerRing(
         ) {
             Text(
                 text = time,
-                fontFamily = InterFamily,
-                fontWeight = FontWeight.Bold,
+                fontFamily = FrauncesFamily,
+                fontWeight = FontWeight.Light,
                 fontSize = 48.sp,
-                color = AnchorColors.textPrimary,
+                color = Nemo.colors.ink,
                 textAlign = TextAlign.Center,
             )
             if (subLabel != null) {
                 Text(
                     text = subLabel,
-                    fontFamily = InterFamily,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 12.sp,
-                    color = AnchorColors.textMuted,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Nemo.colors.mute,
                     textAlign = TextAlign.Center,
                 )
             }
@@ -131,7 +132,7 @@ fun TimerRing(
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 private fun TimerRingPreview() {
-    AnchorTheme {
+    NemoTheme {
         TimerRing(progress = 0.65f, time = "19:22", subLabel = "remaining")
     }
 }

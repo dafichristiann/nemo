@@ -31,8 +31,10 @@ import com.anchor.app.R
 import com.anchor.app.core.design.components.PrimaryButton
 import com.anchor.app.core.design.components.SectionHeader
 import com.anchor.app.core.design.components.pressable
-import com.anchor.app.core.design.theme.AnchorColors
-import com.anchor.app.core.design.theme.InterFamily
+import com.anchor.app.core.design.theme.FrauncesFamily
+import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.Nemo
+import com.anchor.app.core.design.theme.PillShape
 import com.anchor.app.core.design.theme.Radius
 import com.anchor.app.core.design.theme.Spacing
 import com.anchor.app.core.domain.model.DominoEffect
@@ -65,7 +67,7 @@ fun FutureViewScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(AnchorColors.surface)
+            .background(Nemo.colors.background)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = Spacing.screenHorizontal)
             .padding(top = Spacing.x6, bottom = Spacing.x8),
@@ -73,9 +75,9 @@ fun FutureViewScreen(
     ) {
         Row(
             modifier = Modifier
-                .clip(RoundedCornerShape(Radius.chip))
+                .clip(PillShape)
                 .pressable(
-                    shape = RoundedCornerShape(Radius.chip),
+                    shape = PillShape,
                     pressedScale = 0.96f,
                     onClick = onBack,
                 )
@@ -86,30 +88,30 @@ fun FutureViewScreen(
             Icon(
                 imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                 contentDescription = stringResource(R.string.detail_back),
-                tint = AnchorColors.textPrimary,
+                tint = Nemo.colors.ink,
                 modifier = Modifier.size(20.dp),
             )
             Text(
                 text = stringResource(R.string.detail_back),
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp,
-                color = AnchorColors.textPrimary,
+                color = Nemo.colors.ink,
             )
         }
 
         Text(
             text = stringResource(R.string.future_title),
-            fontFamily = InterFamily,
-            fontWeight = FontWeight.Bold,
+            fontFamily = FrauncesFamily,
+            fontWeight = FontWeight.Normal,
             fontSize = 26.sp,
-            color = AnchorColors.textPrimary,
+            color = Nemo.colors.ink,
         )
         Text(
             text = stringResource(R.string.future_disclaimer),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontSize = 13.sp,
-            color = AnchorColors.textSecondary,
+            color = Nemo.colors.inkSecondary,
         )
 
         val view = state.futureView
@@ -152,16 +154,16 @@ private fun ScenarioCard(label: String, scenario: FutureScenario, zone: ZoneId) 
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(Radius.card))
-            .background(AnchorColors.surfaceSunken)
+            .background(Nemo.colors.fog)
             .padding(Spacing.x4),
         verticalArrangement = Arrangement.spacedBy(Spacing.x2),
     ) {
         Text(
             text = label,
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.Bold,
             fontSize = 14.sp,
-            color = AnchorColors.textPrimary,
+            color = Nemo.colors.ink,
         )
         Text(
             text = stringResource(
@@ -169,16 +171,16 @@ private fun ScenarioCard(label: String, scenario: FutureScenario, zone: ZoneId) 
                 formatTime(scenario.startAt, zone),
                 formatTime(scenario.endAt, zone),
             ),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontSize = 13.sp,
-            color = AnchorColors.textSecondary,
+            color = Nemo.colors.inkSecondary,
         )
         scenario.deadlineAt?.let {
             Text(
                 text = stringResource(R.string.future_scenario_deadline, formatTime(it, zone)),
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontSize = 12.sp,
-                color = AnchorColors.textFaint,
+                color = Nemo.colors.placeholder,
             )
         }
     }
@@ -191,9 +193,9 @@ private fun DominoSection(domino: DominoEffect, onOpenTask: (String) -> Unit) {
     if (domino.affectedCount == 0) {
         Text(
             text = stringResource(R.string.future_domino_empty),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontSize = 13.sp,
-            color = AnchorColors.textFaint,
+            color = Nemo.colors.placeholder,
         )
         return
     }
@@ -201,16 +203,16 @@ private fun DominoSection(domino: DominoEffect, onOpenTask: (String) -> Unit) {
     // Estimative count — never deterministic (FR-DE4).
     Text(
         text = stringResource(R.string.future_domino_count, domino.affectedCount),
-        fontFamily = InterFamily,
+        fontFamily = ManropeFamily,
         fontSize = 13.sp,
-        color = AnchorColors.textSecondary,
+        color = Nemo.colors.inkSecondary,
     )
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(Radius.card))
-            .background(AnchorColors.surfaceSunken)
+            .background(Nemo.colors.fog)
             .padding(Spacing.x4),
         verticalArrangement = Arrangement.spacedBy(Spacing.x2),
     ) {
@@ -222,9 +224,9 @@ private fun DominoSection(domino: DominoEffect, onOpenTask: (String) -> Unit) {
         domino.affected.forEach { node ->
             Text(
                 text = "↓",
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontSize = 14.sp,
-                color = AnchorColors.textFaint,
+                color = Nemo.colors.placeholder,
                 modifier = Modifier.padding(start = Spacing.x2),
             )
             DominoRow(
@@ -249,19 +251,19 @@ private fun DominoRow(title: String, tag: String?, onClick: () -> Unit) {
     ) {
         Text(
             text = title,
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 14.sp,
-            color = AnchorColors.textPrimary,
+            color = Nemo.colors.ink,
             modifier = Modifier.weight(1f),
         )
         if (tag != null) {
             Text(
                 text = tag,
-                fontFamily = InterFamily,
+                fontFamily = ManropeFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 10.sp,
-                color = AnchorColors.textFaint,
+                color = Nemo.colors.placeholder,
             )
         }
     }
@@ -286,18 +288,18 @@ private fun DominoLinkSection(
     if (candidates.isEmpty()) {
         Text(
             text = stringResource(R.string.future_domino_none_available),
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontSize = 13.sp,
-            color = AnchorColors.textFaint,
+            color = Nemo.colors.placeholder,
         )
         return
     }
 
     Text(
         text = stringResource(R.string.future_domino_pick_hint),
-        fontFamily = InterFamily,
+        fontFamily = ManropeFamily,
         fontSize = 12.sp,
-        color = AnchorColors.textMuted,
+        color = Nemo.colors.mute,
     )
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
         candidates.forEach { task ->
@@ -305,25 +307,25 @@ private fun DominoLinkSection(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(Radius.field))
-                    .background(AnchorColors.surfaceSunken)
+                    .background(Nemo.colors.fog)
                     .pressable(shape = RoundedCornerShape(Radius.field), onClick = { onLink(task.id) })
                     .padding(horizontal = Spacing.x3, vertical = Spacing.x2),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = task.title,
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontWeight = FontWeight.Medium,
                     fontSize = 14.sp,
-                    color = AnchorColors.textPrimary,
+                    color = Nemo.colors.ink,
                     modifier = Modifier.weight(1f),
                 )
                 Text(
                     text = stringResource(R.string.future_domino_add_button),
-                    fontFamily = InterFamily,
+                    fontFamily = ManropeFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 12.sp,
-                    color = AnchorColors.textSecondary,
+                    color = Nemo.colors.inkSecondary,
                 )
             }
         }
@@ -336,15 +338,15 @@ private fun Notice(text: String) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(Radius.card))
-            .background(AnchorColors.surfaceSunken)
+            .background(Nemo.colors.fog)
             .padding(Spacing.x4),
     ) {
         Text(
             text = text,
-            fontFamily = InterFamily,
+            fontFamily = ManropeFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 13.sp,
-            color = AnchorColors.textSecondary,
+            color = Nemo.colors.inkSecondary,
         )
     }
 }

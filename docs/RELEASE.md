@@ -157,6 +157,28 @@ MVP Phase 1–5 **ditutup**. Ringkasan verifikasi terakhir:
 
 > Ukuran artefak = hasil pengukuran, **bukan** requirement.
 
+### 7.1 Hardening pass (2026-10-10) — audit bug/data + perf + security
+
+Audit menyeluruh (data/domain, Compose, security) dan perbaikan atasnya. Ringkasan:
+
+| Area | Perubahan |
+|---|---|
+| Data (kritis) | Watermark koleksi pakai `MAX(endTime)` (bukan `MAX(startTime)`); baseline per-app menghitung hari-kosong; hitungan task insight di-scope ke hari; reschedule membuka ulang task DONE dengan bersih. |
+| Focus | `Finish` tetap menyelesaikan task; sinyal `verified` (sesi penuh) dipakai hanya untuk feedback pasca-sesi (pop-up), bukan untuk menahan completion. |
+| Intervention | Cooldown anti-spam untuk sinyal terabaikan; gate eskalasi Level-4 di-scope per hari. |
+| Recurring | WEEKLY = sekali per ISO week; time-of-day deadline dipertahankan; instance pertama di-stamp hari ini (tidak ada duplikat). |
+| Perf (Compose) | Stabilkan model (`@Immutable`), `remember` untuk sort/scan/bitmap, kurangi alokasi di `pressable`. |
+| Security | Key Gemini dikirim via header `x-goog-api-key`; `network_security_config` (HTTPS-only); risiko key ter-embed didokumentasikan (§5b). |
+
+Verifikasi: `lintDebug` PASS (0 error) · `testDebugUnitTest` 186 test PASS · device SM-A055F
+(Android 15 / API 35) tanpa crash, alur kritis (task → focus finish → completed, count harian,
+fallback izin Wellbeing) terverifikasi.
+
+> Catatan: `@Immutable` pada tipe `UiState` adalah kontrak (list-nya read-only dan selalu diganti
+> via `copy`). `pressable` tetap memakai `Modifier.composed { }` (rewrite ke `Modifier.Node`
+> ditunda — butuh Node dengan pointer+draw phase, sementara versi ini sudah menghilangkan alokasi
+> Shape per-call); dicatat sebagai follow-up.
+
 **Known Follow-ups / Post-MVP Hardening** (non-blocking — detail di
 `superpowers/design/14-hardening-report.md` §11):
 

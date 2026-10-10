@@ -158,4 +158,34 @@ class DriftAndCategoryTest {
 
         assertNotNull(useCase())
     }
+
+    @Test
+    fun drift_baselineExcludesToday_soSpikeIsNotMaskedByItself() = runTest {
+        // Regression: the weekly baseline is rebuilt via AggregateUsageUseCase with today EXCLUDED.
+        // Before the fix the running week's baseline included today, so a large spike raised its own
+        // mean/variance and the drift never fired. Here Mon/Tue/Wed are a 10-min habit and Thursday
+        // is a 100-min spike; detectDrift must fire.
+        val usage = FakeUsageRepository()
+        val thursday = ZonedDateTime.of(2026, 10, 8, 20, 0, 0, 0, utc).toInstant().toEpochMilli()
+        fun at(d: Int) = ZonedDateTime.of(2026, 10, d, 10, 0, 0, 0, utc).toInstant().toEpochMilli()
+        usage.insertSessions(
+            listOf(
+                session("a", at(5), at(5) + 10 * 60_000L),
+                session("b", at(6), at(6) + 10 * 60_000L),
+                session("c", at(7), at(7) + 10 * 60_000L),
+                session("d", at(8), at(8) + 100 * 60_000L),
+            ),
+        )
+        AggregateUsageUseCase(usage, CategorizeAppsUseCase(usage), FakeTimeProvider(thursday, utc))(nowMillis = thursday)
+
+        val tasks = FakeTaskRepository()
+        tasks.insert(task("t1", TaskPriority.HIGH))
+
+        val signal = DetectDriftUseCase(usage, tasks, FakeTimeProvider(thursday, utc))()
+
+        assertNotNull("a 10x spike over a 3-day habit must be detected as drift", signal)
+    }
+
+    private fun session(id: String, start: Long, end: Long) =
+        com.anchor.app.core.domain.model.UsageSession(id, "com.tiktok", start, end, end - start, 0)
 }

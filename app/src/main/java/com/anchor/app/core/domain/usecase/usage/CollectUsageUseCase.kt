@@ -54,7 +54,14 @@ class CollectUsageUseCase @Inject constructor(
                 durationMs = event.durationMs,
                 collectedAt = nowMillis,
             )
-        }.filter { it.durationMs > 0 }
+        }
+            // Drop zero-length intervals and sessions that are *still open* at the window edge.
+            // The platform closes a not-yet-ended session at `nowMillis`, so an `endTime >= nowMillis`
+            // means it may still be running; persisting it now would freeze a truncated duration that
+            // the deterministic id + insert-Ignore can never correct later. Skipping it lets the next
+            // pass record the whole session once it has actually ended.
+            .filter { it.durationMs > 0 }
+            .filter { it.endTime < nowMillis }
 
         if (sessions.isNotEmpty()) usageRepository.insertSessions(sessions)
 

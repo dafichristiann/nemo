@@ -46,7 +46,10 @@ class AggregateUsageUseCase @Inject constructor(
         val touchedWeeks = computed
             .map { timeProvider.isoWeekKey(LocalDate.ofEpochDay(it)) }
             .distinct()
-        touchedWeeks.forEach { usageRepository.upsertWeeklySummary(aggregateWeek(it)) }
+        // The baseline must describe the user's *habit*, so today is excluded from it. Otherwise a
+        // high-usage day inflates its own baseline mean/variance and masks the very drift it should
+        // trigger (a day is never "compared against itself").
+        touchedWeeks.forEach { usageRepository.upsertWeeklySummary(aggregateWeek(it, excludeEpochDay = lastDay)) }
 
         return computed
     }
@@ -98,7 +101,7 @@ class AggregateUsageUseCase @Inject constructor(
     }
 
     /** Builds the [WeeklyUsageSummary] for an ISO week key (e.g. `2026-W41`). */
-    suspend fun aggregateWeek(isoWeek: String): WeeklyUsageSummary {
+    suspend fun aggregateWeek(isoWeek: String, excludeEpochDay: Long? = null): WeeklyUsageSummary {
         val summaries = usageRepository.dailySummariesFrom(0L)
             .filter { timeProvider.isoWeekKey(LocalDate.ofEpochDay(it.dateEpochDay)) == isoWeek }
 
@@ -106,11 +109,17 @@ class AggregateUsageUseCase @Inject constructor(
         val total = trend.sum()
         val dailyAvg = if (trend.isEmpty()) 0L else total / trend.size
 
+        // The baseline must exclude the day being evaluated (today for the running week): a day
+        // compared against a mean it is itself part of hides its own deviation. When [excludeEpochDay]
+        // is null (historical weeks) nothing is excluded.
+        val baselineDays = if (excludeEpochDay == null) summaries
+        else summaries.filter { it.dateEpochDay != excludeEpochDay }
+
         return WeeklyUsageSummary(
             isoWeek = isoWeek,
             totalScreenTimeMs = total,
             dailyAvgMs = dailyAvg,
-            baseline = computeBaseline(summaries),
+            baseline = computeBaseline(baselineDays),
             trend = trend,
             computedAt = timeProvider.nowMillis(),
         )

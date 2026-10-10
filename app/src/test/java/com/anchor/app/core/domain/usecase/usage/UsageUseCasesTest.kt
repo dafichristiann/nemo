@@ -118,6 +118,38 @@ class UsageUseCasesTest {
         assertEquals(millis(2026, 10, 7, 12), repo.latestSessionEnd())
     }
 
+    @Test
+    fun collect_runningSession_isNotFrozenAtTruncatedDuration() = runTest {
+        // Regression: a session still open when a collect pass runs is closed at `nowMillis` by the
+        // platform. Persisting that truncated interval under a deterministic id + insert-Ignore would
+        // freeze the short duration forever (the watermark then skips the rest). The running session
+        // must be skipped so a later pass records its full length.
+        val repo = FakeUsageRepository()
+        val sessionStart = millis(2026, 10, 7, 10, 0)
+        val now1 = millis(2026, 10, 7, 10, 10)     // first pass: still running (10 min in)
+        val sessionEnd = millis(2026, 10, 7, 11, 0) // real total: 60 min
+        val now2 = millis(2026, 10, 7, 11, 5)      // second pass: after it ended
+
+        CollectUsageUseCase(
+            repo,
+            FakeUsageStatsSource(events = listOf(UsageEvent("com.video", sessionStart, now1))),
+            FakeIdProvider(),
+            FakeTimeProvider(now1, utc),
+        )(nowMillis = now1)
+
+        assertEquals("an open session must not be persisted mid-flight", 0, repo.sessionCount())
+
+        CollectUsageUseCase(
+            repo,
+            FakeUsageStatsSource(events = listOf(UsageEvent("com.video", sessionStart, sessionEnd))),
+            FakeIdProvider(),
+            FakeTimeProvider(now2, utc),
+        )(nowMillis = now2)
+
+        val stored = repo.sessions.value.single()
+        assertEquals("full 60-minute session is recorded once it has ended", sessionEnd - sessionStart, stored.durationMs)
+    }
+
     // --- AggregateUsageUseCase ---
 
     @Test

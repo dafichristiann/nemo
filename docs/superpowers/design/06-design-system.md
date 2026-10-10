@@ -1,5 +1,11 @@
 # Design System — Anchor (Personal Focus Assistant)
 
+> **⚠️ SUPERSEDED (2026-10-10):** The app now uses the **NEMO** design system (Fraunces +
+> Manrope, Day/Night following the system, flat/pill shapes). See
+> `../newdesign/nemo-design-kit/nemo-kit/docs/design-spec.md` (visual source of truth) and
+> `../specs/2026-10-10-nemo-design-migration-design.md` (migration spec). This Anchor
+> document is kept for historical reference only.
+
 > **Status:** Derived from `gamabaran.pen` (aktual) + PRD v0.2 · **Version:** 0.2
 > **Tanggal:** 2026-10-07
 > **Dokumen terkait:** `01-prd.md` §4, `07-screens.md`, `gamabaran.pen`

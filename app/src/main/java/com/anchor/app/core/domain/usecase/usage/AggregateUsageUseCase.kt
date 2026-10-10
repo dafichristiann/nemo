@@ -118,26 +118,42 @@ class AggregateUsageUseCase @Inject constructor(
 
     /**
      * Personal per-app baseline = average & std-dev of that app's **daily** usage across the
-     * week (PRD §10.3). `sampleDays` counts days the app actually appeared, so drift logic
-     * can refuse to act when data is thin (FR-D6).
+     * week (PRD §10.3).
+     *
+     * Zero-days matter: if an app was used on only 2 of 7 days, its true daily average is the
+     * total ÷ 7, not ÷ 2. Every day in [summaries] that does not list the app contributes a 0
+     * sample, so the mean/std-dev reflect the real week (PRD §10.3 "daily usage"), and
+     * `sampleDays` is the number of observed days (the week size), not the number of days the
+     * app happened to appear — otherwise the `>= MIN_SAMPLE_DAYS` gate in drift detection would
+     * overstate coverage and fire on thin data (FR-D6).
      */
     private fun computeBaseline(summaries: List<DailyUsageSummary>): List<AppBaseline> {
-        val byApp = mutableMapOf<String, MutableList<Long>>()
+        val observedDays = summaries.size
+        if (observedDays == 0) return emptyList()
+
+        // Every app seen on any day, with a 0 pre-seeded for each observed day.
+        val appDailyTotals = mutableMapOf<String, LongArray>()
         summaries.forEach { day ->
             day.topApps.forEach { app ->
-                byApp.getOrPut(app.packageName) { mutableListOf() }.add(app.totalTimeMs)
+                appDailyTotals.getOrPut(app.packageName) { LongArray(observedDays) }
             }
         }
 
-        return byApp.map { (pkg, values) ->
-            val n = values.size
-            val mean = values.average().toLong()
-            val variance = if (n == 0) 0.0 else values.sumOf { (it - mean) * (it - mean).toDouble() } / n
+        // Fill each app's per-day vector (missing days stay 0).
+        summaries.forEachIndexed { dayIndex, day ->
+            day.topApps.forEach { app ->
+                appDailyTotals.getValue(app.packageName)[dayIndex] = app.totalTimeMs
+            }
+        }
+
+        return appDailyTotals.map { (pkg, perDay) ->
+            val mean = perDay.average() // full-precision mean, no early truncation
+            val variance = perDay.sumOf { (it - mean) * (it - mean) } / observedDays.toDouble()
             AppBaseline(
                 packageName = pkg,
-                avgSessionMs = mean,
+                avgSessionMs = mean.toLong(),
                 stdDevMs = kotlin.math.sqrt(variance).toLong(),
-                sampleDays = n,
+                sampleDays = observedDays,
             )
         }
     }

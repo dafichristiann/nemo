@@ -49,17 +49,36 @@ class InsightPipelineTest {
     fun payload_containsOnlyAggregatesAndNullUsageWhenAbsent() = runTest {
         val tasks = FakeTaskRepository()
         tasks.insert(doneTask("t1"))
-        tasks.insert(openTask("t2"))
+        tasks.insert(openTask("t2", deadline = fixedNow + 60_000L)) // planned for today
         val useCase = BuildInsightPayloadUseCase(tasks, FakeUsageRepository(), FakeFocusRepository(), time())
 
         val payload = useCase(todayEpoch)
 
         assertEquals(1, payload.tasksCompleted)
-        assertEquals(2, payload.tasksPlanned)
+        assertEquals(1, payload.tasksPlanned)
         // No usage summary today → screen time is null (never a misleading 0).
         assertNull(payload.screenTimeMs)
         assertNull(payload.longestDistractionMs)
         assertTrue(InsightPayload.passesPrivacyAudit(payload))
+    }
+
+    @Test
+    fun payload_scopesTaskCountsToRequestedDay() = runTest {
+        // Regression: task counts must be scoped to the requested day. Counting all-time rows
+        // made every reflection report the lifetime plan/complete totals as "today's".
+        val tasks = FakeTaskRepository()
+        tasks.insert(doneTask("today-done"))           // completed today
+        tasks.insert(openTask("today-open", deadline = fixedNow + 60_000L)) // due today
+        // A task due on another day must not count toward today's plan.
+        val otherDay = fixedNow + 5 * 86_400_000L
+        tasks.insert(openTask("other-open", deadline = otherDay))
+        // A task completed on another day must not count toward today's completions.
+        tasks.insert(doneTask("old-done", completedAt = fixedNow - 5 * 86_400_000L))
+
+        val payload = BuildInsightPayloadUseCase(tasks, FakeUsageRepository(), FakeFocusRepository(), time())(todayEpoch)
+
+        assertEquals("only today's completion counts", 1, payload.tasksCompleted)
+        assertEquals("only today's planned tasks count", 1, payload.tasksPlanned)
     }
 
     @Test
@@ -246,20 +265,21 @@ class InsightPipelineTest {
         recommendedAction = "start_focus",
     )
 
-    private fun doneTask(id: String) = Task(
+    private fun doneTask(id: String, completedAt: Long = fixedNow) = Task(
         id = id,
         title = "Task $id",
         priority = TaskPriority.HIGH,
         status = TaskStatus.DONE,
-        completedAt = fixedNow,
+        completedAt = completedAt,
         createdAt = fixedNow,
     )
 
-    private fun openTask(id: String) = Task(
+    private fun openTask(id: String, deadline: Long? = null) = Task(
         id = id,
         title = "Task $id",
         priority = TaskPriority.MEDIUM,
         status = TaskStatus.TODO,
+        deadline = deadline,
         createdAt = fixedNow,
     )
 }

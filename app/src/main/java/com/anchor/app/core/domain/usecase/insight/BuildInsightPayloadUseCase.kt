@@ -26,12 +26,22 @@ class BuildInsightPayloadUseCase @Inject constructor(
     private val timeProvider: TimeProvider,
 ) {
     suspend operator fun invoke(dateEpochDay: Long = timeProvider.todayEpochDay()): InsightPayload {
-        val tasks = taskRepository.observeAll().first()
-        val tasksPlanned = tasks.count { it.status != TaskStatus.ARCHIVED }
-        val tasksCompleted = tasks.count { it.status == TaskStatus.DONE && it.completedAt != null }
-
         val startOfDay = timeProvider.startOfDayMillisForEpochDay(dateEpochDay)
         val endOfDay = timeProvider.endOfDayMillisForEpochDay(dateEpochDay)
+
+        // Scope task counts to the requested day. Counting all-time rows made every reflection
+        // claim the lifetime plan/complete totals as "today's" (PRD §10.9).
+        val tasks = taskRepository.observeAll().first()
+        val tasksPlanned = tasks.count { task ->
+            task.status != TaskStatus.ARCHIVED && task.isScheduledOn(dateEpochDay, startOfDay, endOfDay)
+        }
+        val tasksCompleted = tasks.count { task ->
+            task.status == TaskStatus.DONE &&
+                task.completedAt != null &&
+                task.completedAt >= startOfDay &&
+                task.completedAt < endOfDay
+        }
+
         val focusMs = focusRepository.totalDurationBetween(startOfDay, endOfDay)
 
         val daily = usageRepository.dailySummary(dateEpochDay)
@@ -61,4 +71,19 @@ class BuildInsightPayloadUseCase @Inject constructor(
 
     private fun humanizeCategory(category: String): String =
         category.lowercase().replaceFirstChar { it.uppercase() }
+
+    /**
+     * Whether [this] task belongs to [dateEpochDay]: a recurring instance is stamped with its
+     * occurrence date; a one-off task belongs to the day its deadline falls on. Tasks with
+     * neither (e.g. deadline-less, non-recurring) are not "planned for a specific day".
+     */
+    private fun com.anchor.app.core.domain.model.Task.isScheduledOn(
+        dateEpochDay: Long,
+        startOfDay: Long,
+        endOfDay: Long,
+    ): Boolean = when {
+        definitionOccurrenceDate != null -> definitionOccurrenceDate == dateEpochDay
+        deadline != null -> deadline >= startOfDay && deadline < endOfDay
+        else -> false
+    }
 }

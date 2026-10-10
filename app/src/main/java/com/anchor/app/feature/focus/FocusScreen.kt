@@ -372,7 +372,7 @@ private fun FocusActiveContent(
                 text = if (completion.verified) {
                     stringResource(R.string.focus_finished_verified, completion.taskTitle, completion.focusMinutes)
                 } else {
-                    stringResource(R.string.focus_finished_not_verified)
+                    stringResource(R.string.focus_finished_not_verified, completion.focusMinutes)
                 },
             )
             Text(

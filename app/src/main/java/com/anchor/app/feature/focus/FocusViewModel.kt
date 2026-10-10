@@ -327,11 +327,14 @@ class FocusViewModel @Inject constructor(
     fun onDismissCompletion() { lastCompletion.value = null }
 
     private suspend fun FinishFocusResult.toCompletionResult(): CompletionResult? {
+        if (!completedTask) return null
         val taskId = taskId ?: return null
         val title = taskRepository.getById(taskId)?.title ?: return null
         return CompletionResult(
             taskTitle = title,
-            verified = completedTask,
+            // `verified` reflects whether the session ran its full duration (effort signal),
+            // shown as a softer/stronger feedback line — the task is completed either way.
+            verified = verified,
             focusMinutes = (totalMs / 60_000L).toInt(),
         )
     }

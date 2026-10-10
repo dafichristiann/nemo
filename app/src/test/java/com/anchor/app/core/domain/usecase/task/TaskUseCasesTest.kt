@@ -160,6 +160,26 @@ class TaskUseCasesTest {
         assertEquals(id, event.taskId)
     }
 
+    // Regression: rescheduling a DONE task must fully reopen it (TODO) with a clean slate, not
+    // leave an invalid row (status=TODO but completedAt set and progress 100).
+    @Test
+    fun reschedule_ofDoneTask_reopensCleanly() = runTest {
+        val (tasks, defs, time) = fakes()
+        val create = CreateTaskUseCase(tasks, defs, FakeIdProvider(), time)
+        val complete = CompleteTaskUseCase(tasks, time)
+        val reschedule = RescheduleTaskUseCase(tasks, defs, FakeIdProvider("res"), time)
+        val id = (create(CreateTaskInput(title = "Task")) as CreateTaskResult.Success).taskId
+        complete(id)
+
+        reschedule(id, fixedNow + 86_400_000)
+
+        val reopened = tasks.tasks.value.single { it.id == id }
+        assertEquals(TaskStatus.TODO, reopened.status)
+        assertNull("completedAt must be cleared when reopening", reopened.completedAt)
+        assertEquals(0, reopened.progressPercent)
+        assertNull("completionSource must be cleared when reopening", reopened.completionSource)
+    }
+
     // FR-T7: a freshly created recurring task already covers today, so the generator must NOT
     // add a duplicate for the same occurrence day (AC "no double instance"). This guards the
     // occurrence-date unit consistency between CreateTaskUseCase (epoch day) and the generator.

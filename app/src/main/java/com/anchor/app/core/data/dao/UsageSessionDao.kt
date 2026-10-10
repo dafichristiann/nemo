@@ -36,6 +36,14 @@ interface UsageSessionDao {
     @Query("SELECT MAX(startTime) FROM usage_session")
     suspend fun latestStartTime(): Long?
 
+    /**
+     * Collection watermark: the furthest point in time we have already collected up to.
+     * `MAX(endTime)` (not `MAX(startTime)`) so a long-running session cannot hide other
+     * apps' sessions that started before it but ended after it.
+     */
+    @Query("SELECT MAX(endTime) FROM usage_session")
+    suspend fun latestEndTime(): Long?
+
     @Query("SELECT COUNT(*) FROM usage_session")
     suspend fun count(): Int
 

@@ -39,8 +39,10 @@ class CollectUsageUseCase @Inject constructor(
             return CollectUsageResult(collected = 0, permissionMissing = true)
         }
 
-        // Start from the last collected session, or a bounded lookback on first run.
-        val from = usageRepository.latestSessionStart()?.let { it + 1 } ?: (nowMillis - lookbackFloorMillis)
+        // Start from the furthest point we have collected up to (max *end* time, not max start
+        // time — a long session that started earlier must not hide apps used in between), or a
+        // bounded lookback on first run.
+        val from = usageRepository.latestSessionEnd()?.let { it + 1 } ?: (nowMillis - lookbackFloorMillis)
         val events = usageStats.queryEvents(from, nowMillis)
 
         val sessions = events.map { event ->

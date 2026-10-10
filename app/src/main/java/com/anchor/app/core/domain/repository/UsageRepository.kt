@@ -26,6 +26,13 @@ interface UsageRepository {
 
     suspend fun latestSessionStart(): Long?
 
+    /**
+     * End time of the most recently **ended** raw session — the collection watermark
+     * (CollectUsageUseCase). Uses `MAX(endTime)`, not `MAX(startTime)`: a long session that
+     * started earlier but ended later must not mask other apps used in between.
+     */
+    suspend fun latestSessionEnd(): Long?
+
     suspend fun sessionCount(): Int
 
     /** Pruning (FR-W4): deletes raw sessions starting before [cutoff]. Returns rows removed. */

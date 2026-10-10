@@ -293,7 +293,7 @@
     <string name="focus_active_paused_label">dijeda</string>
     <string name="focus_emergency_exit">Keluar darurat</string>
     <string name="focus_finished_verified">Tugas selesai â€” kamu fokus %1$d menit untuk \"%2$s\".</string>
-    <string name="focus_finished_not_verified">Sesi tercatat. Selesaikan durasi penuh untuk menandai tugas selesai.</string>
+    <string name="focus_finished_not_verified">Tugas selesai. Kamu mengakhiri lebih awal (%1$d menit); sesi penuh yang bikin hasilnya nempel.</string>
 
     <string name="focus_channel_name">Sesi fokus</string>
     <string name="focus_channel_desc">Menampilkan sesi fokus yang berjalan dengan cara keluar kapan saja.</string>

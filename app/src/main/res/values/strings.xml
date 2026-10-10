@@ -291,7 +291,7 @@
     <string name="focus_active_paused_label">paused</string>
     <string name="focus_emergency_exit">Emergency exit</string>
     <string name="focus_finished_verified">Task completed — you focused %1$d min on \"%2$s\".</string>
-    <string name="focus_finished_not_verified">Session recorded. Complete the full duration to mark the task done.</string>
+    <string name="focus_finished_not_verified">Task completed. You ended early (%1$d min); the full session is what makes it stick.</string>
 
     <string name="focus_channel_name">Focus sessions</string>
     <string name="focus_channel_desc">Shows an ongoing focus session with a way to exit at any time.</string>

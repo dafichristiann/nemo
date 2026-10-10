@@ -39,6 +39,8 @@ class UsageRepositoryImpl @Inject constructor(
 
     override suspend fun latestSessionStart(): Long? = sessionDao.latestStartTime()
 
+    override suspend fun latestSessionEnd(): Long? = sessionDao.latestEndTime()
+
     override suspend fun sessionCount(): Int = sessionDao.count()
 
     override suspend fun pruneSessionsBefore(cutoff: Long): Int = sessionDao.deleteOlderThan(cutoff)

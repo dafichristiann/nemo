@@ -95,6 +95,29 @@ class UsageUseCasesTest {
         assertEquals(1, repo.sessionCount())
     }
 
+    @Test
+    fun collect_secondRunQueriesFromMaxEndTimeNotMaxStartTime() = runTest {
+        // Regression: the watermark must be MAX(endTime). If it were MAX(startTime), a long
+        // session that started early but ended late (e.g. 10:00–12:00) would set the watermark to
+        // 10:00 and a session that started later but ended sooner (11:30–11:45) would be re-read
+        // (its start > 10:00). Using MAX(endTime) starts the next window at 12:00, so both are
+        // captured exactly once and never re-queried.
+        val repo = FakeUsageRepository()
+        val source = FakeUsageStatsSource(
+            events = listOf(
+                UsageEvent("com.long", millis(2026, 10, 7, 10), millis(2026, 10, 7, 12)),
+                UsageEvent("com.short", millis(2026, 10, 7, 11, 30), millis(2026, 10, 7, 11, 45)),
+            ),
+        )
+        val useCase = CollectUsageUseCase(repo, source, FakeIdProvider(), FakeTimeProvider(fixedNow, utc))
+
+        useCase()
+        useCase()
+
+        assertEquals(2, repo.sessionCount())
+        assertEquals(millis(2026, 10, 7, 12), repo.latestSessionEnd())
+    }
+
     // --- AggregateUsageUseCase ---
 
     @Test
@@ -186,6 +209,31 @@ class UsageUseCasesTest {
         val baseline = week.baseline.single { it.packageName == "com.tiktok" }
         assertEquals(2, baseline.sampleDays)
         assertEquals((30 + 60) / 2 * 60_000L, baseline.avgSessionMs)
+    }
+
+    @Test
+    fun aggregateWeek_baselineCountsZeroDaysForAppsUsedOnSomeDaysOnly() = runTest {
+        // Regression: an app used on only 1 of 2 recorded days must have its average computed
+        // over BOTH days (the other day contributes 0), and sampleDays must be the number of
+        // observed days — not the number of days the app appeared. Otherwise the `>= MIN_SAMPLE_DAYS`
+        // drift gate overstates coverage and the mean is inflated (FR-D6, PRD §10.3).
+        val repo = FakeUsageRepository()
+        val time = FakeTimeProvider(fixedNow, utc)
+        repo.insertSessions(
+            listOf(
+                session("com.tiktok", millis(2026, 10, 5, 20), millis(2026, 10, 5, 21, 0)), // 60 min
+                session("com.other", millis(2026, 10, 7, 20), millis(2026, 10, 7, 20, 30)), // com.tiktok absent Oct 7
+            ),
+        )
+        val useCase = AggregateUsageUseCase(repo, CategorizeAppsUseCase(repo), time)
+        repo.upsertDailySummary(useCase.aggregateDay(LocalDate.of(2026, 10, 5).toEpochDay()))
+        repo.upsertDailySummary(useCase.aggregateDay(LocalDate.of(2026, 10, 7).toEpochDay()))
+
+        val week = useCase.aggregateWeek("2026-W41")
+
+        val baseline = week.baseline.single { it.packageName == "com.tiktok" }
+        assertEquals("sampleDays counts observed days, not app days", 2, baseline.sampleDays)
+        assertEquals("missing day contributes 0 → (60 + 0) / 2", 30 * 60_000L, baseline.avgSessionMs)
     }
 
     @Test

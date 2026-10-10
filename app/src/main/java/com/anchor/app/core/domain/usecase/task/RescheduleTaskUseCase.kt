@@ -26,8 +26,20 @@ class RescheduleTaskUseCase @Inject constructor(
             task.copy(
                 deadline = newDeadline,
                 // Rescheduling an overdue open task returns it to TODO (PRD §10.1 autonomy).
+                // A previously-DONE task must be fully reopened: clearing completedAt / progress /
+                // completionSource avoids an invalid row (status=TODO with a 100% progress and a
+                // stale completedAt) that would confuse the UI and the completion counters.
                 status = if (task.status == TaskStatus.ARCHIVED) task.status else TaskStatus.TODO,
-            ),
+            ).let { reopened ->
+                when {
+                    reopened.status == TaskStatus.DONE || task.status != TaskStatus.DONE -> reopened
+                    else -> reopened.copy(
+                        completedAt = null,
+                        progressPercent = 0,
+                        completionSource = null,
+                    )
+                }
+            },
         )
 
         definitionRepository.recordReschedule(

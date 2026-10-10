@@ -40,6 +40,9 @@ class FakeUsageRepository : UsageRepository {
     override suspend fun latestSessionStart(): Long? =
         sessions.value.maxOfOrNull { it.startTime }
 
+    override suspend fun latestSessionEnd(): Long? =
+        sessions.value.maxOfOrNull { it.endTime }
+
     override suspend fun sessionCount(): Int = sessions.value.size
 
     override suspend fun pruneSessionsBefore(cutoff: Long): Int {

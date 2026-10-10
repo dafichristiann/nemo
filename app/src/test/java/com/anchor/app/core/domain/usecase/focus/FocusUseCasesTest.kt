@@ -162,13 +162,47 @@ class FocusUseCasesTest {
         val start = StartFocusUseCase(repo, FakeBlockingStrategy(), time(), FakeIdProvider())
         val id = start("t1", FocusMode.GENTLE, 25 * 60).sessionId
 
-        // Finishing early is an explicit "I'm done" -> the task is completed (updated rule).
+        // Finishing early is an explicit "I'm done" -> the task is completed (updated rule),
+        // but the effort signal reports it was NOT a full session.
         val result = FinishFocusUseCase(repo, FakeBlockingStrategy(), tasks, time())(id, 2 * 60_000L)
 
         assertTrue(result.completedTask)
+        assertFalse(result.verified)
         val saved = tasks.getById("t1")!!
         assertEquals(TaskStatus.DONE, saved.status)
         assertEquals(CompletionSource.VERIFIED, saved.completionSource)
+    }
+
+    @Test
+    fun finish_fullSession_reportsVerified() = runTest {
+        val repo = FakeFocusRepository()
+        val tasks = FakeTaskRepository()
+        tasks.insert(task("t1"))
+        val start = StartFocusUseCase(repo, FakeBlockingStrategy(), time(), FakeIdProvider())
+        val id = start("t1", FocusMode.GENTLE, 25 * 60).sessionId
+
+        val result = FinishFocusUseCase(repo, FakeBlockingStrategy(), tasks, time())(id, 25 * 60_000L)
+
+        assertTrue(result.completedTask)
+        assertTrue(result.verified)
+    }
+
+    @Test
+    fun emergencyExit_isNeverVerified() = runTest {
+        val repo = FakeFocusRepository()
+        val tasks = FakeTaskRepository()
+        tasks.insert(task("t1"))
+        val start = StartFocusUseCase(repo, FakeBlockingStrategy(), time(), FakeIdProvider())
+        val id = start("t1", FocusMode.GENTLE, 25 * 60).sessionId
+
+        val result = FinishFocusUseCase(repo, FakeBlockingStrategy(), tasks, time())(
+            id,
+            elapsedMs = 30 * 60_000L,
+            aborted = true,
+        )
+
+        assertFalse(result.completedTask)
+        assertFalse(result.verified)
     }
 
     @Test

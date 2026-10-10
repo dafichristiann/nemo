@@ -48,34 +48,35 @@ internal class BlockOverlayWindow(private val context: Context) {
 
         val density = context.resources.displayMetrics.density
         fun dp(value: Int) = (value * density).toInt()
+        fun color(resId: Int) = androidx.core.content.ContextCompat.getColor(context, resId)
 
         val card = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
             setPadding(dp(24), dp(24), dp(24), dp(24))
             background = GradientDrawable().apply {
-                cornerRadius = dp(20).toFloat()
-                setColor(Color.WHITE)
+                cornerRadius = dp(24).toFloat()
+                setColor(color(R.color.nemo_surface))
             }
         }
 
         val title = TextView(context).apply {
             text = context.getString(R.string.focus_block_overlay_title)
-            setTextColor(Color.parseColor("#0A0A0A"))
+            setTextColor(color(R.color.nemo_ink))
             textSize = 20f
             typeface = Typeface.DEFAULT_BOLD
             gravity = Gravity.CENTER
         }
         val body = TextView(context).apply {
             text = context.getString(R.string.focus_block_overlay_body)
-            setTextColor(Color.parseColor("#555555"))
+            setTextColor(color(R.color.nemo_ink_secondary))
             textSize = 14f
             gravity = Gravity.CENTER
             setPadding(0, dp(12), 0, 0)
         }
         val hint = TextView(context).apply {
             text = context.getString(R.string.focus_block_overlay_exit_hint)
-            setTextColor(Color.parseColor("#AAAAAA"))
+            setTextColor(color(R.color.nemo_mute))
             textSize = 12f
             gravity = Gravity.CENTER
             setPadding(0, dp(12), 0, 0)
@@ -97,7 +98,7 @@ internal class BlockOverlayWindow(private val context: Context) {
         val root = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            setBackgroundColor(Color.parseColor("#CC0A0A0A"))
+            setBackgroundColor(Color.parseColor("#A0000000"))
             setPadding(dp(24), dp(24), dp(24), dp(24))
             addView(
                 card,

@@ -54,7 +54,7 @@ class InterventionNotifier @Inject constructor(
         )
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_stat_nemo)
             .setContentTitle(context.getString(titleFor(level)))
             .setContentText(context.getString(bodyFor(level)))
             .setStyle(NotificationCompat.BigTextStyle().bigText(context.getString(bodyFor(level))))

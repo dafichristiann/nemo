@@ -16,13 +16,9 @@ object Spacing {
     val x5 = 20.dp
     val x6 = 24.dp
     val x8 = 32.dp
-    val x12 = 48.dp
 
     /** Horizontal screen margin (design-spec.md §5: margin horizontal 24). */
     val screenHorizontal = 24.dp
-
-    /** Gap between sections (design-spec.md §5: jarak antar bagian 28). */
-    val section = 28.dp
 
     /** Default horizontal padding inside a card. */
     val cardHorizontal = 20.dp

@@ -42,7 +42,7 @@ fun NemoNavBar(
     onNavigate: (TopLevelDestination) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.fillMaxWidth().background(Nemo.colors.surface)) {
+    Column(modifier = modifier.fillMaxWidth().background(Nemo.colors.background)) {
         Divider(thickness = 1.dp, color = Nemo.colors.line)
         Row(
             modifier = Modifier
@@ -80,7 +80,8 @@ fun NemoNavBar(
                         text = stringResource(destination.labelRes),
                         fontFamily = ManropeFamily,
                         fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-                        fontSize = 11.sp,
+                        fontSize = 10.5.sp,
+                        letterSpacing = 0.2.sp,
                         color = tint,
                     )
                 }

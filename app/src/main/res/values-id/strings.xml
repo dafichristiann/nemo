@@ -89,6 +89,7 @@
     <string name="add_task_subtasks_label">Sub-tugas (%1$d)</string>
     <string name="add_task_subtask_hint">Tambah langkahâ€¦</string>
     <string name="add_task_subtask_add">Tambah langkah</string>
+    <string name="add_task_more">Lainnya</string>
     <string name="add_task_recurrence_label">Ulangi</string>
     <string name="recurrence_none">Tidak ada</string>
     <string name="recurrence_daily">Harian</string>

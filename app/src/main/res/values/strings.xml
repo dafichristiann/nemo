@@ -83,11 +83,11 @@
     <string name="add_task_duration_choose">Choose</string>
     <string name="dialog_cancel">Cancel</string>
     <string name="dialog_set">Set</string>
-    <string name="add_task_category_label">Category (optional)</string>
-    <string name="add_task_category_hint">e.g. Study</string>
+    <string name="add_task_category_label">Category (optional)</string>    <string name="add_task_category_hint">e.g. Study</string>
     <string name="add_task_subtasks_label">Subtasks (%1$d)</string>
     <string name="add_task_subtask_hint">Add a step…</string>
     <string name="add_task_subtask_add">Add step</string>
+    <string name="add_task_more">More</string>
     <string name="add_task_recurrence_label">Repeat</string>
     <string name="recurrence_none">None</string>
     <string name="recurrence_daily">Daily</string>

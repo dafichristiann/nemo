@@ -15,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -134,6 +135,7 @@ private fun InsightBlock(insight: Insight, fromAi: Boolean) {
         TaggedBlock(
             tag = stringResource(R.string.insights_tag_insight),
             body = insight.summary,
+            quote = true,
         )
 
         if (insight.patterns.isNotEmpty()) {
@@ -162,13 +164,14 @@ private fun InsightBlock(insight: Insight, fromAi: Boolean) {
 }
 
 @Composable
-private fun TaggedBlock(tag: String, body: String) {
+private fun TaggedBlock(tag: String, body: String, quote: Boolean = false) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
         Text(
             text = tag,
             fontFamily = ManropeFamily,
             fontWeight = FontWeight.Bold,
             fontSize = 11.sp,
+            letterSpacing = 0.6.sp,
             color = Nemo.colors.mute,
         )
         Box(
@@ -180,10 +183,12 @@ private fun TaggedBlock(tag: String, body: String) {
         ) {
             Text(
                 text = body,
-                fontFamily = ManropeFamily,
-                fontWeight = FontWeight.Medium,
-                fontSize = 14.sp,
-                color = Nemo.colors.inkSecondary,
+                style = if (quote) {
+                    MaterialTheme.typography.titleLarge
+                } else {
+                    MaterialTheme.typography.bodyLarge
+                },
+                color = if (quote) Nemo.colors.ink else Nemo.colors.inkSecondary,
             )
         }
     }

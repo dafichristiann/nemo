@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -17,11 +18,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.anchor.app.core.design.theme.ManropeFamily
 import com.anchor.app.core.design.theme.Motion
 import com.anchor.app.core.design.theme.Nemo
 import com.anchor.app.core.design.theme.NemoTheme
@@ -90,9 +88,7 @@ fun SegmentedChips(
             ) {
                 Text(
                     text = label,
-                    fontFamily = ManropeFamily,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 13.sp,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = contentColor,
                     maxLines = 1,
                     softWrap = false,

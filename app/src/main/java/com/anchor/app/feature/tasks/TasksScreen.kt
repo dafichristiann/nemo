@@ -68,7 +68,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 
 /**
- * 01 Home â€” Smart Todo (docs/superpowers/design/07-screens.md Â§2.5).
+ * 01 Home Ã¢â‚¬â€ Smart Todo (docs/superpowers/design/07-screens.md Ã‚Â§2.5).
  *
  * Layout refreshed to a calmer, editorial "planner" look (monochrome, high-contrast):
  *  - an oversized greeting header with a compact week strip (today highlighted);
@@ -203,7 +203,7 @@ fun TasksScreen(
 
 /**
  * Oversized greeting + a compact week strip. Today is highlighted with an ink pill, the way a
- * planner marks the current day â€” quiet but confident.
+ * planner marks the current day Ã¢â‚¬â€ quiet but confident.
  */
 @Composable
 private fun HomeHeader(state: TasksUiState, onOpenSettings: () -> Unit) {
@@ -268,7 +268,7 @@ private fun HomeHeader(state: TasksUiState, onOpenSettings: () -> Unit) {
 
 /**
  * Compact 7-day strip (Mon..Sun of today's week). Today gets an ink pill; every other day is a
- * quiet numeral. Purely a date reference for now â€” the list itself is filtered by the tabs below.
+ * quiet numeral. Purely a date reference for now Ã¢â‚¬â€ the list itself is filtered by the tabs below.
  */
 @Composable
 private fun WeekStrip(today: LocalDate) {
@@ -318,7 +318,7 @@ private fun WeekStrip(today: LocalDate) {
     }
 }
 
-/** "M","T",â€¦ single-letter weekday index for the compact strip. */
+/** "M","T",Ã¢â‚¬Â¦ single-letter weekday index for the compact strip. */
 private fun LocalDate.dayOfWeekLabel(): String = dayOfWeek.name.take(1)
 
 /**
@@ -395,8 +395,9 @@ private fun SummaryCard(completed: Int, total: Int) {
 }
 
 /**
- * Segmented filter control: a soft track holding equal-width segments. The active segment gets
- * an ink pill that slides/animates â€” a cleaner alternative to the previous underline tabs.
+ * Filter control as underlined text tabs (design-spec.md §7 #4: "Tab filter berupa teks
+ * bergaris bawah"). The active tab is `ink` + SemiBold with a 2dp `ink` underline; the rest
+ * are `mute`. Scrollable so four labels never wrap on narrow screens.
  */
 @Composable
 private fun FilterSegmented(selected: TaskFilter, onSelect: (TaskFilter) -> Unit) {
@@ -409,43 +410,38 @@ private fun FilterSegmented(selected: TaskFilter, onSelect: (TaskFilter) -> Unit
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(PillShape)
-            .background(Nemo.colors.fog)
-            .horizontalScroll(rememberScrollState())
-            .padding(Spacing.x1),
-        horizontalArrangement = Arrangement.spacedBy(Spacing.x1),
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.x6),
     ) {
         tabs.forEach { (filter, labelRes) ->
             val isSelected = filter == selected
-            val bg by animateColorAsState(
-                targetValue = if (isSelected) Nemo.colors.ink else Color.Transparent,
-                animationSpec = Motion.standardSpec(),
-                label = "seg-bg",
-            )
             val fg by animateColorAsState(
-                targetValue = if (isSelected) Nemo.colors.onInk else Nemo.colors.mute,
+                targetValue = if (isSelected) Nemo.colors.ink else Nemo.colors.mute,
                 animationSpec = Motion.standardSpec(),
-                label = "seg-fg",
+                label = "tab-fg",
             )
-            Box(
+            Column(
                 modifier = Modifier
-                    .clip(PillShape)
-                    .background(bg)
                     .pressable(
-                        shape = PillShape,
-                        pressedScale = 0.97f,
                         onClick = { onSelect(filter) },
                     )
-                    .padding(horizontal = Spacing.x4, vertical = Spacing.x2),
-                contentAlignment = Alignment.Center,
+                    .padding(vertical = Spacing.x2),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
                     text = stringResource(labelRes),
                     fontFamily = ManropeFamily,
                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                    fontSize = 12.sp,
+                    fontSize = 13.sp,
                     color = fg,
                     maxLines = 1,
+                )
+                Spacer(modifier = Modifier.height(Spacing.x1))
+                Box(
+                    modifier = Modifier
+                        .height(2.dp)
+                        .fillMaxWidth()
+                        .background(if (isSelected) Nemo.colors.ink else Color.Transparent),
                 )
             }
         }
@@ -487,7 +483,7 @@ private fun TimelineTaskRow(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            val metaLine = listOfNotNull(row.metaLabel, row.deadlineLabel).joinToString("  Â·  ")
+            val metaLine = listOfNotNull(row.metaLabel, row.deadlineLabel).joinToString("  Ã‚Â·  ")
             if (metaLine.isNotBlank()) {
                 Text(
                     text = metaLine,
@@ -535,7 +531,7 @@ private fun TimelineNode(done: Boolean) {
                 )
             }
         }
-        // Connector stub â€” implies the timeline even on the last row, subtly.
+        // Connector stub Ã¢â‚¬â€ implies the timeline even on the last row, subtly.
         Box(
             modifier = Modifier
                 .padding(top = Spacing.x1)
@@ -547,7 +543,7 @@ private fun TimelineNode(done: Boolean) {
     }
 }
 
-/** Thin priority bar under a task title â€” soft tone, never a red block. */
+/** Thin priority bar under a task title Ã¢â‚¬â€ soft tone, never a red block. */
 @Composable
 private fun PriorityBar(priority: TaskPriority) {
     val width by animateDpAsState(
@@ -577,7 +573,7 @@ private fun PriorityPill(priority: TaskPriority) {
         TaskPriority.HIGH -> R.string.task_priority_high
         TaskPriority.URGENT -> R.string.task_priority_urgent
     }
-    NemoPill(text = stringResource(labelRes), highlighted = priority == TaskPriority.HIGH)
+    NemoPill(text = stringResource(labelRes), filled = priority == TaskPriority.HIGH)
 }
 
 @Composable
@@ -631,7 +627,7 @@ private fun OverdueTaskRow(
         ) {
             SmallAction(stringResource(R.string.overdue_action_reschedule), onReschedule)
             SmallAction(stringResource(R.string.overdue_action_keep), onKeep)
-            // Completion now requires a focus session (PRD v0.5 Â§10.1) â€” open the task to start one.
+            // Completion now requires a focus session (PRD v0.5 Ã‚Â§10.1) Ã¢â‚¬â€ open the task to start one.
             SmallAction(stringResource(R.string.overdue_action_open), onOpen)
         }
     }
@@ -698,7 +694,7 @@ private fun EmptyState() {
     }
 }
 
-/** Priority â†’ soft left-bar color. Never a glowing red (06-design-system.md Â§2.3). */
+/** Priority Ã¢â€ â€™ soft left-bar color. Never a glowing red (06-design-system.md Ã‚Â§2.3). */
 @Composable
 private fun TaskPriority.barColor(): Color = when (this) {
     TaskPriority.URGENT -> Nemo.colors.inkSecondary
@@ -708,9 +704,9 @@ private fun TaskPriority.barColor(): Color = when (this) {
 }
 
 /**
- * Interactive round checkbox â€” kept for the subtask list on the Task Detail screen
- * (docs 07-screens.md Â§2.6). The Home list itself uses the passive [TimelineNode], since a task
- * is completed only by finishing a full Focus session (PRD v0.5 Â§10.1).
+ * Interactive round checkbox Ã¢â‚¬â€ kept for the subtask list on the Task Detail screen
+ * (docs 07-screens.md Ã‚Â§2.6). The Home list itself uses the passive [TimelineNode], since a task
+ * is completed only by finishing a full Focus session (PRD v0.5 Ã‚Â§10.1).
  */
 @Composable
 internal fun RoundCheckbox(checked: Boolean, onToggle: () -> Unit, modifier: Modifier = Modifier) {

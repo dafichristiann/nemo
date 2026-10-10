@@ -76,7 +76,7 @@ import com.anchor.app.platform.accessibility.AccessibilityStatus
 import com.anchor.app.platform.usagestats.UsageAccessSettings
 
 /**
- * 00b Permission Onboarding (docs 07-screens.md Â§2.4).
+ * 00b Permission Onboarding (docs 07-screens.md Ã‚Â§2.4).
  *
  * Step indicator, progress track, two optional permission cards, a local-only privacy
  * card, and Continue / Skip. Permissions are never forced; both cards are informational
@@ -99,7 +99,7 @@ fun PermissionOnboardingScreen(
     var blockingGranted by remember { mutableStateOf(AccessibilityStatus().isEnabled(context)) }
 
     // Usage access + App blocking are granted only in OS Settings, so re-check when we return
-    // (docs 08 Â§2).
+    // (docs 08 Ã‚Â§2).
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -208,9 +208,9 @@ fun PermissionOnboardingScreen(
 }
 
 /**
- * 00a Profile Setup (docs 07-screens.md Â§2.3b).
+ * 00a Profile Setup (docs 07-screens.md Ã‚Â§2.3b).
  *
- * Collects the three fields we ask every new user for â€” a nickname (personalizes the mascot
+ * Collects the three fields we ask every new user for Ã¢â‚¬â€ a nickname (personalizes the mascot
  * greeting), a main focus area (College / Career / Personal Growth), and a default focus-session
  * length (25 / 45 / 60 min). Every field is optional and immediately persisted, so the user can
  * tap Continue/Skip at any point without losing what they typed.
@@ -257,7 +257,7 @@ fun ProfileSetupScreen(
             color = Nemo.colors.inkSecondary,
         )
 
-        // Field 1 â€” nickname (personalizes the mascot greeting).
+        // Field 1 Ã¢â‚¬â€ nickname (personalizes the mascot greeting).
         SectionHeader(title = stringResource(R.string.onboarding_profile_nickname_label))
         NicknameField(
             value = settings.nickname,
@@ -265,7 +265,7 @@ fun ProfileSetupScreen(
             hint = stringResource(R.string.onboarding_profile_nickname_hint),
         )
 
-        // Field 2 â€” main focus area.
+        // Field 2 Ã¢â‚¬â€ main focus area.
         SectionHeader(title = stringResource(R.string.onboarding_profile_focus_label))
         SegmentedChips(
             options = listOf(
@@ -277,7 +277,7 @@ fun ProfileSetupScreen(
             onSelect = { viewModel.onSelectFocusArea(FocusArea.entries[it]) },
         )
 
-        // Field 3 â€” default focus-session length (25 / 45 / 60; default 25).
+        // Field 3 Ã¢â‚¬â€ default focus-session length (25 / 45 / 60; default 25).
         SectionHeader(title = stringResource(R.string.onboarding_profile_duration_label))
         SegmentedChips(
             options = AppSettings.FOCUS_DURATION_OPTIONS_MIN
@@ -309,7 +309,7 @@ fun ProfileSetupScreen(
 
 /**
  * Single-line nickname input built on Material3 [OutlinedTextField] (already on the classpath
- * via the Compose BOM â€” no extra dependency). Styled to match the App's soft inputs: sunken
+ * via the Compose BOM Ã¢â‚¬â€ no extra dependency). Styled to match the App's soft inputs: sunken
  * background, thin border, Inter font, and a rounded field shape. `singleLine` + IME "Done"
  * dismisses the keyboard on submit.
  */
@@ -362,7 +362,7 @@ private fun NicknameField(
     )
 }
 
-/** Nickname is a greeting, not data â€” cap it so the header never overflows. */
+/** Nickname is a greeting, not data Ã¢â‚¬â€ cap it so the header never overflows. */
 private const val MAX_NICKNAME_LENGTH = 24
 
 /** Reads the PACKAGE_USAGE_STATS AppOps state (special access, granted in Settings). */
@@ -424,7 +424,7 @@ private fun PermissionCard(
         }
         Spacer(modifier = Modifier.width(Spacing.x2))
         if (granted) {
-            NemoPill(text = stringResource(R.string.onboarding_perm_enabled), highlighted = true)
+            NemoPill(text = stringResource(R.string.onboarding_perm_enabled), filled = true)
         } else {
             Box(
                 modifier = Modifier

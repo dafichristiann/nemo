@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -183,9 +184,7 @@ private fun ScreenTimeCard(
         }
         Text(
             text = formatDuration(totalMs),
-            fontFamily = ManropeFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize = 34.sp,
+            style = MaterialTheme.typography.displayMedium,
             color = Nemo.colors.ink,
         )
         val comparison = when {

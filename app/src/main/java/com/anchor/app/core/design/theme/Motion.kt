@@ -40,4 +40,5 @@ object Motion {
     fun <T> standardSpec() = tween<T>(durationMillis = standard, easing = standardEase)
     fun <T> enterSpec() = tween<T>(durationMillis = standard, easing = standardEase)
     fun <T> instantSpec() = tween<T>(durationMillis = instant, easing = standardEase)
+    fun <T> progressSpec() = tween<T>(durationMillis = progress, easing = standardEase)
 }

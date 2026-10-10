@@ -23,11 +23,9 @@ import com.anchor.app.core.design.theme.NemoTheme
 import com.anchor.app.core.design.theme.Radius
 
 /**
- * Thin progress track (docs/superpowers/design/06-design-system.md §7.5).
- *
- * Track `#EEEEEE`, radius 2, height 3–4; fill `#0A0A0A`. The fill width animates smoothly
- * between values (calm motion, §1.6) so progress changes read as a gentle sweep rather
- * than a jump. Percentage label is rendered by the caller, not here.
+ * Thin progress track (design-spec.md §6): track `fog`, height 3, radius 3; fill `ink`.
+ * The fill animates over 600ms (the progress duration, §8) so changes read as a gentle
+ * sweep. The percentage label is rendered by the caller, not here.
  *
  * @param progress fraction in 0f..1f (clamped).
  */
@@ -35,7 +33,7 @@ import com.anchor.app.core.design.theme.Radius
 fun ProgressTrack(
     progress: Float,
     modifier: Modifier = Modifier,
-    trackHeight: Dp = 4.dp,
+    trackHeight: Dp = 3.dp,
     animate: Boolean = true,
     fillColor: Color = Color.Unspecified,
 ) {
@@ -43,7 +41,7 @@ fun ProgressTrack(
     val clamped = progress.coerceIn(0f, 1f)
     val animated by animateFloatAsState(
         targetValue = clamped,
-        animationSpec = Motion.standardSpec(),
+        animationSpec = Motion.progressSpec(),
         label = "progress-track-fill",
     )
     val fraction = if (animate) animated else clamped

@@ -57,11 +57,11 @@ import com.anchor.app.core.design.theme.Spacing
 import com.anchor.app.core.domain.model.FocusMode
 
 /**
- * Focus tab (screens 05 Setup + 06 Active, docs/superpowers/design/07-screens.md §2.9-2.10).
+ * Focus tab (screens 05 Setup + 06 Active, docs/superpowers/design/07-screens.md Â§2.9-2.10).
  *
  * Setup: task selector, mode cards (Gentle/Strict), duration wheel, Begin.
  * Active: task name, current step, timer + progress, Pause/Finish, and an always-available
- * **Emergency exit** (PRD §10.5). Honest fallback notice when Strict degrades to Gentle.
+ * **Emergency exit** (PRD Â§10.5). Honest fallback notice when Strict degrades to Gentle.
  */
 @Composable
 fun FocusScreen(
@@ -167,7 +167,7 @@ private fun FocusSetupContent(
         }
 
         // Blocked-apps summary for Strict (FR-S4): pre-filled from Settings. When empty,
-        // offer a calm CTA instead of blocking the user — the engine falls back to Gentle (FR-F8).
+        // offer a calm CTA instead of blocking the user â€” the engine falls back to Gentle (FR-F8).
         if (state.selectedMode == FocusMode.STRICT) {
             if (state.blockedApps.isNotEmpty()) {
                 Notice(text = stringResource(R.string.focus_blocked_summary, state.blockedApps.size))
@@ -186,8 +186,8 @@ private fun FocusSetupContent(
                 )
             }
 
-            // Blocking readiness (FR-F4/F8, PRD v0.4 §10.5): the OS Accessibility service must be
-            // enabled for Strict to actually pause apps. Explain, then offer to enable it —
+            // Blocking readiness (FR-F4/F8, PRD v0.4 Â§10.5): the OS Accessibility service must be
+            // enabled for Strict to actually pause apps. Explain, then offer to enable it â€”
             // if the user declines, the session simply runs as Gentle (handled by StartFocusUseCase).
             if (!state.blockingReady) {
                 Notice(text = stringResource(R.string.focus_blocking_setup_body))
@@ -205,7 +205,7 @@ private fun FocusSetupContent(
             }
         }
 
-        // Duration field (tap → wheel dialog; seconds precision, no keyboard).
+        // Duration field (tap â†’ wheel dialog; seconds precision, no keyboard).
         SectionHeader(title = stringResource(R.string.focus_duration_label))
         var durationDialogOpen by remember { mutableStateOf(false) }
         val durationIndex = FOCUS_DURATION_STEPS_SEC
@@ -285,7 +285,7 @@ private fun FocusActiveContent(
     ) {
         // Header row: status pill on the left so the ring below can be centered.
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
-            NemoPill(text = stringResource(R.string.focus_active_tag), highlighted = true)
+            NemoPill(text = stringResource(R.string.focus_active_tag), filled = true)
         }
 
         Text(
@@ -297,12 +297,12 @@ private fun FocusActiveContent(
             textAlign = TextAlign.Center,
         )
 
-        // Ring Timer (06-design-system.md §7.13): thick monochrome progress ring with the
+        // Ring Timer (06-design-system.md Â§7.13): thick monochrome progress ring with the
         // large digits centered inside. Replaces the old text + flat bar pairing.
         TimerRing(
             progress = active.progressFraction,
             time = formatClock(active.remainingMs ?: active.elapsedMs),
-            subLabel = stringResource(
+            caption = stringResource(
                 if (active.paused) R.string.focus_active_paused_label else R.string.focus_active_remaining_label,
             ),
             modifier = Modifier.padding(top = Spacing.x2),
@@ -332,7 +332,7 @@ private fun FocusActiveContent(
 
         Divider()
 
-        // Pause / Finish — clear hierarchy: Finish is primary, Pause is a quieter secondary.
+        // Pause / Finish â€” clear hierarchy: Finish is primary, Pause is a quieter secondary.
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(Spacing.x3),
@@ -350,7 +350,7 @@ private fun FocusActiveContent(
             }
         }
 
-        // Emergency exit — always available (PRD §10.5)
+        // Emergency exit â€” always available (PRD Â§10.5)
         Text(
             text = stringResource(R.string.focus_emergency_exit),
             fontFamily = ManropeFamily,
@@ -367,7 +367,7 @@ private fun FocusActiveContent(
                 .padding(vertical = Spacing.x3),
         )
 
-        // Post-session feedback (PRD v0.5 §10.1): a full session completed the task; a partial
+        // Post-session feedback (PRD v0.5 Â§10.1): a full session completed the task; a partial
         // one did not. Tone stays calm and non-judgmental in both cases.
         state.lastCompletion?.let { completion ->
             Notice(
@@ -534,7 +534,7 @@ private fun Notice(text: String) {
     }
 }
 
-/** mm:ss (or h:mm:ss for long sessions) — used for both the countdown and the elapsed clock. */
+/** mm:ss (or h:mm:ss for long sessions) â€” used for both the countdown and the elapsed clock. */
 private fun formatClock(ms: Long): String {
     val totalSeconds = (ms / 1_000).coerceAtLeast(0)
     val hours = totalSeconds / 3_600

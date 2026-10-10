@@ -55,7 +55,7 @@ import com.anchor.app.core.design.theme.Spacing
 import com.anchor.app.core.domain.model.TaskPriority
 
 /**
- * 10 Task Detail (docs/superpowers/design/07-screens.md Â§2.14).
+ * 10 Task Detail (docs/superpowers/design/07-screens.md Ã‚Â§2.14).
  *
  * Priority bar, title, badges, meta, progress track, subtasks (check/order), a Future
  * View callout (wired in Sprint 6), and the actions: Start Focus, Reschedule, Mark Done.
@@ -138,7 +138,7 @@ fun TaskDetailScreen(
         )
 
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.x2)) {
-            NemoPill(text = priorityLabel(task.priority), highlighted = task.priority == TaskPriority.HIGH)
+            NemoPill(text = priorityLabel(task.priority), filled = task.priority == TaskPriority.HIGH)
             NemoPill(text = stringResource(R.string.detail_status_in_progress))
         }
 
@@ -254,7 +254,7 @@ fun TaskDetailScreen(
             }
         }
 
-        // Future View callout (07-screens.md Â§2.14; opens screen 07)
+        // Future View callout (07-screens.md Ã‚Â§2.14; opens screen 07)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -272,7 +272,7 @@ fun TaskDetailScreen(
             )
         }
 
-        // Actions. Completion requires a focus session (PRD v0.5 Â§10.1), so the primary action
+        // Actions. Completion requires a focus session (PRD v0.5 Ã‚Â§10.1), so the primary action
         // opens Focus for this task instead of completing it directly.
         PrimaryButton(
             label = stringResource(R.string.detail_action_complete_via_focus),
@@ -303,13 +303,17 @@ fun TaskDetailScreen(
     }
 }
 
+/**
+ * A quiet, text-only secondary action (design-spec.md §7 #6): "Reschedule" is neutral text
+ * and "Delete Task" is danger-coloured **text** (no bordered pill), so destructive actions
+ * read as calm links rather than loud buttons.
+ */
 @Composable
 private fun SecondaryAction(label: String, danger: Boolean = false, onClick: () -> Unit) {
     Box(
         modifier = Modifier
-            .heightIn(min = 40.dp)
+            .heightIn(min = 44.dp)
             .clip(PillShape)
-            .border(1.dp, if (danger) Nemo.colors.dangerLine else Nemo.colors.line, PillShape)
             .pressable(shape = PillShape, onClick = onClick)
             .padding(horizontal = Spacing.x3),
         contentAlignment = Alignment.Center,
@@ -318,7 +322,7 @@ private fun SecondaryAction(label: String, danger: Boolean = false, onClick: () 
             text = label,
             fontFamily = ManropeFamily,
             fontWeight = FontWeight.Medium,
-            fontSize = 12.sp,
+            fontSize = 14.sp,
             color = if (danger) Nemo.colors.danger else Nemo.colors.inkSecondary,
         )
     }

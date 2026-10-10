@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -119,6 +120,7 @@ fun FutureViewScreen(
                 label = stringResource(R.string.future_scenario_now),
                 scenario = view.startNow,
                 zone = state.zone,
+                emphasis = true,
             )
             ScenarioCard(
                 label = stringResource(R.string.future_scenario_delay),
@@ -147,22 +149,37 @@ fun FutureViewScreen(
     }
 }
 
+/**
+ * A scenario card (design-spec.md §7 #13): the outcome time range is shown as a **large
+ * Fraunces number** (`displayMedium`). The recommended "start now" card is filled with `ink`
+ * and inverts its text; the alternative sits on a quiet `fog` card.
+ */
 @Composable
-private fun ScenarioCard(label: String, scenario: FutureScenario, zone: ZoneId) {
+private fun ScenarioCard(
+    label: String,
+    scenario: FutureScenario,
+    zone: ZoneId,
+    emphasis: Boolean = false,
+) {
+    val container = if (emphasis) Nemo.colors.ink else Nemo.colors.fog
+    val titleColor = if (emphasis) Nemo.colors.onInk else Nemo.colors.mute
+    val valueColor = if (emphasis) Nemo.colors.onInk else Nemo.colors.ink
+    val metaColor = if (emphasis) Nemo.colors.onInk.copy(alpha = 0.7f) else Nemo.colors.inkSecondary
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(Radius.card))
-            .background(Nemo.colors.fog)
+            .background(container)
             .padding(Spacing.x4),
         verticalArrangement = Arrangement.spacedBy(Spacing.x2),
     ) {
         Text(
             text = label,
             fontFamily = ManropeFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize = 14.sp,
-            color = Nemo.colors.ink,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 12.sp,
+            letterSpacing = 0.6.sp,
+            color = titleColor,
         )
         Text(
             text = stringResource(
@@ -170,16 +187,15 @@ private fun ScenarioCard(label: String, scenario: FutureScenario, zone: ZoneId) 
                 formatTime(scenario.startAt, zone),
                 formatTime(scenario.endAt, zone),
             ),
-            fontFamily = ManropeFamily,
-            fontSize = 13.sp,
-            color = Nemo.colors.inkSecondary,
+            style = MaterialTheme.typography.displayMedium,
+            color = valueColor,
         )
         scenario.deadlineAt?.let {
             Text(
                 text = stringResource(R.string.future_scenario_deadline, formatTime(it, zone)),
                 fontFamily = ManropeFamily,
                 fontSize = 12.sp,
-                color = Nemo.colors.placeholder,
+                color = metaColor,
             )
         }
     }

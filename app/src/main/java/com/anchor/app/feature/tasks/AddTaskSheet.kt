@@ -1,6 +1,7 @@
 package com.anchor.app.feature.tasks
 
 import androidx.compose.foundation.background
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -30,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -45,7 +48,9 @@ import com.anchor.app.core.design.components.WheelPickerDialog
 import com.anchor.app.core.design.components.minTouchTarget
 import com.anchor.app.core.design.components.pressable
 import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.Motion
 import com.anchor.app.core.design.theme.Nemo
+import com.anchor.app.core.design.theme.PillShape
 import com.anchor.app.core.design.theme.Radius
 import com.anchor.app.core.design.theme.Spacing
 import com.anchor.app.core.domain.model.RecurrenceRule
@@ -93,6 +98,8 @@ fun AddTaskSheet(
     val subtasks = remember { mutableStateListOf<String>() }
     var subtaskInput by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<CreateTaskResult?>(null) }
+    // "More" disclosure (design-spec.md §7 #5): repeat, category and subtasks live behind it.
+    var moreExpanded by remember { mutableStateOf(false) }
 
     NemoBottomSheet(onDismissRequest = onDismiss) {
         Column(
@@ -142,19 +149,6 @@ fun AddTaskSheet(
                     options = labels,
                     selectedIndex = priority.ordinal,
                     onSelect = { priority = TaskPriority.entries[it] },
-                )
-            }
-
-            LabeledSection(stringResource(R.string.add_task_recurrence_label)) {
-                val labels = listOf(
-                    stringResource(R.string.recurrence_none),
-                    stringResource(R.string.recurrence_daily),
-                    stringResource(R.string.recurrence_weekly),
-                )
-                SegmentedChips(
-                    options = labels,
-                    selectedIndex = recurrence.ordinal,
-                    onSelect = { recurrence = RecurrenceRule.entries[it] },
                 )
             }
 
@@ -278,61 +272,79 @@ fun AddTaskSheet(
                 }
             }
 
-            LabeledSection(stringResource(R.string.add_task_category_label)) {
-                Field(
-                    value = category,
-                    onValueChange = { category = it },
-                    hint = stringResource(R.string.add_task_category_hint),
-                )
-            }
+            // "More" disclosure (design-spec.md §7 #5): repeat, category and subtasks sit here.
+            MoreToggle(expanded = moreExpanded, onToggle = { moreExpanded = !moreExpanded })
 
-            LabeledSection(stringResource(R.string.add_task_subtasks_label, subtasks.size)) {
-                Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
-                    subtasks.forEachIndexed { index, sub ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                text = "â€¢ $sub",
-                                fontFamily = ManropeFamily,
-                                fontSize = 13.sp,
-                                color = Nemo.colors.inkSecondary,
-                                modifier = Modifier.weight(1f),
-                            )
-                            Icon(
-                                painter = painterResource(R.drawable.ic_close),
-                                contentDescription = null,
-                                tint = Nemo.colors.placeholder,
-                                modifier = Modifier
-                                    .width(16.dp)
-                                    .clickable { subtasks.removeAt(index) },
-                            )
-                        }
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            Field(
-                                value = subtaskInput,
-                                onValueChange = { subtaskInput = it },
-                                hint = stringResource(R.string.add_task_subtask_hint),
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(Spacing.x2))
-                        TextButton(onClick = {
-                            val clean = subtaskInput.trim()
-                            if (clean.isNotEmpty()) {
-                                subtasks.add(clean)
-                                subtaskInput = ""
+            if (moreExpanded) {
+                LabeledSection(stringResource(R.string.add_task_recurrence_label)) {
+                    val labels = listOf(
+                        stringResource(R.string.recurrence_none),
+                        stringResource(R.string.recurrence_daily),
+                        stringResource(R.string.recurrence_weekly),
+                    )
+                    SegmentedChips(
+                        options = labels,
+                        selectedIndex = recurrence.ordinal,
+                        onSelect = { recurrence = RecurrenceRule.entries[it] },
+                    )
+                }
+
+                LabeledSection(stringResource(R.string.add_task_category_label)) {
+                    Field(
+                        value = category,
+                        onValueChange = { category = it },
+                        hint = stringResource(R.string.add_task_category_hint),
+                    )
+                }
+
+                LabeledSection(stringResource(R.string.add_task_subtasks_label, subtasks.size)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
+                        subtasks.forEachIndexed { index, sub ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    text = "• $sub",
+                                    fontFamily = ManropeFamily,
+                                    fontSize = 13.sp,
+                                    color = Nemo.colors.inkSecondary,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_close),
+                                    contentDescription = null,
+                                    tint = Nemo.colors.placeholder,
+                                    modifier = Modifier
+                                        .width(16.dp)
+                                        .clickable { subtasks.removeAt(index) },
+                                )
                             }
-                        }) {
-                            Text(
-                                text = stringResource(R.string.add_task_subtask_add),
-                                fontFamily = ManropeFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 13.sp,
-                                color = Nemo.colors.ink,
-                            )
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                Field(
+                                    value = subtaskInput,
+                                    onValueChange = { subtaskInput = it },
+                                    hint = stringResource(R.string.add_task_subtask_hint),
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(Spacing.x2))
+                            TextButton(onClick = {
+                                val clean = subtaskInput.trim()
+                                if (clean.isNotEmpty()) {
+                                    subtasks.add(clean)
+                                    subtaskInput = ""
+                                }
+                            }) {
+                                Text(
+                                    text = stringResource(R.string.add_task_subtask_add),
+                                    fontFamily = ManropeFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 13.sp,
+                                    color = Nemo.colors.ink,
+                                )
+                            }
                         }
                     }
                 }
@@ -373,6 +385,44 @@ fun AddTaskSheet(
                 },
             )
         }
+    }
+}
+
+/**
+ * The "More" disclosure row (design-spec.md §7 #5): a quiet text row with a rotating chevron
+ * that reveals repeat / category / subtasks.
+ */
+@Composable
+private fun MoreToggle(expanded: Boolean, onToggle: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(PillShape)
+            .pressable(shape = PillShape, onClick = onToggle)
+            .padding(vertical = Spacing.x2),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = stringResource(R.string.add_task_more),
+            fontFamily = ManropeFamily,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 14.sp,
+            color = Nemo.colors.inkSecondary,
+        )
+        val rotation by animateFloatAsState(
+            targetValue = if (expanded) 180f else 0f,
+            animationSpec = Motion.standardSpec(),
+            label = "more-chevron",
+        )
+        Icon(
+            painter = painterResource(R.drawable.ic_back),
+            contentDescription = null,
+            tint = Nemo.colors.mute,
+            modifier = Modifier
+                .size(16.dp)
+                .rotate(rotation + 270f),
+        )
     }
 }
 

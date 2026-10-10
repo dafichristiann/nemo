@@ -24,6 +24,9 @@ class TaskRepositoryImpl @Inject constructor(
     override fun observeAll(): Flow<List<Task>> =
         taskDao.observeAll().map { list -> list.map { it.toDomain() } }
 
+    override suspend fun getAllOnce(): List<Task> =
+        taskDao.getAllOnce().map { it.toDomain() }
+
     override fun observeToday(startOfDay: Long, endOfDay: Long, todayEpochDay: Long): Flow<List<Task>> =
         taskDao.observeToday(startOfDay, endOfDay, todayEpochDay).map { list -> list.map { it.toDomain() } }
 
@@ -78,6 +81,9 @@ class TaskRepositoryImpl @Inject constructor(
 
     override suspend fun countForDefinitionOnDate(definitionId: String, occurrenceDate: Long): Int =
         taskDao.countForDefinitionOnDate(definitionId, occurrenceDate)
+
+    override suspend fun latestInstanceForDefinition(definitionId: String, upToEpochDay: Long): Task? =
+        taskDao.latestInstanceForDefinition(definitionId, upToEpochDay)?.toDomain()
 
     override suspend fun clear() {
         subtaskDao.clear()

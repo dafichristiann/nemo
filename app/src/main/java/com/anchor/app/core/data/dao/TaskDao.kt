@@ -35,6 +35,26 @@ interface TaskDao {
     fun observeAll(): Flow<List<TaskEntity>>
 
     /**
+     * One-shot snapshot of the same rows as [observeAll]. Use this (not `observeAll().first()`)
+     * for background logic like drift detection: a Room Flow may transiently emit an emptied list
+     * during invalidation, and `.first()` could capture that spurious empty result.
+     */
+    @Query(
+        """
+        SELECT * FROM task_instance
+        WHERE status != 'ARCHIVED'
+        ORDER BY
+            CASE status WHEN 'DONE' THEN 2 ELSE 1 END,
+            CASE priority WHEN 'URGENT' THEN 0 WHEN 'HIGH' THEN 1 WHEN 'MEDIUM' THEN 2
+                          WHEN 'LOW' THEN 3 ELSE 4 END,
+            deadline IS NULL,
+            deadline ASC,
+            createdAt DESC
+        """,
+    )
+    suspend fun getAllOnce(): List<TaskEntity>
+
+    /**
      * Tasks shown in the Today view: open tasks whose deadline falls within
      * [startOfDay, endOfDay), PLUS a recurring instance issued for today
      * (`definitionOccurrenceDate == :todayEpochDay`) even when it carries no deadline
@@ -122,6 +142,23 @@ interface TaskDao {
         """,
     )
     suspend fun countForDefinitionOnDate(definitionId: String, occurrenceDate: Long): Int
+
+    /**
+     * Most recent instance for a recurring definition (by occurrence date) at/before [upToEpochDay],
+     * or null. Used to preserve the previous instance's deadline time-of-day when issuing the next
+     * one, so a recurring task does not silently jump to 23:59 every cycle.
+     */
+    @Query(
+        """
+        SELECT * FROM task_instance
+        WHERE definitionId = :definitionId
+          AND definitionOccurrenceDate IS NOT NULL
+          AND definitionOccurrenceDate <= :upToEpochDay
+        ORDER BY definitionOccurrenceDate DESC
+        LIMIT 1
+        """,
+    )
+    suspend fun latestInstanceForDefinition(definitionId: String, upToEpochDay: Long): TaskEntity?
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(task: TaskEntity)

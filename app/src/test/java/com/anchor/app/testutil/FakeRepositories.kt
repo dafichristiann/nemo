@@ -23,6 +23,8 @@ class FakeTaskRepository : TaskRepository {
 
     override fun observeAll(): Flow<List<Task>> = tasks
 
+    override suspend fun getAllOnce(): List<Task> = tasks.value
+
     override fun observeToday(startOfDay: Long, endOfDay: Long, todayEpochDay: Long): Flow<List<Task>> = tasks.map { list ->
         list.filter {
             it.status in OPEN &&
@@ -101,6 +103,11 @@ class FakeTaskRepository : TaskRepository {
 
     override suspend fun countForDefinitionOnDate(definitionId: String, occurrenceDate: Long): Int =
         tasks.value.count { it.definitionId == definitionId && it.definitionOccurrenceDate == occurrenceDate }
+
+    override suspend fun latestInstanceForDefinition(definitionId: String, upToEpochDay: Long): Task? =
+        tasks.value
+            .filter { it.definitionId == definitionId && it.definitionOccurrenceDate != null && it.definitionOccurrenceDate <= upToEpochDay }
+            .maxByOrNull { it.definitionOccurrenceDate!! }
 
     override suspend fun clear() {
         tasks.value = emptyList()

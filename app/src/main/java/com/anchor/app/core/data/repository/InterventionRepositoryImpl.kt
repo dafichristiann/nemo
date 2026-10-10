@@ -35,6 +35,15 @@ class InterventionRepositoryImpl @Inject constructor(
     override suspend fun countMeaningfulAtOrAbove(level: Int): Int =
         dao.countMeaningfulAtOrAbove(level)
 
+    override suspend fun countMeaningfulAtOrAboveBetween(
+        level: Int,
+        startOfDay: Long,
+        endOfDay: Long,
+    ): Int = dao.countMeaningfulAtOrAboveBetween(level, startOfDay, endOfDay)
+
+    override suspend fun latestUnresolvedShownAt(contextPackage: String): Long? =
+        dao.latestUnresolvedShownAt(contextPackage)
+
     override suspend fun latestMeaningfulShownAt(): Long? = dao.latestMeaningfulShownAt()
 
     override suspend fun resolve(

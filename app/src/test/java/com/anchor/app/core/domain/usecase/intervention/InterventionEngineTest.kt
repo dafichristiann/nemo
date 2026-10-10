@@ -121,6 +121,82 @@ class InterventionEngineTest {
         assertEquals(InterventionLevel.FUTURE_VIEW, (first as InterventionDecision.Show).level)
     }
 
+    @Test
+    fun levelFour_unlockedOnlyBySameDayEngagement() = runTest {
+        val interventions = FakeInterventionRepository()
+        val tasks = FakeTaskRepository().apply { insert(task(estimate = 60)) }
+        val engine = engine(interventions, tasks)
+
+        // Engage meaningfully at Level >= 3 TODAY.
+        val id = engine.recordShown(engine.evaluate(signal()) as InterventionDecision.Show)
+        engine.recordAction(id, InterventionAction.DISMISS)
+
+        // A later drift the same day may now escalate to Focus.
+        val laterSameDay = fixedNow + 3 * 60 * 60 * 1000L
+        val show = engine.evaluate(signal(), now = laterSameDay) as InterventionDecision.Show
+        assertEquals(InterventionLevel.FOCUS, show.level)
+    }
+
+    @Test
+    fun levelFour_resetsOnNewDay() = runTest {
+        // Regression: the Level-4 gate must be scoped to the local day. All-time history must
+        // NOT permanently unlock Focus; a new day starts gradual again (never a cold jump).
+        val interventions = FakeInterventionRepository()
+        val tasks = FakeTaskRepository().apply { insert(task(estimate = 60)) }
+        val engine = engine(interventions, tasks)
+
+        val id = engine.recordShown(engine.evaluate(signal()) as InterventionDecision.Show)
+        engine.recordAction(id, InterventionAction.DISMISS)
+
+        val tomorrow = fixedNow + 24 * 60 * 60 * 1000L
+        val show = engine.evaluate(signal(), now = tomorrow) as InterventionDecision.Show
+        assertEquals(InterventionLevel.FUTURE_VIEW, show.level)
+    }
+
+    // --- Anti-spam: an ignored signal must not re-fire every worker cycle (Fase 2 #9) ---
+
+    @Test
+    fun ignoredSignal_isNotReshownWithinCooldownWindow() = runTest {
+        val interventions = FakeInterventionRepository()
+        val tasks = FakeTaskRepository().apply { insert(task()) }
+        val engine = engine(interventions, tasks)
+
+        // Show once, then never act (row stays EXPIRED — costs no quota).
+        engine.recordShown(engine.evaluate(signal()) as InterventionDecision.Show)
+
+        // 15 minutes later the periodic worker runs again: suppress (no spam).
+        val fifteenMinLater = fixedNow + 15 * 60 * 1000L
+        assertEquals(
+            InterventionDecision.Suppress(SuppressReason.COOLDOWN),
+            engine.evaluate(signal("com.tiktok"), now = fifteenMinLater),
+        )
+    }
+
+    @Test
+    fun ignoredSignal_canSurfaceAgainAfterCooldownWindow() = runTest {
+        val interventions = FakeInterventionRepository()
+        val tasks = FakeTaskRepository().apply { insert(task()) }
+        val engine = engine(interventions, tasks)
+
+        engine.recordShown(engine.evaluate(signal()) as InterventionDecision.Show)
+
+        val pastWindow = fixedNow + InterventionEngine.RESHOW_COOLDOWN_MS + 1
+        assertTrue(engine.evaluate(signal("com.tiktok"), now = pastWindow) is InterventionDecision.Show)
+    }
+
+    @Test
+    fun actedSignal_allowsFreshInterventionImmediately() = runTest {
+        val interventions = FakeInterventionRepository()
+        val tasks = FakeTaskRepository().apply { insert(task()) }
+        val engine = engine(interventions, tasks)
+
+        val id = engine.recordShown(engine.evaluate(signal()) as InterventionDecision.Show)
+        engine.recordAction(id, InterventionAction.DISMISS)
+
+        // Once resolved, a new intervention for the same context is allowed again.
+        assertTrue(engine.evaluate(signal("com.tiktok"), now = fixedNow + 60_000L) is InterventionDecision.Show)
+    }
+
     // --- Quota (FR-I6, AC "3 meaningful/day") ---
 
     @Test

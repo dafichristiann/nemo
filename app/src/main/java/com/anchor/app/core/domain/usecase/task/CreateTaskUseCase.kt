@@ -70,10 +70,12 @@ class CreateTaskUseCase @Inject constructor(
         }
 
         // Occurrence key is a LOCAL EPOCH DAY (not ms), matching GenerateRecurringTasksUseCase's
-        // idempotency guard (`today.toEpochDay()`) so a recurring definition never issues a
-        // duplicate instance for the same day (PRD FR-T7, "no double instance").
+        // idempotency guard (`today.toEpochDay()`). It is TODAY — the generation day — not the
+        // deadline's day: a recurring task created with a future deadline must not be stamped with
+        // the deadline's day, or the generator would also issue a second instance for today
+        // (PRD FR-T7, "no double instance").
         val occurrenceDate = if (definitionId != null) {
-            timeProvider.epochDayOf(input.deadline ?: now)
+            timeProvider.todayEpochDay()
         } else {
             null
         }

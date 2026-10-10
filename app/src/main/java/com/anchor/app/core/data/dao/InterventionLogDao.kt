@@ -59,6 +59,35 @@ interface InterventionLogDao {
     )
     suspend fun countMeaningfulAtOrAbove(level: Int): Int
 
+    /**
+     * Meaningful interventions (INTERACTED/DISMISSED) at/above [level] within the local-day
+     * window `[startOfDay, endOfDay)`. Escalation pacing is per-day so the user always starts a
+     * new day at a gentle level instead of the all-time history permanently unlocking Level 4.
+     */
+    @Query(
+        """
+        SELECT COUNT(*) FROM intervention_log
+        WHERE status IN ('INTERACTED', 'DISMISSED')
+          AND level >= :level
+          AND shownAt >= :startOfDay AND shownAt < :endOfDay
+        """,
+    )
+    suspend fun countMeaningfulAtOrAboveBetween(level: Int, startOfDay: Long, endOfDay: Long): Int
+
+    /**
+     * Timestamp of the most recent intervention shown for [contextPackage] that the user has not
+     * acted on (status still `EXPIRED`), or null. Used to stop re-notifying an *ignored* signal
+     * every worker cycle. Once the user acts, the row leaves EXPIRED and this returns null, so a
+     * fresh intervention for the context is allowed again.
+     */
+    @Query(
+        """
+        SELECT MAX(shownAt) FROM intervention_log
+        WHERE contextPackage = :contextPackage AND status = 'EXPIRED'
+        """,
+    )
+    suspend fun latestUnresolvedShownAt(contextPackage: String): Long?
+
     /** Most recent meaningful intervention timestamp (escalation pacing), or null. */
     @Query(
         """

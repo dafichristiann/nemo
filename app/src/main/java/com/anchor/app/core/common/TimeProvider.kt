@@ -48,6 +48,10 @@ interface TimeProvider {
     fun toMillis(dateTime: LocalDateTime): Long =
         dateTime.atZone(zoneId()).toInstant().toEpochMilli()
 
+    /** Local time-of-day for an instant, in the device zone. */
+    fun toLocalTime(millis: Long): LocalTime =
+        Instant.ofEpochMilli(millis).atZone(zoneId()).toLocalTime()
+
     /** Start-of-day (00:00 local) for the given instant, as epoch milliseconds. */
     fun startOfDayMillis(millis: Long): Long =
         Instant.ofEpochMilli(millis)

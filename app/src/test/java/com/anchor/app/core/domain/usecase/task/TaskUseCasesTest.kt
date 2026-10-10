@@ -202,10 +202,10 @@ class TaskUseCasesTest {
         assertEquals(todayEpoch, tasks.tasks.value.single().definitionOccurrenceDate)
     }
 
-    // FR-T7: a recurring task created with a deadline uses the LOCAL DAY of that deadline as its
-    // occurrence key, matching the generator's `today.toEpochDay()` guard.
+    // FR-T7: a recurring task's first instance is stamped with TODAY (the generation day), so the
+    // generator agrees and adds nothing extra for today.
     @Test
-    fun recurringTask_occurrenceDateIsEpochDayOfDeadline() = runTest {
+    fun recurringTask_occurrenceDateIsToday() = runTest {
         val (tasks, defs, time) = fakes()
         val create = CreateTaskUseCase(tasks, defs, FakeIdProvider(), time)
         val deadline = fixedNow + 5 * 60 * 60 * 1000L // same local day
@@ -213,10 +213,53 @@ class TaskUseCasesTest {
         create(CreateTaskInput(title = "Daily", deadline = deadline, recurrenceRule = RecurrenceRule.DAILY))
 
         val saved = tasks.tasks.value.single()
-        assertEquals(time.epochDayOf(deadline), saved.definitionOccurrenceDate)
+        assertEquals(time.todayEpochDay(), saved.definitionOccurrenceDate)
+        assertEquals(deadline, saved.deadline)
         // And the generator agrees nothing new is due today.
         val generate = GenerateRecurringTasksUseCase(tasks, defs, FakeIdProvider("gen"), time)
         assertEquals(0, generate(time.today()))
+    }
+
+    // Regression (Fase 2 #12): creating a recurring task with a FUTURE deadline must not produce
+    // a duplicate instance for today. Previously the occurrence date was the deadline's day, so
+    // the generator (keyed on today) issued a second instance for today.
+    @Test
+    fun recurringTask_withFutureDeadline_doesNotDuplicateToday() = runTest {
+        val (tasks, defs, time) = fakes()
+        val create = CreateTaskUseCase(tasks, defs, FakeIdProvider(), time)
+        val tomorrow = fixedNow + 24 * 60 * 60 * 1000L
+
+        create(CreateTaskInput(title = "Daily", deadline = tomorrow, recurrenceRule = RecurrenceRule.DAILY))
+
+        val generate = GenerateRecurringTasksUseCase(tasks, defs, FakeIdProvider("gen"), time)
+        assertEquals("no extra instance for today", 0, generate(time.today()))
+        assertEquals("exactly one instance exists", 1, tasks.tasks.value.size)
+    }
+
+    // Regression (Fase 2 #10): a WEEKLY definition issues at most one instance per ISO week.
+    // The old `?: true` fallback re-issued a new instance EVERY DAY once no prior instance was
+    // found (e.g. after the user deleted it): running the generator repeatedly must not stack up
+    // instances across the week's days.
+    @Test
+    fun weeklyGenerator_issuesAtMostOncePerIsoWeek() = runTest {
+        val (tasks, defs, time) = fakes()
+        val definition = com.anchor.app.core.domain.model.TaskDefinition(
+            id = "def-weekly",
+            title = "Weekly",
+            recurrenceRule = RecurrenceRule.WEEKLY,
+            createdAt = fixedNow,
+        )
+        defs.insert(definition)
+        val generate = GenerateRecurringTasksUseCase(tasks, defs, FakeIdProvider("gen"), time)
+
+        // Monday (2026-10-05): due → issue once.
+        val monday = java.time.LocalDate.of(2026, 10, 5)
+        assertEquals(1, generate(monday))
+        // Tue–Sun of the same ISO week: already issued this week → nothing.
+        for (offset in 1..6) {
+            assertEquals(0, generate(monday.plusDays(offset.toLong())))
+        }
+        assertEquals(1, tasks.tasks.value.size)
     }
 
     // FR-T7 / AC "no double instance": second run on the same day adds nothing.
@@ -294,6 +337,40 @@ class TaskUseCasesTest {
         assertEquals(1, generate(time.today()))
         // Already issued for today → not due again.
         assertEquals(0, generate(time.today()))
+    }
+
+    // Regression (Fase 2 #11): the next instance keeps the previous instance's deadline
+    // time-of-day instead of always jumping to 23:59.
+    @Test
+    fun recurringGenerator_preservesDeadlineTimeOfDay() = runTest {
+        val (tasks, defs, time) = fakes()
+        val definition = com.anchor.app.core.domain.model.TaskDefinition(
+            id = "def-daily",
+            title = "Standup",
+            recurrenceRule = RecurrenceRule.DAILY,
+            createdAt = fixedNow,
+        )
+        defs.insert(definition)
+        // Prior instance (issued yesterday) carried an 08:00 deadline.
+        val yesterday = time.today().minusDays(1)
+        val eightAm = time.toMillis(yesterday.atTime(8, 0))
+        tasks.insert(
+            com.anchor.app.core.domain.model.Task(
+                id = "prev",
+                definitionId = "def-daily",
+                title = "Standup",
+                deadline = eightAm,
+                createdAt = fixedNow,
+                definitionOccurrenceDate = yesterday.toEpochDay(),
+            ),
+        )
+
+        val generate = GenerateRecurringTasksUseCase(tasks, defs, FakeIdProvider("gen"), time)
+        assertEquals(1, generate(time.today()))
+
+        val issued = tasks.tasks.value.single { it.definitionOccurrenceDate == time.todayEpochDay() }
+        assertEquals("08:00 preserved", 8, time.toLocalTime(issued.deadline!!).hour)
+        assertEquals(0, time.toLocalTime(issued.deadline!!).minute)
     }
 
     // Non-recurring tasks never produce extra instances.

@@ -42,6 +42,21 @@ class FakeInterventionRepository : InterventionRepository {
                 it.level >= level
         }
 
+    override suspend fun countMeaningfulAtOrAboveBetween(
+        level: Int,
+        startOfDay: Long,
+        endOfDay: Long,
+    ): Int = logs.value.count {
+        (it.status == InterventionStatus.INTERACTED || it.status == InterventionStatus.DISMISSED) &&
+            it.level >= level &&
+            it.shownAt >= startOfDay && it.shownAt < endOfDay
+    }
+
+    override suspend fun latestUnresolvedShownAt(contextPackage: String): Long? =
+        logs.value
+            .filter { it.contextPackage == contextPackage && it.status == InterventionStatus.EXPIRED }
+            .maxOfOrNull { it.shownAt }
+
     override suspend fun latestMeaningfulShownAt(): Long? =
         logs.value
             .filter { it.status == InterventionStatus.INTERACTED || it.status == InterventionStatus.DISMISSED }

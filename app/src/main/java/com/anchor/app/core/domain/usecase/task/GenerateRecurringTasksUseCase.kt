@@ -15,7 +15,7 @@ import javax.inject.Inject
  * Issues new [Task] instances from recurring [com.anchor.app.core.domain.model.TaskDefinition]s
  * (PRD FR-T7, §10.1 Recurring Task Architecture).
  *
- * Rules: **DAILY** (every day) and **WEEKLY** (same weekday as the previous instance).
+ * Rules: **DAILY** (every day) and **WEEKLY** (once per ISO week, Monday–Sunday).
  * Idempotent — a definition never produces two instances for the same occurrence date
  * (checked via `countForDefinitionOnDate`), which satisfies the "no double instance" AC.
  *
@@ -50,7 +50,7 @@ class GenerateRecurringTasksUseCase @Inject constructor(
                     definitionId = definition.id,
                     title = definition.title,
                     description = definition.description,
-                    deadline = deadlineFor(today),
+                    deadline = deadlineFor(definition.id, today),
                     priority = definition.defaultPriority,
                     estimatedDurationMin = definition.defaultDurationMin,
                     category = definition.category,
@@ -66,32 +66,41 @@ class GenerateRecurringTasksUseCase @Inject constructor(
     private suspend fun isDue(rule: RecurrenceRule, definitionId: String, today: LocalDate): Boolean =
         when (rule) {
             RecurrenceRule.DAILY -> true
-            RecurrenceRule.WEEKLY -> lastOccurrenceWeekday(definitionId, today)?.let { it == today.dayOfWeek } ?: true
+            // Weekly = once per ISO week (Mon–Sun), not "same weekday as an instance found in the
+            // last 7 days". The old `?: true` fallback re-issued an instance every single day when
+            // no prior instance existed (e.g. after the user deleted it), producing duplicates.
+            RecurrenceRule.WEEKLY -> !hasInstanceInIsoWeek(definitionId, today)
             RecurrenceRule.NONE -> false
         }
 
-    /** Weekday of the most recent prior instance within the last 7 days, if any. */
-    private suspend fun lastOccurrenceWeekday(definitionId: String, today: LocalDate): DayOfWeek? =
-        recentOccurrences(definitionId, today).maxOrNull()?.let { LocalDate.ofEpochDay(it).dayOfWeek }
-
-    /**
-     * Occurrence epoch-days for [definitionId] within the last 7 days. Uses the [today] threaded
-     * through [invoke] rather than re-reading the clock, so the scan and the "is due" decision
-     * can never disagree about what day it is (deterministic under a fake clock / around midnight).
-     */
-    private suspend fun recentOccurrences(definitionId: String, today: LocalDate): List<Long> =
-        (0..6).mapNotNull { back ->
-            val epoch = today.minusDays(back.toLong()).toEpochDay()
-            if (taskRepository.countForDefinitionOnDate(definitionId, epoch) > 0) epoch else null
+    /** True when an instance for [definitionId] already exists in [today]'s ISO week. */
+    private suspend fun hasInstanceInIsoWeek(definitionId: String, today: LocalDate): Boolean {
+        val monday = today.with(DayOfWeek.MONDAY)
+        return (0..6).any { offset ->
+            val epoch = monday.plusDays(offset.toLong()).toEpochDay()
+            taskRepository.countForDefinitionOnDate(definitionId, epoch) > 0
         }
+    }
 
     /**
-     * Deadline for a new instance: 23:59 on [today] (domain heuristic, PRD §10.6).
-     * A per-instance time-of-day override would be layered here when the Add Task sheet
-     * lets recurring definitions carry an explicit clock time.
+     * Deadline for a new instance on [today]. The time-of-day is carried forward from the
+     * definition's most recent prior instance when one exists (so a task scheduled for, say,
+     * 08:00 keeps 08:00); otherwise it defaults to 23:59 on the occurrence date (PRD §10.6).
      */
-    private fun deadlineFor(today: LocalDate): Long =
-        timeProvider.toMillis(today.atTime(DEFAULT_DEADLINE_TIME))
+    private suspend fun deadlineFor(definitionId: String, today: LocalDate): Long {
+        val timeOfDay = previousDeadlineTimeOfDay(definitionId, today) ?: DEFAULT_DEADLINE_TIME
+        return timeProvider.toMillis(today.atTime(timeOfDay))
+    }
+
+    /** Local time-of-day of the previous instance's deadline, or null when there is none / none set. */
+    private suspend fun previousDeadlineTimeOfDay(
+        definitionId: String,
+        today: LocalDate,
+    ): LocalTime? {
+        val previous = taskRepository.latestInstanceForDefinition(definitionId, today.toEpochDay())
+        val deadline = previous?.deadline ?: return null
+        return timeProvider.toLocalTime(deadline)
+    }
 
     private companion object {
         val DEFAULT_DEADLINE_TIME: LocalTime = LocalTime.of(23, 59)

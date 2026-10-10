@@ -61,6 +61,13 @@ class InterventionEngine @Inject constructor(
             return InterventionDecision.Suppress(SuppressReason.COOLDOWN)
         }
 
+        // Anti-spam: if we already surfaced an intervention for this context recently and the
+        // user has not acted on it, do not surface the same one again every worker cycle.
+        // Suppression costs no quota (Rule 2), so this only quiets repeats of an ignored signal.
+        if (recentlyShownForContext(signal.packageName, now)) {
+            return InterventionDecision.Suppress(SuppressReason.COOLDOWN)
+        }
+
         // Don't interrupt the user with a notification for the same context while they're in Anchor.
         if (userInsideAnchor) {
             return InterventionDecision.Suppress(SuppressReason.USER_IN_APP)
@@ -90,6 +97,21 @@ class InterventionEngine @Inject constructor(
     ): Boolean {
         val lastLater = interventionRepository.latestCooldownAt(contextPackage) ?: return false
         return now - lastLater < COOLDOWN_AFTER_LATER_MS
+    }
+
+    /**
+     * True while an intervention for [contextPackage] was shown recently and the user has not
+     * acted on it (the row is still `EXPIRED`). Prevents the periodic worker from re-notifying
+     * the *same* ignored signal every cycle ("tanpa spam", docs 04 §3.1). Once the user acts, the
+     * row leaves EXPIRED and this returns false, so a legitimate follow-up can surface again.
+     */
+    suspend fun recentlyShownForContext(
+        contextPackage: String,
+        now: Long = timeProvider.nowMillis(),
+    ): Boolean {
+        val lastUnresolved = interventionRepository.latestUnresolvedShownAt(contextPackage)
+            ?: return false
+        return now - lastUnresolved < RESHOW_COOLDOWN_MS
     }
 
     /**
@@ -163,14 +185,24 @@ class InterventionEngine @Inject constructor(
             level = InterventionLevel.FUTURE_VIEW
         }
 
-        // Level 4 is gated: the user must have engaged at/above Level 3 before (never a cold jump).
+        // Level 4 is gated: the user must have engaged at/above Level 3 *today* before (never a
+        // cold jump). Scoping to the local day resets escalation each day instead of letting
+        // all-time history permanently unlock Level 4 after the very first engagement.
         if (level >= InterventionLevel.FUTURE_VIEW &&
-            interventionRepository.countMeaningfulAtOrAbove(InterventionLevel.FUTURE_VIEW) > 0
+            meaningfulAtOrAboveToday(InterventionLevel.FUTURE_VIEW, now) > 0
         ) {
             level = InterventionLevel.FOCUS
         }
         return level
     }
+
+    /** Meaningful interventions at/above [level] within the current local day. */
+    private suspend fun meaningfulAtOrAboveToday(level: Int, now: Long): Int =
+        interventionRepository.countMeaningfulAtOrAboveBetween(
+            level = level,
+            startOfDay = timeProvider.startOfDayMillis(now),
+            endOfDay = timeProvider.endOfDayMillis(now),
+        )
 
     /** Channel priority (FR-I3): Notification when allowed, else In-app. Fullscreen stays rare. */
     private fun chooseChannel(level: Int, notificationPermissionGranted: Boolean): InterventionChannel =
@@ -182,6 +214,13 @@ class InterventionEngine @Inject constructor(
 
         /** LOCKED "Later" cooldown, per context/app (PRD §10.4 rule 4). */
         const val COOLDOWN_AFTER_LATER_MS = 2 * 60 * 60 * 1000L
+
+        /**
+         * Back-off before the same context can be surfaced again after being shown (any status).
+         * Shorter than the user-chosen "Later" cooldown; exists only to stop the periodic worker
+         * from re-notifying an ignored signal every cycle ("tanpa spam").
+         */
+        const val RESHOW_COOLDOWN_MS = 60 * 60 * 1000L
 
         /** Priorities that make a pending task "meaningful" for contextual interventions. */
         val MEANINGFUL_PRIORITIES = setOf(TaskPriority.HIGH, TaskPriority.URGENT)

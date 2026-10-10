@@ -16,6 +16,13 @@ interface TaskRepository {
 
     fun observeAll(): Flow<List<Task>>
 
+    /**
+     * One-shot snapshot of all non-archived tasks. Prefer this over `observeAll().first()` in
+     * background logic: a Room Flow can transiently emit an empty list during invalidation, so
+     * `.first()` may return a spurious empty snapshot (e.g. drift detection silently missing).
+     */
+    suspend fun getAllOnce(): List<Task>
+
     fun observeToday(startOfDay: Long, endOfDay: Long, todayEpochDay: Long): Flow<List<Task>>
 
     fun observeUpcoming(endOfDay: Long): Flow<List<Task>>
@@ -60,6 +67,12 @@ interface TaskRepository {
 
     /** Recurring generation idempotency check (FR-T7). */
     suspend fun countForDefinitionOnDate(definitionId: String, occurrenceDate: Long): Int
+
+    /**
+     * Most recent instance for a recurring definition (by occurrence date) at/before
+     * [upToEpochDay], or null — used to carry forward the deadline time-of-day.
+     */
+    suspend fun latestInstanceForDefinition(definitionId: String, upToEpochDay: Long): Task?
 
     suspend fun clear()
 

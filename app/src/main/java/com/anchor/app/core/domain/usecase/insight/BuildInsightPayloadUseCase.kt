@@ -6,7 +6,6 @@ import com.anchor.app.core.domain.model.TaskStatus
 import com.anchor.app.core.domain.repository.FocusRepository
 import com.anchor.app.core.domain.repository.TaskRepository
 import com.anchor.app.core.domain.repository.UsageRepository
-import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
 /**
@@ -31,7 +30,7 @@ class BuildInsightPayloadUseCase @Inject constructor(
 
         // Scope task counts to the requested day. Counting all-time rows made every reflection
         // claim the lifetime plan/complete totals as "today's" (PRD §10.9).
-        val tasks = taskRepository.observeAll().first()
+        val tasks = taskRepository.getAllOnce()
         val tasksPlanned = tasks.count { task ->
             task.status != TaskStatus.ARCHIVED && task.isScheduledOn(dateEpochDay, startOfDay, endOfDay)
         }

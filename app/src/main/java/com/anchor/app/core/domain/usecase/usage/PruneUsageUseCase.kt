@@ -17,7 +17,11 @@ class PruneUsageUseCase @Inject constructor(
     /** Returns the number of raw rows deleted. */
     suspend operator fun invoke(retentionDays: Int = DEFAULT_RETENTION_DAYS): Int {
         val days = retentionDays.coerceIn(MIN_RETENTION_DAYS, MAX_RETENTION_DAYS)
-        val cutoff = timeProvider.nowMillis() - days * ONE_DAY_MS
+        // Cut on the local day boundary (start of the day `days` ago), not `now - days*24h`.
+        // The naive multiply drifts across DST and leaves a partial extra day depending on when
+        // the worker runs; a fixed local-midnight cutoff keeps retention day-exact.
+        val cutoffEpochDay = timeProvider.todayEpochDay() - days
+        val cutoff = timeProvider.startOfDayMillisForEpochDay(cutoffEpochDay)
         return usageRepository.pruneSessionsBefore(cutoff)
     }
 
@@ -25,6 +29,5 @@ class PruneUsageUseCase @Inject constructor(
         const val MIN_RETENTION_DAYS = 14
         const val MAX_RETENTION_DAYS = 30
         const val DEFAULT_RETENTION_DAYS = 30
-        const val ONE_DAY_MS = 24L * 60 * 60 * 1000
     }
 }

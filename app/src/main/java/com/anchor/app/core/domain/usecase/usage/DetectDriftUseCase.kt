@@ -6,7 +6,6 @@ import com.anchor.app.core.domain.model.TaskPriority
 import com.anchor.app.core.domain.model.TaskStatus
 import com.anchor.app.core.domain.repository.TaskRepository
 import com.anchor.app.core.domain.repository.UsageRepository
-import kotlinx.coroutines.flow.first
 import javax.inject.Inject/**
  * Detects drift against the **personal baseline** (FR-D1..D6,
  * docs/superpowers/design/04-intervention-engine.md §2, PRD §10.3).
@@ -73,7 +72,7 @@ class DetectDriftUseCase @Inject constructor(
 
     /** Highest-priority still-open task (HIGH/URGENT first), or null. */
     private suspend fun mostImportantOpenTaskId(): String? {
-        val open = taskRepository.observeAll().first()
+        val open = taskRepository.getAllOnce()
             .filter { it.status == TaskStatus.TODO || it.status == TaskStatus.IN_PROGRESS }
             .filter { it.priority == TaskPriority.HIGH || it.priority == TaskPriority.URGENT }
         return open.maxByOrNull { it.priority.ordinal }?.id

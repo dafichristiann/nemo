@@ -26,6 +26,18 @@ interface InterventionRepository {
     /** Count of meaningful interventions already at/above [level] (for escalation pacing). */
     suspend fun countMeaningfulAtOrAbove(level: Int): Int
 
+    /**
+     * Meaningful interventions at/above [level] within `[startOfDay, endOfDay)` — used so
+     * escalation resets each local day rather than being permanently unlocked by all-time history.
+     */
+    suspend fun countMeaningfulAtOrAboveBetween(level: Int, startOfDay: Long, endOfDay: Long): Int
+
+    /**
+     * Timestamp of the newest *unresolved* (EXPIRED) intervention for [contextPackage], or null.
+     * Backs the per-context re-show back-off that prevents re-notifying an ignored signal.
+     */
+    suspend fun latestUnresolvedShownAt(contextPackage: String): Long?
+
     /** Most recent meaningful intervention timestamp, or null (FR-I2 pacing). */
     suspend fun latestMeaningfulShownAt(): Long?
 

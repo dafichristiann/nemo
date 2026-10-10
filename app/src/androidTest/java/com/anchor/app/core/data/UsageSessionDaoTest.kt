@@ -112,6 +112,23 @@ class UsageSessionDaoTest {
     }
 
     @Test
+    fun latestEndTime_tracksFurthestCollectedInstant_notMaxStart() = runTest {
+        // The collection watermark must be MAX(endTime): a long session that started early but ends
+        // latest must set the watermark, or apps used after it would be re-queried / truncated.
+        assertNull(dao.latestEndTime())
+
+        dao.insertAll(
+            listOf(
+                session("long-early-start", start = 100, end = 900),
+                session("short-late-start", start = 500, end = 600),
+            ),
+        )
+
+        assertEquals(900L, dao.latestEndTime())
+        assertEquals(500L, dao.latestStartTime())
+    }
+
+    @Test
     fun deleteOlderThan_prunesByStartTime_andReturnsCount() = runTest {
         dao.insertAll(
             listOf(

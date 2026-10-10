@@ -64,6 +64,9 @@ fun SegmentedChips(
             )
             Box(
                 modifier = Modifier
+                    // Share the row width evenly so a longer label ("Urgent"/"Personal Growth")
+                    // never wraps or clips on narrow screens; each chip stays a >= 48 dp target.
+                    .weight(1f)
                     .heightIn(min = 48.dp)
                     .clip(RoundedCornerShape(Radius.chip))
                     .background(background)
@@ -83,7 +86,7 @@ fun SegmentedChips(
                         indication = null,
                         onClick = { onSelect(index) },
                     )
-                    .padding(horizontal = Spacing.x4),
+                    .padding(horizontal = Spacing.x2),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
@@ -92,6 +95,10 @@ fun SegmentedChips(
                     fontWeight = FontWeight.Medium,
                     fontSize = 13.sp,
                     color = contentColor,
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 )
             }
         }

@@ -12,7 +12,10 @@ enum class InsightSource { AI, RULE_BASED }
  *
  * Hard rules honoured upstream (not here): only aggregated data feeds generation, the AI is
  * optional, and every field must be supported by data (FR-AI1, FR-AI4, FR-AI6).
+ *
+ * `@Immutable`: the list fields are read-only lists that are never mutated after construction.
  */
+@androidx.compose.runtime.Immutable
 data class Insight(
     val id: String,
     val type: InsightType,

@@ -135,8 +135,11 @@ fun TasksScreen(
                 }
 
                 item {
+                    // Derive the summary once per relevant change instead of scanning the list
+                    // inside the `item {}` lambda on every recomposition.
+                    val completedCount = remember(state.rows) { state.rows.count { it.task.isDone } }
                     SummaryCard(
-                        completed = state.rows.count { it.task.isDone },
+                        completed = completedCount,
                         total = state.rows.size + state.overdueRows.size,
                     )
                 }
@@ -273,8 +276,11 @@ private fun HomeHeader(state: TasksUiState, onOpenSettings: () -> Unit) {
  */
 @Composable
 private fun WeekStrip(today: LocalDate) {
-    val monday = today.minusDays((today.dayOfWeek.value - 1).toLong())
-    val days = (0..6).map { monday.plusDays(it.toLong()) }
+    // Remembered on `today`: the 7-day window only changes when the date does, not every recompose.
+    val days = remember(today) {
+        val monday = today.minusDays((today.dayOfWeek.value - 1).toLong())
+        (0..6).map { monday.plusDays(it.toLong()) }
+    }
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,

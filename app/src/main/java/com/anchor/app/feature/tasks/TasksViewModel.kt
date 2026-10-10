@@ -29,6 +29,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /** One row of the Home list, pre-formatted for display. */
+@androidx.compose.runtime.Immutable
 data class TaskRowUi(
     val task: Task,
     val deadlineLabel: String?,
@@ -37,6 +38,7 @@ data class TaskRowUi(
 )
 
 /** Aggregated Home screen state (PRD FR-T10). */
+@androidx.compose.runtime.Immutable
 data class TasksUiState(
     val filter: TaskFilter = TaskFilter.TODAY,
     val rows: List<TaskRowUi> = emptyList(),

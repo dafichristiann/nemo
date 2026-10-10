@@ -11,7 +11,10 @@ enum class FocusArea { COLLEGE, CAREER, PERSONAL_GROWTH }
 /**
  * App-wide settings (docs/superpowers/design/03-database-schema.md §7.1).
  * Defaults are privacy-preserving: tracking & AI OFF until the user opts in (FR-S6).
+ *
+ * `@Immutable`: `blockedApps` is a read-only set that is replaced (via `copy`) rather than mutated.
  */
+@androidx.compose.runtime.Immutable
 data class AppSettings(
     val trackingEnabled: Boolean = false,
     val aiEnabled: Boolean = false,

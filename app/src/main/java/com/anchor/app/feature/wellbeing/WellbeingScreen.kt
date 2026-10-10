@@ -362,7 +362,8 @@ private fun formatDelta(ms: Long): String {
 
 @Composable
 private fun TopApps(apps: List<TopAppRow>) {
-    val maxMs = apps.maxOf { it.totalMs }.coerceAtLeast(1L)
+    // Remembered: an O(n) scan that would otherwise re-run on every recomposition of this section.
+    val maxMs = remember(apps) { apps.maxOf { it.totalMs } }.coerceAtLeast(1L)
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.x3)) {
         apps.forEach { app ->
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -413,10 +414,12 @@ private fun TopApps(apps: List<TopAppRow>) {
 
 @Composable
 private fun WeeklyChart(week: List<DayBar>, onSelectDay: (Long) -> Unit) {
-    val maxMs = week.maxOf { it.totalMs }.coerceAtLeast(1L)
+    val maxMs = remember(week) { week.maxOf { it.totalMs } }.coerceAtLeast(1L)
     // Animate the chart in on first composition: bars grow from the baseline (calm motion).
     var appeared by remember { mutableStateOf(false) }
-    LaunchedEffect(week.map { it.epochDay }) { appeared = true }
+    // Remember the key so the effect isn't keyed on a freshly-allocated list each recomposition.
+    val weekKey = remember(week) { week.map { it.epochDay } }
+    LaunchedEffect(weekKey) { appeared = true }
     Row(
         modifier = Modifier
             .fillMaxWidth()

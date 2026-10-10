@@ -51,6 +51,7 @@ internal fun effectiveBlockedApps(mode: FocusMode, blockedApps: Set<String>): Se
     if (mode == FocusMode.GENTLE) emptySet() else blockedApps
 
 /** One selectable task row on Focus Setup. */
+@androidx.compose.runtime.Immutable
 data class FocusTaskOption(val id: String, val title: String)
 
 /** Internal bundle of the Focus Setup selections, combined into [FocusUiState]. */
@@ -62,6 +63,7 @@ private data class SetupSelection(
 )
 
 /** Result of the last finished session, for post-session feedback (PRD v0.5 §10.1). */
+@androidx.compose.runtime.Immutable
 data class CompletionResult(
     val taskTitle: String,
     val verified: Boolean,
@@ -69,6 +71,7 @@ data class CompletionResult(
 )
 
 /** UI state for screens 05 (Setup) and 06 (Active). */
+@androidx.compose.runtime.Immutable
 data class FocusUiState(
     val taskOptions: List<FocusTaskOption> = emptyList(),
     val selectedTaskId: String? = null,
@@ -90,6 +93,7 @@ data class FocusUiState(
 }
 
 /** Everything screen 06 needs to render (PRD §10.5 required fields). */
+@androidx.compose.runtime.Immutable
 data class ActiveFocus(
     val sessionId: String,
     val taskId: String?,

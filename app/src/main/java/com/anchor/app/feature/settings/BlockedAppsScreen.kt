@@ -24,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,7 +60,14 @@ fun BlockedAppsScreen(
     val blocked = settings.blockedApps
 
     // Blocked apps first (so they are easy to find/remove), then the rest alphabetically.
-    val ordered = apps.sortedWith(compareByDescending<com.anchor.app.platform.apps.InstalledApp> { it.packageName in blocked }.thenBy { it.label.lowercase() })
+    // Remembered: sorting the whole installed-app list is O(n log n) and would otherwise re-run on
+    // every recomposition (including each keystroke in the search field).
+    val ordered = remember(apps, blocked) {
+        apps.sortedWith(
+            compareByDescending<com.anchor.app.platform.apps.InstalledApp> { it.packageName in blocked }
+                .thenBy { it.label.lowercase() },
+        )
+    }
 
     Column(
         modifier = modifier

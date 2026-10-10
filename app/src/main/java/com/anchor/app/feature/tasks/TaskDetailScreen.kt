@@ -186,7 +186,12 @@ fun TaskDetailScreen(
             )
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
-                state.subtasks.sortedBy { it.orderIndex }.forEach { sub ->
+                // Remembered: re-sorting on every recomposition (e.g. each keystroke in the
+                // quick-add field below) is wasted work; only the subtask list matters.
+                val orderedSubtasks = remember(state.subtasks) {
+                    state.subtasks.sortedBy { it.orderIndex }
+                }
+                orderedSubtasks.forEach { sub ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         RoundCheckbox(checked = sub.isDone, onToggle = { viewModel.onToggleSubtask(sub) })
                         Spacer(modifier = Modifier.width(Spacing.x3))

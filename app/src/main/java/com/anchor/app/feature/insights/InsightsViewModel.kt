@@ -17,6 +17,7 @@ import java.time.LocalDate
 import javax.inject.Inject
 
 /** A "Screen time / distraction" block is shown only when real usage data exists (PRD §10.9). */
+@androidx.compose.runtime.Immutable
 data class InsightsUiState(
     val dateLabel: LocalDate? = null,
     val hasAnyContent: Boolean = false,

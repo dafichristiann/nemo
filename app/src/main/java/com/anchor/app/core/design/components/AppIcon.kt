@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,7 +33,10 @@ fun AppIcon(
 ) {
     val shape = RoundedCornerShape(10.dp)
     if (icon != null) {
-        val bitmap = icon.toBitmap(width = size, height = size)
+        // Cache the rasterised bitmap: `toBitmap` re-renders the drawable every call, and this
+        // composable lives inside lazy lists (Settings → Blocked apps / Categories), so it would
+        // otherwise rasterise on every scroll/recomposition of each visible row.
+        val bitmap = remember(icon, size) { icon.toBitmap(width = size, height = size).asImageBitmap() }
         Box(
             modifier = modifier
                 .size(size.dp)
@@ -40,7 +44,7 @@ fun AppIcon(
             contentAlignment = Alignment.Center,
         ) {
             Image(
-                bitmap = bitmap.asImageBitmap(),
+                bitmap = bitmap,
                 contentDescription = null,
                 modifier = Modifier.size(size.dp),
             )

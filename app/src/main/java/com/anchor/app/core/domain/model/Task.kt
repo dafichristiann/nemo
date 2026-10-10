@@ -1,9 +1,15 @@
 package com.anchor.app.core.domain.model
 
+import androidx.compose.runtime.Immutable
+
 /**
  * A concrete, actionable task (docs/superpowers/design/03-database-schema.md §2.2 /
  * PRD §10.1 "Task Instance"). This is the primary unit shown in lists.
+ *
+ * `@Immutable`: every field is a primitive, enum, or String, so Compose can treat a [Task]
+ * instance as stable and skip recomposition of rows that receive an equal task.
  */
+@Immutable
 data class Task(
     val id: String,
     val definitionId: String? = null,

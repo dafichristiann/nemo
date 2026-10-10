@@ -29,6 +29,9 @@ import com.anchor.app.core.design.theme.Motion
 /** Material minimum touch target (better-accessibility/hit-areas.md: Material = 48dp). */
 val MinTouchTarget: Dp = 48.dp
 
+/** Shared default shape so `pressable`'s default arg does not allocate a new Shape per call. */
+private val DefaultPressableShape: Shape = RoundedCornerShape(12.dp)
+
 /**
  * Makes a custom (non-Material) surface press-responsive: it scales down slightly while held
  * and returns smoothly, and keeps the standard indication (ripple). Use in place of a bare
@@ -40,7 +43,7 @@ val MinTouchTarget: Dp = 48.dp
  */
 fun Modifier.pressable(
     enabled: Boolean = true,
-    shape: Shape = RoundedCornerShape(12.dp),
+    shape: Shape = DefaultPressableShape,
     pressedScale: Float = 0.97f,
     onClick: () -> Unit,
 ): Modifier = composed {

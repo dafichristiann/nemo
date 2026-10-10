@@ -22,6 +22,7 @@ import java.time.ZoneId
 import javax.inject.Inject
 
 /** UI state for screen 07 Future View + Domino (docs 07-screens.md §2.11, PRD §10.6-10.7). */
+@androidx.compose.runtime.Immutable
 data class FutureViewUiState(
     val task: Task? = null,
     val futureView: FutureView? = null,

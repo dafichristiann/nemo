@@ -21,6 +21,7 @@ import java.time.LocalDate
 import javax.inject.Inject
 
 /** One bar in the weekly chart. */
+@androidx.compose.runtime.Immutable
 data class DayBar(
     val epochDay: Long,
     val label: String,
@@ -30,6 +31,7 @@ data class DayBar(
 )
 
 /** One row in the "top apps" list. */
+@androidx.compose.runtime.Immutable
 data class TopAppRow(
     val packageName: String,
     val label: String,
@@ -46,6 +48,7 @@ enum class TrendDirection { UP, DOWN, FLAT }
  * A single comparison statistic: how the selected day compares to a baseline (yesterday or the
  * 7-day average). [deltaPct] is null when no honest percentage can be computed (baseline is 0).
  */
+@androidx.compose.runtime.Immutable
 data class StatComparison(
     val direction: TrendDirection,
     val deltaMs: Long,
@@ -53,6 +56,7 @@ data class StatComparison(
 )
 
 /** Wellbeing screen state (PRD §10.2, docs 07-screens.md §2.7). */
+@androidx.compose.runtime.Immutable
 data class WellbeingUiState(
     val availability: WellbeingAvailability = WellbeingAvailability.PERMISSION_MISSING,
     /** Total screen time for the **selected** day (defaults to today). */

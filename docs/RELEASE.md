@@ -115,6 +115,17 @@ GEMINI_API_KEY=<key dari Google AI Studio>
 - **Rotasi key** langsung di AI Studio bila pernah terekspos (mis. ter-paste ke chat/tiket).
 - `local.properties.example` hanya berisi placeholder — aman di-commit.
 
+**🔓 Risiko yang diketahui — key ter-embed di APK (diterima untuk dev pribadi):**
+- Sejak build, key yang terisi **dibakar ke `BuildConfig.GEMINI_API_KEY`** dan karena itu dapat
+  diekstrak dari APK (`unzip` + `strings`, atau JADX). Ini anti-pattern "client-embedded key":
+  siapa pun yang punya APK bisa memakai/menguras kuota key tersebut.
+- **Keputusan proyek:** ini diterima untuk penggunaan **pribadi/single-user** (sesuai desain
+  local-first tanpa backend). **Jangan** rilis publik/Play dengan key ter-embed.
+- Mitigasi yang sudah diterapkan: key dikirim via header `x-goog-api-key` (bukan query URL),
+  egress hanya agregat, offline-by-default, dan `network_security_config` mengunci HTTPS saja.
+- Jalur yang lebih aman bila kelak dipublikasikan: **proxy backend** (key di server) atau **input
+  key oleh user saat runtime** (tidak dibakar ke APK).
+
 ---
 
 ## 6. Checklist Rilis

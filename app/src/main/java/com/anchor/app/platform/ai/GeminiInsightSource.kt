@@ -58,13 +58,16 @@ class GeminiInsightSource @Inject constructor() : AiInsightSource {
     }
 
     private fun callModel(key: String, model: String, requestBody: JSONObject): InsightDraft? {
-        val url = URL("$ENDPOINT/$model:generateContent?key=$key")
+        // The API key is sent in the `x-goog-api-key` header, NOT as a `?key=` URL query param:
+        // URLs are more likely to be logged/persisted by proxies and crash reporters than headers.
+        val url = URL("$ENDPOINT/$model:generateContent")
         val connection = (url.openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
             connectTimeout = TIMEOUT_MS
             readTimeout = TIMEOUT_MS
             doOutput = true
             setRequestProperty("Content-Type", "application/json; charset=utf-8")
+            setRequestProperty("x-goog-api-key", key)
         }
 
         try {

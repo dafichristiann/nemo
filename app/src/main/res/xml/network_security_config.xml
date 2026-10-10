@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Explicit network hardening (docs 09-privacy-and-security.md).
+
+  - `cleartextTrafficPermitted="false"` at the base config forbids ALL plaintext HTTP app-wide,
+    so no code path (including any transitive dependency) can silently send data unencrypted.
+  - Only the opt-in AI endpoint (Gemini) is declared; it is HTTPS, and the app makes no other
+    network calls. This documents the single sanctioned egress host for reviewers.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">generativelanguage.googleapis.com</domain>
+    </domain-config>
+</network-security-config>

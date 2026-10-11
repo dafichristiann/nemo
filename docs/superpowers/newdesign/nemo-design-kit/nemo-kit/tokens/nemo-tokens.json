@@ -1,0 +1,37 @@
+{
+  "$name": "Nemo Design Tokens",
+  "$version": "1.0.0",
+  "$note": "dp/sp/ms. Tema: day (terang) & night (gelap, direkomendasikan). Netral murni, tanpa warna aksen.",
+  "color": {
+    "day":   { "background": "#FFFFFF", "surface": "#FAFAFA", "fog": "#F5F5F5", "line": "#E9E9E9",
+               "mute": "#767676", "placeholder": "#8C8C8C", "inkSecondary": "#444444", "ink": "#111111",
+               "onInk": "#FFFFFF", "danger": "#8A3B3B", "dangerLine": "#EAD9D9", "scrim": "#000000", "scrimAlpha": 0.42 },
+    "night": { "background": "#0A0A0A", "surface": "#141414", "fog": "#1B1B1B", "line": "#262626",
+               "mute": "#8A8A8A", "placeholder": "#6B6B6B", "inkSecondary": "#CFCFCF", "ink": "#F2F2F2",
+               "onInk": "#0A0A0A", "danger": "#D9A0A0", "dangerLine": "#3A2A2A", "scrim": "#000000", "scrimAlpha": 0.67 }
+  },
+  "font": {
+    "display": { "family": "Fraunces", "weights": [300, 400], "use": "judul, angka besar, timer" },
+    "text":    { "family": "Manrope",  "weights": [400, 500, 600, 700], "use": "isi, label, tombol" }
+  },
+  "type": {
+    "displayLarge":  { "font": "display", "weight": 300, "size": 46, "line": 52, "tracking": -0.02 },
+    "displayMedium": { "font": "display", "weight": 300, "size": 34, "line": 40, "tracking": -0.02 },
+    "headlineLarge": { "font": "display", "weight": 300, "size": 30, "line": 36, "tracking": -0.01 },
+    "headlineMedium":{ "font": "display", "weight": 400, "size": 22, "line": 28 },
+    "titleLarge":    { "font": "display", "weight": 400, "size": 19, "line": 26 },
+    "titleMedium":   { "font": "text", "weight": 600, "size": 15, "line": 22 },
+    "bodyLarge":     { "font": "text", "weight": 400, "size": 14, "line": 22 },
+    "bodyMedium":    { "font": "text", "weight": 400, "size": 13, "line": 20 },
+    "bodySmall":     { "font": "text", "weight": 400, "size": 12, "line": 18 },
+    "labelLarge":    { "font": "text", "weight": 600, "size": 14, "line": 20 },
+    "labelMedium":   { "font": "text", "weight": 600, "size": 12, "line": 16 },
+    "labelSmall":    { "font": "text", "weight": 600, "size": 10.5, "line": 14, "tracking": 0.12, "caps": true }
+  },
+  "space": { "xs": 4, "sm": 8, "md": 12, "lg": 16, "xl": 24, "xxl": 32, "xxxl": 48, "screenH": 24, "section": 28 },
+  "radius": { "pill": 999, "chip": 999, "button": 999, "input": 18, "card": 24, "dialog": 30, "sheetTop": 32, "small": 12 },
+  "size": { "button": 54, "buttonSmall": 34, "input": 54, "chipV": 10, "chipH": 18, "fab": 56, "bottomBar": 76,
+            "icon": 24, "node": 20, "toggle": [40, 24], "progressTrack": 3, "ringStroke": 6, "ring": 220, "touchMin": 48 },
+  "motion": { "press": 150, "standard": 250, "sheet": 400, "progress": 600, "easing": [0.22, 1, 0.36, 1], "note": "Lembut, tanpa bounce." },
+  "elevation": { "none": 0, "fab": "0 12 28 rgba(0,0,0,.15)" }
+}

@@ -10,6 +10,7 @@ import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.anchor.app.MainActivity
@@ -81,6 +82,14 @@ internal class BlockOverlayWindow(private val context: Context) {
             gravity = Gravity.CENTER
             setPadding(0, dp(12), 0, 0)
         }
+        val mascot = ImageView(context).apply {
+            // nemo_mascot_sleepy.png has the angry expression with vein mark
+            setImageResource(R.drawable.nemo_mascot_sleepy)
+            layoutParams = LinearLayout.LayoutParams(dp(72), dp(72)).apply {
+                gravity = Gravity.CENTER_HORIZONTAL
+                bottomMargin = dp(12)
+            }
+        }
         val back = Button(context).apply {
             text = context.getString(R.string.focus_block_overlay_back)
             setOnClickListener {
@@ -90,16 +99,40 @@ internal class BlockOverlayWindow(private val context: Context) {
             }
         }
 
+        card.addView(mascot)
         card.addView(title)
         card.addView(body)
         card.addView(hint)
         card.addView(back)
 
-        val root = LinearLayout(context).apply {
+        val root = object : LinearLayout(context) {
+            override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
+                if (event.keyCode == android.view.KeyEvent.KEYCODE_BACK && event.action == android.view.KeyEvent.ACTION_UP) {
+                    hide()
+                    val homeIntent = Intent(Intent.ACTION_MAIN).apply {
+                        addCategory(Intent.CATEGORY_HOME)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    runCatching { context.startActivity(homeIntent) }
+                    return true
+                }
+                return super.dispatchKeyEvent(event)
+            }
+        }.apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
             setBackgroundColor(Color.parseColor("#A0000000"))
             setPadding(dp(24), dp(24), dp(24), dp(24))
+            filterTouchesWhenObscured = true
+            setOnClickListener {
+                hide()
+                val homeIntent = Intent(Intent.ACTION_MAIN).apply {
+                    addCategory(Intent.CATEGORY_HOME)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                runCatching { context.startActivity(homeIntent) }
+            }
+            card.setOnClickListener { /* consume click so touching card does not dismiss */ }
             addView(
                 card,
                 LinearLayout.LayoutParams(

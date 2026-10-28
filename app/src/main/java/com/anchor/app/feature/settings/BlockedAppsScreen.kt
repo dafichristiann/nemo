@@ -36,6 +36,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.anchor.app.R
 import com.anchor.app.core.design.components.AppIcon
+import com.anchor.app.core.design.components.NemoScreenHeader
 import com.anchor.app.core.design.components.NemoSwitch
 import com.anchor.app.core.design.components.pressable
 import com.anchor.app.core.design.theme.ManropeFamily
@@ -77,7 +78,11 @@ fun BlockedAppsScreen(
             .padding(top = Spacing.x6),
         verticalArrangement = Arrangement.spacedBy(Spacing.x4),
     ) {
-        BackHeader(title = stringResource(R.string.blocked_title), onBack = onBack)
+        BackHeader(
+            eyebrow = "DISTRACTION SHIELD",
+            title = stringResource(R.string.blocked_title),
+            onBack = onBack,
+        )
 
         // Search
         SearchField(
@@ -159,42 +164,16 @@ internal fun AppToggleRow(
 }
 
 @Composable
-internal fun BackHeader(title: String, onBack: () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(Spacing.x3)) {
-        Row(
-            modifier = Modifier
-                .clip(PillShape)
-                .pressable(
-                    shape = PillShape,
-                    pressedScale = 0.96f,
-                    onClick = onBack,
-                )
-                .padding(vertical = Spacing.x1, horizontal = Spacing.x1),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Spacing.x1),
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_back),
-                contentDescription = stringResource(R.string.detail_back),
-                tint = Nemo.colors.ink,
-                modifier = Modifier.size(20.dp),
-            )
-            Text(
-                text = stringResource(R.string.detail_back),
-                fontFamily = ManropeFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp,
-                color = Nemo.colors.ink,
-            )
-        }
-        Text(
-            text = title,
-            fontFamily = ManropeFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize = 26.sp,
-            color = Nemo.colors.ink,
-        )
-    }
+internal fun BackHeader(
+    title: String,
+    onBack: () -> Unit,
+    eyebrow: String? = null,
+) {
+    NemoScreenHeader(
+        eyebrow = eyebrow,
+        title = title,
+        onBack = onBack,
+    )
 }
 
 @Composable

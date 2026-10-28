@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.anchor.app.core.common.DispatcherProvider
+import com.anchor.app.core.design.theme.AppThemeMode
+import com.anchor.app.core.design.theme.ThemePreferences
 import com.anchor.app.core.domain.model.AppCategory
 import com.anchor.app.core.domain.model.AppSettings
 import com.anchor.app.core.domain.model.FocusArea
@@ -12,6 +14,7 @@ import com.anchor.app.core.domain.repository.InsightRepository
 import com.anchor.app.core.domain.repository.InterventionRepository
 import com.anchor.app.core.domain.repository.SettingsRepository
 import com.anchor.app.core.domain.repository.TaskDefinitionRepository
+import com.anchor.app.core.domain.repository.TaskDependencyRepository
 import com.anchor.app.core.domain.repository.TaskRepository
 import com.anchor.app.core.domain.repository.UsageRepository
 import com.anchor.app.platform.apps.InstalledApp
@@ -40,6 +43,7 @@ class SettingsViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val settingsRepository: SettingsRepository,
     private val taskRepository: TaskRepository,
+    private val taskDependencyRepository: TaskDependencyRepository,
     private val definitionRepository: TaskDefinitionRepository,
     private val usageRepository: UsageRepository,
     private val focusRepository: FocusRepository,
@@ -50,7 +54,18 @@ class SettingsViewModel @Inject constructor(
     private val appCatalog: InstalledAppsSource,
     private val accessibilityStatus: AccessibilityStatus,
     private val dispatchers: DispatcherProvider,
+    private val themePreferences: ThemePreferences,
 ) : ViewModel() {
+
+    val themeMode: StateFlow<AppThemeMode> = themePreferences.themeMode
+
+    fun toggleTheme(isCurrentlyDark: Boolean) {
+        themePreferences.toggleTheme(isCurrentlyDark)
+    }
+
+    fun setThemeMode(mode: AppThemeMode) {
+        themePreferences.setThemeMode(mode)
+    }
 
     val settings: StateFlow<AppSettings> = settingsRepository.observe()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AppSettings())
@@ -153,6 +168,20 @@ class SettingsViewModel @Inject constructor(
     fun setDefaultFocusDurationMin(minutes: Int) =
         viewModelScope.launch(dispatchers.io) { settingsRepository.setDefaultFocusDurationMin(minutes) }
 
+    fun setLocale(locale: String) {
+        val normalized = if (locale.startsWith("id", true) || locale.startsWith("in", true)) "id" else "en"
+        viewModelScope.launch(dispatchers.io) {
+            settingsRepository.setLocale(normalized)
+        }
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            try {
+                val localeManager = context.getSystemService(android.app.LocaleManager::class.java)
+                val target = if (normalized == "id") java.util.Locale("in", "ID") else java.util.Locale.ENGLISH
+                localeManager?.applicationLocales = android.os.LocaleList(target)
+            } catch (_: Exception) {}
+        }
+    }
+
     /** Opens the OS Accessibility settings so the user can grant the service (docs 08 §4). */
     fun onOpenAccessibilitySettings() = accessibilityStatus.open(context)
 
@@ -192,6 +221,7 @@ class SettingsViewModel @Inject constructor(
     /** "Delete all data" — erase every user table then reset settings (PRD §10.10). */
     fun onDeleteAllData() = viewModelScope.launch(dispatchers.io) {
         taskRepository.clear()
+        taskDependencyRepository.clear()
         definitionRepository.clear()
         usageRepository.clearAll()
         focusRepository.clear()

@@ -64,6 +64,12 @@ class SettingsRepositoryImpl @Inject constructor(
         dao.upsert(current.copy(defaultFocusDurationMin = minutes).toEntity())
     }
 
+    override suspend fun setLocale(locale: String) {
+        val current = get()
+        if (current.locale == locale) return
+        update(current.copy(locale = locale))
+    }
+
     override suspend fun resetAll() {
         dao.clear()
     }

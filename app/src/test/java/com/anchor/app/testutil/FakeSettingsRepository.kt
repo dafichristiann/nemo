@@ -52,6 +52,10 @@ class FakeSettingsRepository(
         state.value = state.value.copy(defaultFocusDurationMin = minutes)
     }
 
+    override suspend fun setLocale(locale: String) {
+        state.value = state.value.copy(locale = locale)
+    }
+
     override suspend fun resetAll() {
         state.value = AppSettings()
     }

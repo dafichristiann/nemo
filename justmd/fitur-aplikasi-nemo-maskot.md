@@ -8,6 +8,11 @@
 > **Bahasa UI aplikasi:** default **Inggris** (`res/values/strings.xml`), tersedia terjemahan
 > **Bahasa Indonesia** penuh (`res/values-id/strings.xml`). Karena itu, label asli di dokumen ini
 > ditulis persis seperti yang muncul di aplikasi versi Inggris, disertai terjemahan Indonesia.
+>
+> **Revisi maskot:** versi ini memasang karakter maskot baru (kepala chibi bergaya tinta hitam,
+> 12 ekspresi) di seluruh layar. **Semua fitur, label, dan alur tidak berubah.** Bagian bertanda
+> **Maskot:** adalah spesifikasi desain yang perlu diimplementasikan, belum tentu sudah ada di
+> kode saat ini. Ringkasan lengkap ada di bagian 1.1.
 
 ---
 
@@ -25,6 +30,8 @@ dan tidak menghakimi**. Seluruh data tersimpan **lokal di HP**; tidak ada server
   untuk diabaikan ("Not now", "Emergency exit").
 - **Autonomy > Forced Behavior** — pengguna selalu punya jalan keluar.
 - **Nada:** kalem, suportif, ringkas, tanpa menghakimi.
+- **Wajah aplikasi:** satu karakter maskot (kepala chibi bergaya tinta hitam, 12 ekspresi) yang
+  menyertai identitas, ilustrasi, dan momen penting di seluruh layar (lihat 1.1).
 
 **Struktur navigasi utama:**
 - **Splash** singkat → **Onboarding** (2 langkah) → **Shell utama**.
@@ -41,6 +48,115 @@ dan tidak menghakimi**. Seluruh data tersimpan **lokal di HP**; tidak ada server
 > "00b Permission Onboarding"). **Kode yang benar-benar berjalan memakai nama "Nemo"** dan
 > struktur halaman seperti dijelaskan dokumen ini. Bila ada perbedaan, dokumen ini mengikuti apa
 > yang tampil di aplikasi.
+
+### 1.1 Maskot Nemo
+
+> **Status:** spesifikasi desain. Fitur, label, dan alur layar tidak berubah; yang berubah hanya
+> tampilan maskot.
+
+**Karakter.** Anak laki-laki chibi, **kepala saja** (tanpa leher dan badan), digambar dengan tinta
+spidol hitam-putih: rambut runcing berantakan dengan goresan putih tipis, kacamata bulat tebal,
+telinga kecil, hidung titik, mulut kecil. Tanpa warna, bayangan, atau gradasi. Karakter ini
+**menggantikan semua maskot dan ilustrasi lama**, termasuk intro video di Splash (lihat 3.1) dan
+ikon bulat pada empty state.
+
+**Tiga peran:**
+1. **Identitas:** ikon aplikasi, Splash, dan notifikasi.
+2. **Ilustrasi:** pengganti ikon umum pada empty state dan header.
+3. **Pendamping:** bereaksi pada momen penting (menyapa, selesai fokus, mengingatkan).
+
+Maskot tidak pernah menggantikan teks dan tidak pernah menutupi tombol.
+
+#### Aset ekspresi (12 gambar)
+
+| # | Berkas | Ekspresi | Ciri utama |
+|---|---|---|---|
+| 1 | `mascot_neutral` | Neutral | Mata melirik ke samping, mulut kecil datar |
+| 2 | `mascot_happy` | Happy | Mata melengkung, mulut terbuka tersenyum |
+| 3 | `mascot_sad` | Sad | Alis turun, satu air mata, mulut melengkung ke bawah |
+| 4 | `mascot_angry` | Angry | Alis menukik, gigi rapat, tanda urat di dahi |
+| 5 | `mascot_surprised` | Surprised | Mata bulat lebar, mulut "O", garis kejut |
+| 6 | `mascot_sleepy` | Sleepy | Mata setengah tertutup, tanda "zzz" |
+| 7 | `mascot_confused` | Confused | Satu alis naik, mulut bergelombang, tanda "?" |
+| 8 | `mascot_laughing` | Laughing | Mata menyipit, mulut tawa lebar |
+| 9 | `mascot_shy` | Shy | Mata menghindar, garis pipi merona, mulut bergelombang |
+| 10 | `mascot_thinking` | Thinking | Mata melirik ke atas, tanda "..." |
+| 11 | `mascot_wink` | Wink | Satu mata tertutup, senyum kecil |
+| 12 | `mascot_talking` | Talking | Mata seperti Neutral, mulut terbuka oval |
+
+**Aset tambahan yang masih perlu dibuat:**
+- `mascot_blink`: kedua mata tertutup, untuk animasi berkedip. Sementara bisa memakai `mascot_wink`.
+- `mascot_silhouette`: siluet monokrom (rambut + kacamata) untuk ikon kecil notifikasi dan ikon tema.
+- `app_icon`: Neutral di atas latar putih, kepala berada di zona aman tengah.
+
+Semua berkas memakai kanvas persegi yang sama (disarankan 1024x1024, latar transparan) dengan ukuran
+dan posisi kepala yang sama, agar tidak "loncat" saat berganti ekspresi.
+
+#### Identitas aplikasi
+
+| Kebutuhan | Pakai | Catatan |
+|---|---|---|
+| Ikon launcher | `app_icon` (Neutral) | Kepala di zona aman tengah (kira-kira dua pertiga kanvas) agar tidak terpotong bentuk ikon |
+| Ikon tema (Android 13+) | `mascot_silhouette` | Monokrom |
+| Splash | Neutral lalu Happy | Lihat 3.1 |
+| Ikon kecil notifikasi (status bar) | `mascot_silhouette` | Android hanya menampilkan siluet satu warna di sini |
+| Ikon besar notifikasi | Ekspresi sesuai konteks | Lihat 3.12 dan 3.16 |
+| Listing toko aplikasi | Neutral atau Happy | 512x512 |
+
+#### Ukuran
+
+- **Besar** (sekitar 120 dp): Splash, onboarding, dan empty state.
+- **Sedang** (sekitar 80 dp): overlay "Back to focus?" dan kartu intervensi.
+- **Kecil** (sekitar 48 dp): header, notice, dan kartu di layar fungsional.
+
+#### Peta ekspresi per halaman
+
+| Halaman | Ukuran | Ekspresi |
+|---|---|---|
+| Splash | Besar | Neutral lalu Happy |
+| Onboarding Profil | Besar | Talking, jadi Happy saat nickname terisi |
+| Onboarding Izin | Besar | Shy, jadi Happy saat semua izin aktif |
+| Tasks: header sapaan | Kecil | Happy (pagi), Neutral (siang dan malam) |
+| Tasks: banner overdue | Kecil | Sad |
+| Tasks: progress 100% | Kecil | Laughing |
+| Tasks: kosong | Besar | Talking |
+| Add Task, Reschedule | Tidak ada | - |
+| Task Detail | Tidak ada, kecuali callout Future View (kecil) | Thinking |
+| Wellbeing: izin belum ada | Besar | Shy |
+| Wellbeing: belum ada data | Besar | Sleepy |
+| Focus Setup | Kecil (tugas kosong: besar) | Neutral; notice fallback Confused; tugas kosong Thinking |
+| Focus Active | Kecil | Neutral; Pause Sleepy; selesai penuh Laughing; berakhir lebih awal Sad |
+| Overlay "Back to focus?" | Sedang | Angry |
+| Notifikasi Sesi Fokus | Ikon besar notifikasi | Neutral |
+| Future View | Kecil | Skenario A Happy, skenario B Angry; notice tautan melingkar Confused |
+| Insights | Kecil (kosong: besar) | Talking pada blok INSIGHT; kosong Sleepy |
+| Intervention (dalam app dan notifikasi) | Sedang | Thinking / Sad / Happy / Talking sesuai level |
+| Settings | Kecil | Happy pada penegasan privasi; Sad pada Delete all data |
+| App Categories: kosong | Besar | Sleepy |
+| Blocked Apps: kosong | Besar | Confused |
+
+#### Aturan pemakaian
+
+- **Ekspresi negatif dipakai secara sengaja.** **Sad** untuk momen tertinggal atau kehilangan
+  (tugas overdue, sesi berakhir lebih awal, tugas belum selesai pada intervensi Contextual, dan
+  "Delete all data"). **Angry** untuk momen menegur (membuka app yang dipause saat fokus dan
+  proyeksi "IF I KEEP DELAYING"). Di luar momen itu pakai ekspresi lain.
+- **Surprised** belum dipakai di layar mana pun (cadangan).
+- **Secukupnya.** Maskot besar hanya untuk Splash, onboarding, dan empty state. Di layar fungsional
+  pakai ukuran kecil atau sedang dan jangan membuat layar terasa ramai.
+- **Dekoratif.** Pembaca layar melewati maskot; semua informasi tetap ada dalam teks.
+- **Mode terang dan gelap.** Aset berupa garis hitam di atas transparan. Di latar terang dipakai
+  langsung. Di latar gelap (mis. `#0A0A0A`) maskot ditaruh di dalam badge lingkaran putih agar
+  rambut hitamnya tidak hilang.
+
+#### Animasi (tanpa video)
+
+- **Ganti ekspresi:** pergantian gambar dengan crossfade cepat (sekitar 120 ms).
+- **Kedip (idle):** ganti ke gambar kedip sekitar 150 ms setiap 3-5 detik (acak).
+- **Gerak lewat kode:** memantul pelan naik-turun (Happy, Laughing) dan miring sedikit (Confused,
+  Thinking). Tidak perlu menggambar frame tambahan.
+- **Hemat gerak:** bila pengguna mematikan animasi sistem, maskot tampil statis tanpa kedip,
+  pantul, atau miring.
 
 ---
 
@@ -77,15 +193,20 @@ dan tidak menghakimi**. Seluruh data tersimpan **lokal di HP**; tidak ada server
 - **Tujuan:** menampilkan intro bermerek singkat sebelum masuk ke aplikasi.
 - **Cara membuka:** otomatis sekali per *cold start* (bukan setiap rotasi layar).
 - **Yang dilihat pengguna:**
-  - Klip video pendek (sekitar 3,5 detik) dengan suara/chime singkat, ditampilkan layar penuh.
+  - Urutan gambar maskot (bukan video) selama sekitar 3,5 detik, di tengah layar, dengan
+    suara/chime singkat yang tetap dipertahankan:
+    1. **Neutral** (sekitar 1,5 detik), berkedip sekali.
+    2. Berganti ke **Happy** (sekitar 2 detik) sambil memantul pelan naik-turun.
+  - Teks nama aplikasi **Nemo** di bawah maskot.
   - Ada **dua varian:** versi **terang** dan versi **gelap**, dipilih otomatis mengikuti tema
     sistem HP. Latar belakang menyesuaikan (putih untuk terang, nyaris hitam `#0A0A0A` untuk gelap).
+    Pada versi gelap, maskot ditaruh di dalam badge lingkaran putih agar rambut hitamnya tidak hilang.
 - **Perilaku penting:**
-  - Setelah klip selesai, layar langsung berpindah ke langkah berikutnya (Onboarding bila belum
-    selesai, atau tab **Tasks** bila onboarding sudah selesai).
-  - **Tidak pernah macet:** jika klip gagal diputar (codec tidak didukung, error decode) atau
-    tidak pernah melaporkan selesai, ada batas waktu maksimum (~4,5 detik) yang memaksa lanjut.
-    Layar tidak akan tertahan kosong.
+  - Setelah urutan gambar selesai, layar langsung berpindah ke langkah berikutnya (Onboarding bila
+    belum selesai, atau tab **Tasks** bila onboarding sudah selesai).
+  - **Tidak pernah macet:** jika gambar gagal dimuat atau urutan tidak pernah selesai, batas waktu
+    maksimum (~4,5 detik) tetap memaksa lanjut. Layar tidak akan tertahan kosong. Karena memakai
+    gambar, Splash tidak lagi bergantung pada codec video.
 
 ---
 
@@ -111,6 +232,9 @@ dan tidak menghakimi**. Seluruh data tersimpan **lokal di HP**; tidak ada server
     - Chip pilihan: **25 min** • **45 min** • **60 min** (default **25 min**).
   - **Tombol utama:** **"Continue"**.
   - **Tautan bawah:** **"Skip for now"** (teks di tengah bawah).
+- **Maskot:**
+  - Maskot **besar** di atas judul, ekspresi **Talking** (menyapa).
+  - Berganti ke **Happy** begitu nickname terisi; kembali ke Talking bila dikosongkan.
 - **Perilaku penting:**
   - Setiap isian **langsung tersimpan** saat diubah, jadi pengguna bisa menekan Continue atau Skip
     kapan saja tanpa kehilangan yang sudah diketik.
@@ -140,6 +264,9 @@ dan tidak menghakimi**. Seluruh data tersimpan **lokal di HP**; tidak ada server
   - **Kartu privasi:** ikon gembok + "All data is stored locally on your phone."
   - **Tombol utama:** **"Continue"**.
   - **Tautan bawah:** **"Skip for now"**.
+- **Maskot:**
+  - Maskot **besar** di atas judul, ekspresi **Shy** (meminta izin dengan sopan).
+  - Berganti ke **Happy** setelah ketiga izin berstatus "Enabled".
 - **Perilaku penting:**
   - Menekan **Enable** pada **Usage access** atau **App blocking** membuka **Pengaturan sistem HP**
     (izin ini hanya bisa diberikan dari sana, bukan lewat dialog dalam app).
@@ -183,7 +310,7 @@ dan tidak menghakimi**. Seluruh data tersimpan **lokal di HP**; tidak ada server
       tidak merah menyala).
     - **Pill prioritas** di kanan: **LOW** / **MEDIUM** / **HIGH** / **URGENT**.
   - **FAB (`+`)** bulat gelap di kanan bawah → membuka sheet **Add Task**.
-  - **Empty state:** bila tidak ada tugas → ikon bulat + **"No tasks yet - plan your day."** +
+  - **Empty state:** bila tidak ada tugas → **maskot** besar (ekspresi **Talking**, menggantikan ikon bulat) + **"No tasks yet - plan your day."** +
     **"Tap + to add your first task."**
 - **Daftar tugas overdue (muncul setelah menekan "Review & Reschedule"):**
   - Tiap tugas overdue menampilkan baris timeline yang sama, plus tiga tombol kecil:
@@ -191,6 +318,14 @@ dan tidak menghakimi**. Seluruh data tersimpan **lokal di HP**; tidak ada server
     - **"Keep for Today"** → memindahkan tenggat ke akhir hari ini (23:59) sehingga tidak lagi
       overdue.
     - **"Open"** → membuka Task Detail (menyelesaikan tugas kini melalui sesi fokus).
+- **Maskot:**
+  - **Header sapaan:** maskot **kecil** di samping sapaan. **Happy** untuk "Good morning", **Neutral**
+    untuk "Good afternoon" dan "Good evening". Berkedip berkala (idle).
+  - **Banner overdue:** maskot **kecil** di kiri teks banner, ekspresi **Sad**.
+  - **Kartu progress:** saat mencapai **100%**, maskot **kecil** ekspresi **Laughing** muncul di kartu
+    (memantul sekali). Di bawah 100% tidak ada maskot di kartu.
+  - **Empty state:** maskot **besar** ekspresi **Talking** (menggantikan ikon bulat).
+  - Week strip, filter, daftar tugas, dan FAB tidak memakai maskot.
 - **Perilaku penting:**
   - Tugas overdue **dipisahkan** ke daftar sendiri agar tidak muncul dua kali di daftar utama.
     (Pada filter **Completed**, semua tugas tetap ditampilkan.)
@@ -222,6 +357,7 @@ dan tidak menghakimi**. Seluruh data tersimpan **lokal di HP**; tidak ada server
     - Daftar step yang sudah ditambahkan (bisa dihapus dengan ikon X di sebelahnya).
     - Kolom input placeholder **"Add a step."** + tombol **"Add step"** untuk menambah step.
   - **Tombol utama:** **"Save Task"** (nonaktif selama judul kosong).
+- **Maskot:** tidak ada di sheet ini agar form tetap ringkas dan tidak menutupi kolom isian.
 - **Perilaku penting:**
   - **Judul kosong tidak bisa disimpan** — tombol Save nonaktif, dan bila dipaksa muncul pesan
     kesalahan.
@@ -257,6 +393,8 @@ dan tidak menghakimi**. Seluruh data tersimpan **lokal di HP**; tidak ada server
       (menyelesaikan tugas dilakukan lewat sesi fokus).
     - Tombol sekunder: **"Reschedule"** → membuka sheet Reschedule.
     - Tombol sekunder (merah/danger): **"Delete Task"** → menghapus tugas, lalu kembali ke Tasks.
+- **Maskot:** tidak ada di layar ini, dengan satu pengecualian: callout **"See what happens if you
+  delay"** memakai maskot **kecil** ekspresi **Thinking** di kiri teksnya.
 - **Perilaku penting:**
   - Mencentang step memperbarui progres secara langsung.
   - Bila tugas tidak ditemukan, muncul pesan kosong sederhana.
@@ -276,6 +414,7 @@ dan tidak menghakimi**. Seluruh data tersimpan **lokal di HP**; tidak ada server
     ada, jika tidak **23:00**).
   - **Tombol utama:** **"Move deadline"** → menyimpan tenggat baru.
   - **Tombol teks (bila ada tenggat saat ini):** **"Clear deadline"** → menghapus tenggat.
+- **Maskot:** tidak ada di sheet ini.
 - **Perilaku penting:**
   - Hari dihitung dari tanggal hari ini (deterministik).
   - Memindahkan tenggat tercatat sebagai event (dipakai untuk insight), tetapi **tidak** terlihat
@@ -312,6 +451,11 @@ dan tidak menghakimi**. Seluruh data tersimpan **lokal di HP**; tidak ada server
     Usage access sistem) dan tautan **"App settings"** (membuka Settings dalam app).
   - **Belum ada data** → **"No usage data yet"** + **"Once you use your phone a little, your
     screen-time summary will appear here."**
+- **Maskot:**
+  - Layar dengan data: tanpa maskot, supaya angka tetap jadi fokus.
+  - **Izin belum diberikan** ("See your screen time"): maskot **besar** ekspresi **Shy** di atas teks
+    dan tombol **"Open Settings"**.
+  - **Belum ada data** ("No usage data yet"): maskot **besar** ekspresi **Sleepy** (belum ada aktivitas).
 - **Perilaku penting:**
   - Angka **hanya** dari data pemakaian Android; **tidak pernah** diisi angka palsu 0 yang
     menyesatkan (bila tak ada data, bagian disembunyikan/diganti empty state).
@@ -344,6 +488,11 @@ dan tidak menghakimi**. Seluruh data tersimpan **lokal di HP**; tidak ada server
   - **Section "Duration":** kolom yang bisa ditekan (menampilkan mis. **"25:00"**). Menekan membuka
     **dialog roda** dengan opsi 5 detik–600 detik (kelipatan 5 detik), tombol **"Set"**/**"Cancel"**.
   - **Tombol utama:** **"Begin Focus"**.
+- **Maskot:**
+  - Maskot **kecil** ekspresi **Neutral** di samping judul "Focus session".
+  - **Notice fallback Gentle** ("Blocking isn't available..."): maskot **kecil** ekspresi **Confused**
+    di samping teks notice.
+  - Daftar tugas kosong ("No focus session yet..."): maskot **besar** ekspresi **Thinking**.
 - **Perilaku penting:**
   - Durasi awal mengikuti **default focus length** dari Profil/Settings (25/45/60 menit) sampai
     pengguna memilih sendiri.
@@ -384,6 +533,12 @@ dan tidak menghakimi**. Seluruh data tersimpan **lokal di HP**; tidak ada server
     - Sesi berakhir lebih awal: **"Task completed. You ended early (N min); the full session is
       what makes it stick."**
     - Tombol **"Dismiss"** untuk menutup feedback.
+- **Maskot:**
+  - Maskot **kecil** di sisi kanan atas, sejajar pill **FOCUS**, sehingga tidak menutupi Timer Ring.
+    Sesi berjalan: **Neutral** dengan kedipan berkala. Saat **Pause**: **Sleepy**. Saat **Resume**:
+    kembali ke **Neutral**.
+  - **Feedback pasca-sesi:** sesi penuh dan tugas selesai: **Laughing**. Sesi berakhir lebih awal:
+    **Sad**.
 - **Perilaku penting:**
   - **Pause** membekukan jam; **Resume** melanjutkan dari waktu terakumulasi (waktu saat pause
     tidak dihitung sebagai waktu fokus).
@@ -409,6 +564,8 @@ dan tidak menghakimi**. Seluruh data tersimpan **lokal di HP**; tidak ada server
   - **Hint:** **"You can always end the session from the focus screen or its notification."**
   - **Tombol:** **"Back to focus"** → menutup overlay, membawa Nemo ke depan pada tab **Focus**
     (sesi aktif).
+- **Maskot:** maskot **sedang** di bagian atas kartu putih, ekspresi **Angry** (menegur karena app
+  yang dipause dibuka). Tombol **"Back to focus"** tetap tidak tertutup maskot.
 - **Perilaku penting:**
   - **Tidak memaksa**: overlay menjelaskan dan menyediakan cara kembali, tapi pengguna selalu bisa
     mengabaikannya (Awareness > Control). Overlay bersifat fokusable agar tombol "Back to focus"
@@ -427,6 +584,10 @@ dan tidak menghakimi**. Seluruh data tersimpan **lokal di HP**; tidak ada server
   - **Aksi:** **"Emergency exit"** (menghentikan sesi + membuka Nemo).
   - Notifikasi bersifat **menetap (ongoing)** dan prioritas rendah.
   - Mengetuk notifikasi membuka kembali aplikasi.
+- **Maskot:**
+  - **Ikon kecil (status bar):** `mascot_silhouette`, siluet monokrom rambut dan kacamata. Android
+    hanya menampilkan ikon kecil satu warna, jadi ekspresi penuh tidak bisa dipakai di sini.
+  - **Ikon besar (di dalam notifikasi):** maskot ekspresi **Neutral**.
 - **Perilaku penting:**
   - Notifikasi hanya hidup **selama sesi aktif**; tidak ada notifikasi "hantu" saat tak ada sesi.
 
@@ -458,6 +619,11 @@ dan tidak menghakimi**. Seluruh data tersimpan **lokal di HP**; tidak ada server
       circular link, so it wasn't added."**
     - Bila tak ada kandidat: **"No other tasks to link yet."**
   - **Tombol utama:** **"Start Focus Now"** → memulai sesi fokus untuk tugas ini.
+- **Maskot:**
+  - Kartu skenario A ("IF I START NOW"): maskot **kecil** ekspresi **Happy**.
+  - Kartu skenario B ("IF I KEEP DELAYING"): maskot **kecil** ekspresi **Angry**.
+  - Notice "That would create a circular link, so it wasn't added.": maskot **kecil** ekspresi
+    **Confused** di samping notice.
 - **Perilaku penting:**
   - Bahasa bersifat estimatif ("may affect"), bukan kepastian.
   - Bila tugas tidak punya estimasi durasi/tenggat, dipakai nilai asumsi default dan ditandai
@@ -487,6 +653,10 @@ dan tidak menghakimi**. Seluruh data tersimpan **lokal di HP**; tidak ada server
 - **Empty state:**
   - **"Nothing to reflect on yet"** + **"Once you plan or complete a task, your daily reflection
     will appear here."**
+- **Maskot:**
+  - **Blok "INSIGHT":** maskot **kecil** ekspresi **Talking** di samping kutipan refleksi, seolah
+    maskot yang menyampaikannya.
+  - **Empty state** ("Nothing to reflect on yet"): maskot **besar** ekspresi **Sleepy**.
 - **Perilaku penting:**
   - Bagian **Screen Time / Longest distraction disembunyikan** bila tidak ada data usage (tidak
     menampilkan 0 yang menyesatkan).
@@ -514,6 +684,12 @@ dan tidak menghakimi**. Seluruh data tersimpan **lokal di HP**; tidak ada server
     - **Aksi utama:** **"Start Focus"**.
     - **Aksi sekunder:** **"Later"** dan **"Not now"**.
     - **Hint:** **"We'll stay quiet about this one for a while."**
+- **Maskot:** maskot **sedang** menempel di tepi atas kartu (sebagian keluar dari kartu) agar tidak
+  menutupi tombol. Ekspresi mengikuti level:
+  - Gentle ("You've been here longer than usual."): **Thinking**.
+  - Contextual ("Your task is still unfinished."): **Sad**.
+  - Future ("Starting now gives you free time later."): **Happy**.
+  - Focus ("Start a focus session?"): **Talking**.
 - **Perilaku penting:**
   - **Start Focus** → masuk ke alur Focus (mencatat interaksi).
   - **Later** → mencatat penundaan dan memasang **cooldown 2 jam** untuk konteks ini (Nemo diam
@@ -534,6 +710,10 @@ dan tidak menghakimi**. Seluruh data tersimpan **lokal di HP**; tidak ada server
   - **Focus** — "Ready to focus?" / "Here whenever you're ready to start a focus session."
   - **Aksi:** **"Start Focus"** dan **"Later"**.
   - Nama channel: **"Gentle check-ins"** (dengan deskripsi kalem).
+- **Maskot:**
+  - **Ikon kecil (status bar):** `mascot_silhouette`, sama dengan notifikasi sesi fokus.
+  - **Ikon besar:** ekspresi sesuai level, sama dengan 3.15: Gentle **Thinking**, Contextual
+    **Sad**, Future **Happy**, Focus **Talking**.
 - **Perilaku penting:**
   - Bila notifikasi dinonaktifkan, mesin beralih ke channel dalam app (3.15).
   - Menekan **Start Focus** atau **Later** mencatat pilihan pengguna (mempengaruhi kuota &
@@ -575,6 +755,10 @@ dan tidak menghakimi**. Seluruh data tersimpan **lokal di HP**; tidak ada server
     - Tombol danger: **"Delete all data"** (menghapus seluruh data pengguna + mengatur ulang
       pengaturan).
   - **Penegasan:** **"Raw usage data never leaves your phone."**
+- **Maskot:**
+  - Maskot **kecil** ekspresi **Happy** di samping penegasan **"Raw usage data never leaves your
+    phone."**
+  - Bagian **Data controls**: maskot **kecil** ekspresi **Sad** di samping tombol **"Delete all data"**.
 - **Perilaku penting:**
   - Status izin diperbarui otomatis saat kembali ke layar (mis. setelah mengubah di Settings HP).
   - Toggle **AI Personal Insights** menjelaskan secara ringkas bahwa hanya data agregat yang
@@ -596,6 +780,8 @@ dan tidak menghakimi**. Seluruh data tersimpan **lokal di HP**; tidak ada server
     - **Kolom ubah label kategori** (placeholder "Category") + tombol **"Save"**.
     - **Toggle "Treat as distraction"**.
   - **Empty state:** **"No apps categorized yet. They appear once usage is collected."**
+- **Maskot:** hanya pada empty state ("No apps categorized yet..."): maskot **besar** ekspresi
+  **Sleepy**. Daftar app tidak memakai maskot.
 - **Perilaku penting:**
   - Menyimpan label kategori atau mengubah toggle "Treat as distraction" langsung menyimpan
     perubahan (override manual oleh pengguna).
@@ -613,6 +799,8 @@ dan tidak menghakimi**. Seluruh data tersimpan **lokal di HP**; tidak ada server
   - **Daftar app terinstal:** tiap baris berisi ikon app, label, package name, dan **toggle**.
     - App yang **terblokir** ditampilkan **paling atas**, lalu app lainnya secara alfabetis.
   - **Empty state:** **"No installed apps found."**
+- **Maskot:** hanya pada empty state ("No installed apps found."): maskot **besar** ekspresi
+  **Confused**. Daftar app tidak memakai maskot.
 - **Perilaku penting:**
   - Menyalakan toggle menambahkan app ke daftar blokir; mematikan menghapusnya.
   - Nemo hanya melihat app dengan entri launcher (bukan seluruh paket) demi privasi.
@@ -624,7 +812,7 @@ dan tidak menghakimi**. Seluruh data tersimpan **lokal di HP**; tidak ada server
 ## 4. Peta Alur Navigasi
 
 ```
-[Splash]  (video intro, sekali per cold start)
+[Splash]  (intro maskot, sekali per cold start)
     │
     ▼
 [Onboarding — Profil]  "Setup 2 of 3"        (Continue / Skip)
@@ -706,6 +894,10 @@ dokumentasi tidak menyesatkan:
    daftar layar dokumen lama.
 5. **Bahasa.** Aplikasi default berbahasa **Inggris**, dengan terjemahan **Indonesia** tersedia
    penuh; label di dokumen ini mengikuti versi Inggris (seperti yang tampil di perangkat default).
+6. **Maskot (spesifikasi, belum di kode).** Semua bagian bertanda **Maskot:** dan bagian 1.1 adalah
+   rancangan revisi. Kode saat ini masih memakai klip video di Splash dan ikon bulat pada empty
+   state. Setelah maskot baru diimplementasikan, berkas video Splash (varian terang dan gelap) tidak
+   lagi dipakai.
 
 ---
 

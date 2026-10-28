@@ -59,6 +59,7 @@ data class StatComparison(
 @androidx.compose.runtime.Immutable
 data class WellbeingUiState(
     val availability: WellbeingAvailability = WellbeingAvailability.PERMISSION_MISSING,
+    val loading: Boolean = false,
     /** Total screen time for the **selected** day (defaults to today). */
     val totalMs: Long = 0,
     /** Screen time for the day before the selected one, for the comparison line. */
@@ -117,13 +118,17 @@ class WellbeingViewModel @Inject constructor(
 
     /** Recomputes the displayed summary. Public so the screen can retry after enabling access. */
     fun refresh() = viewModelScope.launch(dispatchers.io) {
+        _uiState.value = _uiState.value.copy(loading = true)
         val hasPermission = usageStats.hasPermission()
         val trackingEnabled = settingsRepository.observe().first().trackingEnabled
         val today = timeProvider.today()
         val todayEpoch = today.toEpochDay()
 
         if (!hasPermission) {
-            _uiState.value = WellbeingUiState(availability = WellbeingAvailability.PERMISSION_MISSING)
+            _uiState.value = WellbeingUiState(
+                availability = WellbeingAvailability.PERMISSION_MISSING,
+                loading = false,
+            )
             return@launch
         }
 
@@ -146,6 +151,7 @@ class WellbeingViewModel @Inject constructor(
             _uiState.value = WellbeingUiState(
                 availability = WellbeingAvailability.NO_DATA,
                 week = buildWeek(weekDays, summariesByEpoch, todayEpoch, selected),
+                loading = false,
             )
             return@launch
         }
@@ -163,6 +169,7 @@ class WellbeingViewModel @Inject constructor(
 
         _uiState.value = WellbeingUiState(
             availability = WellbeingAvailability.AVAILABLE,
+            loading = false,
             totalMs = selectedTotal,
             previousTotalMs = previousTotal,
             selectedDate = LocalDate.ofEpochDay(selected),

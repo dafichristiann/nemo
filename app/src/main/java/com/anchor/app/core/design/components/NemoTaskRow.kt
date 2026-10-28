@@ -1,5 +1,15 @@
 package com.anchor.app.core.design.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -18,9 +28,18 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -47,31 +66,69 @@ fun NemoTaskRow(
     meta: String? = null,
     done: Boolean = false,
     highlighted: Boolean = false,
+    onClick: (() -> Unit)? = null,
+    onToggleDone: (() -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
+    content: (@Composable () -> Unit)? = null,
 ) {
     val shape = RoundedCornerShape(Radius.card)
+    val titleColor by animateColorAsState(
+        targetValue = if (done) Nemo.colors.mute else Nemo.colors.ink,
+        animationSpec = tween(durationMillis = 200),
+        label = "task_title_color",
+    )
+
+    val rowModifier = modifier
+        .fillMaxWidth()
+        .clip(shape)
+        .background(Nemo.colors.surface)
+        .then(
+            if (highlighted) {
+                Modifier.border(1.dp, Nemo.colors.ink, shape)
+            } else {
+                Modifier.border(1.dp, Nemo.colors.line, shape)
+            },
+        )
+        .then(
+            if (onClick != null) {
+                Modifier.pressable(
+                    shape = shape,
+                    pressedScale = 0.99f,
+                    onClick = onClick,
+                )
+            } else {
+                Modifier
+            },
+        )
+        .padding(
+            start = Spacing.cardHorizontal,
+            end = Spacing.cardHorizontal,
+            top = Spacing.x4,
+            bottom = Spacing.x4,
+        )
 
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .background(Nemo.colors.surface)
-            .then(
-                if (highlighted) {
-                    Modifier.border(1.dp, Nemo.colors.ink, shape)
-                } else {
-                    Modifier
-                },
-            )
-            .padding(
-                start = Spacing.cardHorizontal,
-                end = Spacing.cardHorizontal,
-                top = Spacing.x4,
-                bottom = Spacing.x4,
-            ),
+        modifier = rowModifier,
         verticalAlignment = Alignment.Top,
     ) {
-        NemoNode(done = done, modifier = Modifier.padding(top = 1.dp))
+        Box(
+            modifier = Modifier
+                .padding(top = 1.dp)
+                .then(
+                    if (onToggleDone != null) {
+                        Modifier.pressable(
+                            shape = CircleShape,
+                            pressedScale = 0.88f,
+                            onClick = onToggleDone,
+                        )
+                    } else {
+                        Modifier
+                    },
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            NemoNode(done = done)
+        }
         Spacer(modifier = Modifier.width(Spacing.x3))
         Column(
             modifier = Modifier.weight(1f),
@@ -80,9 +137,9 @@ fun NemoTaskRow(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
-                color = if (done) Nemo.colors.mute else Nemo.colors.ink,
+                color = titleColor,
                 textDecoration = if (done) TextDecoration.LineThrough else null,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
             if (subtitle != null) {
@@ -103,6 +160,7 @@ fun NemoTaskRow(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
+            content?.invoke()
         }
         trailing?.let {
             Spacer(modifier = Modifier.width(Spacing.x2))
@@ -120,21 +178,57 @@ fun NemoNode(
     done: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    val haptic = LocalHapticFeedback.current
+    var prevDone by remember { mutableStateOf(done) }
+
+    LaunchedEffect(done) {
+        if (done && !prevDone) {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        }
+        prevDone = done
+    }
+
     val contentDescription = if (done) "Completed" else "Not completed"
+    val backgroundColor by animateColorAsState(
+        targetValue = if (done) Nemo.colors.ink else Color.Transparent,
+        animationSpec = tween(durationMillis = 200),
+        label = "nemo_node_bg",
+    )
+    val borderColor by animateColorAsState(
+        targetValue = if (done) Color.Transparent else Nemo.colors.mute.copy(alpha = 0.5f),
+        animationSpec = tween(durationMillis = 200),
+        label = "nemo_node_border",
+    )
+    val scale by animateFloatAsState(
+        targetValue = if (done) 1f else 0.94f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMediumLow,
+        ),
+        label = "nemo_node_scale",
+    )
+
     Box(
         modifier = modifier
+            .scale(scale)
             .size(20.dp)
             .clip(CircleShape)
-            .then(
-                if (done) {
-                    Modifier.background(Nemo.colors.ink)
-                } else {
-                    Modifier.border(1.5.dp, Nemo.colors.mute.copy(alpha = 0.5f), CircleShape)
-                },
-            ),
+            .background(backgroundColor)
+            .border(1.5.dp, borderColor, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        if (done) {
+        AnimatedVisibility(
+            visible = done,
+            enter = scaleIn(
+                initialScale = 0.4f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMediumLow,
+                ),
+            ) + fadeIn(animationSpec = tween(durationMillis = 200)),
+            exit = scaleOut(animationSpec = tween(durationMillis = 150)) +
+                fadeOut(animationSpec = tween(durationMillis = 150)),
+        ) {
             Icon(
                 painter = painterResource(R.drawable.ic_tasks),
                 contentDescription = contentDescription,

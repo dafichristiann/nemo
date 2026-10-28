@@ -7,16 +7,22 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -34,6 +40,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.anchor.app.R
 import com.anchor.app.core.design.components.PrimaryButton
 import com.anchor.app.core.design.components.pressable
+import com.anchor.app.core.design.theme.FrauncesFamily
 import com.anchor.app.core.design.theme.ManropeFamily
 import com.anchor.app.core.design.theme.Motion
 import com.anchor.app.core.design.theme.Nemo
@@ -98,53 +105,182 @@ fun InterventionOverlay(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
                         ) {}
-                        .padding(Spacing.x6),
+                        .padding(Spacing.x5),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(Spacing.x3),
                 ) {
-                    Text(
-                        text = stringResource(titleFor(v.level)),
-                        fontFamily = ManropeFamily,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        color = Nemo.colors.ink,
-                    )
-                    Text(
-                        text = stringResource(R.string.intervention_overlay_body),
-                        fontFamily = ManropeFamily,
-                        fontSize = 15.sp,
-                        color = Nemo.colors.inkSecondary,
-                    )
-
-                    Box(modifier = Modifier.padding(top = Spacing.x2)) {
-                        PrimaryButton(
-                            label = stringResource(R.string.intervention_action_start_focus),
-                            onClick = { viewModel.onStartFocus(onNavigateToFocus) },
-                        )
-                    }
-
+                    // Pill Tag: MINDFUL INTERVENTION
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.x3),
+                        modifier = Modifier
+                            .clip(PillShape)
+                            .background(Nemo.colors.fog)
+                            .padding(horizontal = Spacing.x3, vertical = Spacing.x1),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
-                        OverlayTextAction(
-                            label = stringResource(R.string.intervention_action_later),
-                            color = Nemo.colors.inkSecondary,
-                            onClick = { viewModel.onLater() },
-                            modifier = Modifier.weight(1f),
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .clip(androidx.compose.foundation.shape.CircleShape)
+                                .background(Color(0xFF34D399)),
                         )
-                        OverlayTextAction(
-                            label = stringResource(R.string.intervention_action_dismiss),
-                            color = Nemo.colors.placeholder,
-                            onClick = { viewModel.onDismiss() },
-                            modifier = Modifier.weight(1f),
+                        Text(
+                            text = stringResource(R.string.intervention_tag_mindful),
+                            fontFamily = ManropeFamily,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 10.sp,
+                            letterSpacing = 0.8.sp,
+                            color = Nemo.colors.inkSecondary,
                         )
                     }
 
+                    // Breathing Ring Container (canvas JuZ1E)
+                    Box(
+                        modifier = Modifier
+                            .size(120.dp)
+                            .padding(top = Spacing.x1),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        // Outer Halo
+                        Box(
+                            modifier = Modifier
+                                .size(120.dp)
+                                .clip(CircleShape)
+                                .background(Nemo.colors.fog.copy(alpha = 0.5f)),
+                        )
+                        // Middle Guide Ring
+                        Box(
+                            modifier = Modifier
+                                .size(90.dp)
+                                .clip(CircleShape)
+                                .border(
+                                    1.dp,
+                                    Nemo.colors.line,
+                                    CircleShape,
+                                ),
+                        )
+                        // Inner Core
+                        Box(
+                            modifier = Modifier
+                                .size(64.dp)
+                                .clip(CircleShape)
+                                .background(Nemo.colors.surface),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = stringResource(R.string.intervention_breath_seconds),
+                                    fontFamily = FrauncesFamily,
+                                    fontWeight = FontWeight.Light,
+                                    fontSize = 18.sp,
+                                    color = Nemo.colors.ink,
+                                )
+                                Text(
+                                    text = stringResource(R.string.intervention_breath_cue),
+                                    fontFamily = ManropeFamily,
+                                    fontSize = 8.sp,
+                                    color = Nemo.colors.mute,
+                                )
+                            }
+                        }
+                    }
+
+                    // Main Headline & Subheadline
                     Text(
-                        text = stringResource(R.string.intervention_overlay_later_hint),
+                        text = stringResource(R.string.intervention_headline),
+                        fontFamily = FrauncesFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 22.sp,
+                        color = Nemo.colors.ink,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.intervention_subheadline,
+                            "Instagram",
+                            "Thesis Deep Work",
+                            28,
+                        ),
                         fontFamily = ManropeFamily,
-                        fontSize = 12.sp,
-                        color = Nemo.colors.placeholder,
+                        fontSize = 13.sp,
+                        color = Nemo.colors.inkSecondary,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        lineHeight = 18.sp,
+                    )
+
+                    // Reflection Intent Card
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(Radius.card))
+                            .background(Nemo.colors.fog)
+                            .padding(Spacing.cardHorizontal),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.x2),
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.x2),
+                        ) {
+                            com.anchor.app.core.design.components.NemoMascot(
+                                expression = com.anchor.app.core.design.components.MascotExpression.THINKING,
+                                size = 20.dp,
+                            )
+                            Text(
+                                text = stringResource(R.string.intervention_coach_tag),
+                                fontFamily = ManropeFamily,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 10.sp,
+                                letterSpacing = 0.6.sp,
+                                color = Nemo.colors.mute,
+                            )
+                        }
+                        Text(
+                            text = stringResource(R.string.intervention_coach_quote),
+                            fontFamily = FrauncesFamily,
+                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                            fontSize = 13.sp,
+                            color = Nemo.colors.ink,
+                            lineHeight = 18.sp,
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(Spacing.x1))
+
+                    // Primary Return Button
+                    PrimaryButton(
+                        label = stringResource(R.string.intervention_action_return),
+                        onClick = { viewModel.onStartFocus(onNavigateToFocus) },
+                    )
+
+                    // Secondary Open Button
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(PillShape)
+                            .background(Nemo.colors.fog)
+                            .pressable(shape = PillShape, onClick = { viewModel.onLater() })
+                            .padding(vertical = Spacing.x3),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.intervention_action_continue_5m),
+                            fontFamily = ManropeFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.sp,
+                            color = Nemo.colors.ink,
+                        )
+                    }
+
+                    // Emergency exit
+                    Text(
+                        text = stringResource(R.string.intervention_action_emergency_exit),
+                        fontFamily = ManropeFamily,
+                        fontSize = 11.sp,
+                        color = Nemo.colors.mute,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        modifier = Modifier
+                            .pressable(shape = PillShape, onClick = { viewModel.onDismiss() })
+                            .padding(vertical = Spacing.x1),
                     )
                 }
             }
@@ -186,4 +322,11 @@ private fun titleFor(level: Int): Int = when (level) {
     InterventionLevel.FUTURE_VIEW -> R.string.intervention_overlay_title_future
     InterventionLevel.CONTEXTUAL -> R.string.intervention_overlay_title_contextual
     else -> R.string.intervention_overlay_title_gentle
+}
+
+private fun expressionFor(level: Int): com.anchor.app.core.design.components.MascotExpression = when (level) {
+    InterventionLevel.FOCUS -> com.anchor.app.core.design.components.MascotExpression.HAPPY
+    InterventionLevel.FUTURE_VIEW -> com.anchor.app.core.design.components.MascotExpression.TALKING
+    InterventionLevel.CONTEXTUAL -> com.anchor.app.core.design.components.MascotExpression.SAD
+    else -> com.anchor.app.core.design.components.MascotExpression.THINKING
 }

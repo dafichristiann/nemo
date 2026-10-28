@@ -105,6 +105,32 @@ class InsightPipelineTest {
     }
 
     @Test
+    fun payload_selectsLongestDistractionEvenWhenNonDistractionAppIsHigher() = runTest {
+        val usage = FakeUsageRepository()
+        usage.upsertDailySummary(
+            DailyUsageSummary(
+                dateEpochDay = todayEpoch,
+                totalScreenTimeMs = 5 * 60 * 60_000L,
+                distractionRatio = 0.3f,
+                topApps = listOf(
+                    AppUsage("com.work.slack", 120 * 60_000L, 5), // top overall app, but productive
+                    AppUsage("com.instagram", 40 * 60_000L, 2),  // distraction app
+                ),
+                categoryBreakdown = emptyMap(),
+                sessionCount = 7,
+                computedAt = fixedNow,
+            ),
+        )
+        usage.upsertAppCategory(AppCategory("com.work.slack", "WORK", isDistraction = false, overrideSource = AppCategory.SOURCE_AUTO))
+        usage.upsertAppCategory(AppCategory("com.instagram", "SOCIAL", isDistraction = true, overrideSource = AppCategory.SOURCE_AUTO))
+
+        val payload = BuildInsightPayloadUseCase(FakeTaskRepository(), usage, FakeFocusRepository(), time())(todayEpoch)
+
+        assertEquals(40 * 60_000L, payload.longestDistractionMs)
+        assertEquals("Social", payload.topDistractionCategory)
+    }
+
+    @Test
     fun payload_includesFocusTimeBetweenDayBounds() = runTest {
         val focus = FakeFocusRepository()
         val startOfDay = time().startOfDayMillis(fixedNow)

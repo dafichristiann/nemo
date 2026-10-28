@@ -155,22 +155,22 @@ class FocusUseCasesTest {
     }
 
     @Test
-    fun finish_shortSession_stillCompletesTask() = runTest {
+    fun finish_shortSession_doesNotCompleteTask() = runTest {
         val repo = FakeFocusRepository()
         val tasks = FakeTaskRepository()
         tasks.insert(task("t1"))
         val start = StartFocusUseCase(repo, FakeBlockingStrategy(), time(), FakeIdProvider())
         val id = start("t1", FocusMode.GENTLE, 25 * 60).sessionId
 
-        // Finishing early is an explicit "I'm done" -> the task is completed (updated rule),
-        // but the effort signal reports it was NOT a full session.
+        // PRD §10.1: Finishing early (e.g. 2 min of 25 min) records the session duration,
+        // but does not mark the task DONE.
         val result = FinishFocusUseCase(repo, FakeBlockingStrategy(), tasks, time())(id, 2 * 60_000L)
 
-        assertTrue(result.completedTask)
+        assertFalse(result.completedTask)
         assertFalse(result.verified)
         val saved = tasks.getById("t1")!!
-        assertEquals(TaskStatus.DONE, saved.status)
-        assertEquals(CompletionSource.VERIFIED, saved.completionSource)
+        assertEquals(TaskStatus.TODO, saved.status)
+        assertNull(saved.completionSource)
     }
 
     @Test

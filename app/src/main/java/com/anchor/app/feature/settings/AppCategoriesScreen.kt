@@ -65,7 +65,11 @@ fun AppCategoriesScreen(
             .padding(top = Spacing.x6),
         verticalArrangement = Arrangement.spacedBy(Spacing.x4),
     ) {
-        BackHeader(title = stringResource(R.string.categories_title), onBack = onBack)
+        BackHeader(
+            eyebrow = "APP ECOSYSTEM",
+            title = stringResource(R.string.categories_title),
+            onBack = onBack,
+        )
 
         SearchField(
             query = query,

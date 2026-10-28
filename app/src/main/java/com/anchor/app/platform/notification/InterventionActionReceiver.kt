@@ -33,7 +33,19 @@ class InterventionActionReceiver : BroadcastReceiver() {
 
         val pendingResult = goAsync()
         CoroutineScope(Dispatchers.Default).launch {
-            runCatching { engine.recordAction(logId, action) }
+            runCatching {
+                engine.recordAction(logId, action)
+                androidx.core.app.NotificationManagerCompat.from(context).cancel(logId.hashCode())
+                if (action == InterventionAction.START_FOCUS) {
+                    val relatedTaskId = intent.getStringExtra(EXTRA_TASK_ID)
+                    val route = if (!relatedTaskId.isNullOrBlank()) "focus?taskId=$relatedTaskId" else "focus"
+                    val activityIntent = Intent(context, com.anchor.app.MainActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                        putExtra(com.anchor.app.MainActivity.EXTRA_OPEN_ROUTE, route)
+                    }
+                    context.startActivity(activityIntent)
+                }
+            }
             pendingResult.finish()
         }
     }

@@ -85,9 +85,12 @@ private val DEADLINE_HOUR_OPTIONS: List<Int> = (0..23).toList()
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTaskSheet(
+    today: java.time.LocalDate = java.time.LocalDate.now(),
+    zone: java.time.ZoneId = java.time.ZoneId.systemDefault(),
     onDismiss: () -> Unit,
     onSave: (TaskDraft, (CreateTaskResult) -> Unit) -> Unit,
 ) {
+    var isSubmitting by remember { mutableStateOf(false) }
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var priority by remember { mutableStateOf(TaskPriority.MEDIUM) }
@@ -101,7 +104,7 @@ fun AddTaskSheet(
     // "More" disclosure (design-spec.md §7 #5): repeat, category and subtasks live behind it.
     var moreExpanded by remember { mutableStateOf(false) }
 
-    NemoBottomSheet(onDismissRequest = onDismiss) {
+    NemoBottomSheet(onDismissRequest = { if (!isSubmitting) onDismiss() }) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -130,13 +133,27 @@ fun AddTaskSheet(
                     modifier = Modifier
                         .minTouchTarget()
                         .clip(CircleShape)
-                        .pressable(shape = CircleShape, onClick = onDismiss)
+                        .pressable(
+                            shape = CircleShape,
+                            enabled = !isSubmitting,
+                            onClick = { if (!isSubmitting) onDismiss() },
+                        )
                         .padding(Spacing.x2),
                 )
             }
 
-            Field(value = title, onValueChange = { title = it }, hint = stringResource(R.string.add_task_field_title_hint))
-            Field(value = description, onValueChange = { description = it }, hint = stringResource(R.string.add_task_field_description_hint))
+            Field(
+                value = title,
+                onValueChange = { title = it },
+                hint = "Task title…",
+                enabled = !isSubmitting,
+            )
+            Field(
+                value = description,
+                onValueChange = { description = it },
+                hint = stringResource(R.string.add_task_field_description_hint),
+                enabled = !isSubmitting,
+            )
 
             LabeledSection(stringResource(R.string.add_task_priority_label)) {
                 val labels = listOf(
@@ -152,127 +169,200 @@ fun AddTaskSheet(
                 )
             }
 
-            LabeledSection(stringResource(R.string.add_task_deadline_label)) {
-                // Tap the field â†’ a centered AlertDialog opens with an hour wheel; "Set" commits,
-                // "Cancel" discards. Index 0 is "No deadline"; the rest are whole hours.
-                var dialogOpen by remember { mutableStateOf(false) }
-                val options: List<Int?> = remember { listOf(null) + DEADLINE_HOUR_OPTIONS }
-                val noDeadlineLabel = stringResource(R.string.add_task_deadline_hint)
-                val displayText = deadlineHours?.let { "%02d:00".format(it) } ?: noDeadlineLabel
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 48.dp)
-                        .clip(RoundedCornerShape(Radius.field))
-                        .background(Nemo.colors.fog)
-                        .pressable(
-                            shape = RoundedCornerShape(Radius.field),
-                            onClick = { dialogOpen = true },
-                        )
-                        .padding(horizontal = Spacing.x4),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
+            // Two-column Deadline & Duration layout matching canvas vrE9D
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.x3),
+            ) {
+                // Deadline column
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.x2),
                 ) {
                     Text(
-                        text = displayText,
+                        text = stringResource(R.string.add_task_deadline_label),
                         fontFamily = ManropeFamily,
-                        fontSize = 14.sp,
-                        color = if (deadlineHours == null) Nemo.colors.placeholder else Nemo.colors.ink,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 13.sp,
+                        color = Nemo.colors.inkSecondary,
                     )
-                    Text(
-                        text = stringResource(R.string.add_task_duration_choose),
-                        fontFamily = ManropeFamily,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 12.sp,
-                        color = Nemo.colors.mute,
-                    )
+                    var dialogOpen by remember { mutableStateOf(false) }
+                    val options: List<Int?> = remember { listOf(null) + DEADLINE_HOUR_OPTIONS }
+                    val noDeadlineLabel = stringResource(R.string.add_task_deadline_hint)
+                    val displayText = deadlineHours?.let { "%02d:00".format(it) } ?: noDeadlineLabel
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 48.dp)
+                            .clip(RoundedCornerShape(Radius.field))
+                            .background(Nemo.colors.fog)
+                            .pressable(
+                                shape = RoundedCornerShape(Radius.field),
+                                enabled = !isSubmitting,
+                                onClick = { if (!isSubmitting) dialogOpen = true },
+                            )
+                            .padding(horizontal = Spacing.x3),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text(
+                            text = displayText,
+                            fontFamily = ManropeFamily,
+                            fontSize = 13.sp,
+                            color = if (deadlineHours == null) Nemo.colors.placeholder else Nemo.colors.ink,
+                            maxLines = 1,
+                        )
+                    }
+
+                    if (dialogOpen) {
+                        WheelPickerDialog(
+                            values = options,
+                            initialIndex = options.indexOf(deadlineHours).coerceAtLeast(0),
+                            title = stringResource(R.string.add_task_deadline_label),
+                            onDismiss = { dialogOpen = false },
+                            onConfirm = { index ->
+                                deadlineHours = options[index]
+                                dialogOpen = false
+                            },
+                            formatValue = { hour ->
+                                if (hour == null) noDeadlineLabel else "%02d:00".format(hour)
+                            },
+                        )
+                    }
                 }
 
-                if (dialogOpen) {
-                    WheelPickerDialog(
-                        values = options,
-                        initialIndex = options.indexOf(deadlineHours).coerceAtLeast(0),
-                        title = stringResource(R.string.add_task_deadline_label),
-                        onDismiss = { dialogOpen = false },
-                        onConfirm = { index ->
-                            deadlineHours = options[index]
-                            dialogOpen = false
-                        },
-                        formatValue = { hour ->
-                            if (hour == null) noDeadlineLabel else "%02d:00".format(hour)
-                        },
+                // Est. Duration column
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.x2),
+                ) {
+                    Text(
+                        text = "Est. Duration",
+                        fontFamily = ManropeFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 13.sp,
+                        color = Nemo.colors.inkSecondary,
                     )
+                    var dialogOpen by remember { mutableStateOf(false) }
+                    val options: List<Int?> = remember { listOf(null) + DURATION_OPTIONS_MIN }
+                    val notSetLabel = stringResource(R.string.add_task_duration_not_set)
+                    val labelsByIndex: List<String> = options.map { minutes ->
+                        if (minutes == null) notSetLabel
+                        else stringResource(R.string.add_task_duration_minutes, minutes)
+                    }
+                    val displayText = durationMinutes
+                        ?.let { stringResource(R.string.add_task_duration_minutes, it) }
+                        ?: notSetLabel
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 48.dp)
+                            .clip(RoundedCornerShape(Radius.field))
+                            .background(Nemo.colors.fog)
+                            .pressable(
+                                shape = RoundedCornerShape(Radius.field),
+                                enabled = !isSubmitting,
+                                onClick = { if (!isSubmitting) dialogOpen = true },
+                            )
+                            .padding(horizontal = Spacing.x3),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text(
+                            text = displayText,
+                            fontFamily = ManropeFamily,
+                            fontSize = 13.sp,
+                            color = if (durationMinutes == null) Nemo.colors.placeholder else Nemo.colors.ink,
+                            maxLines = 1,
+                        )
+                    }
+
+                    if (dialogOpen) {
+                        WheelPickerDialog(
+                            values = options,
+                            initialIndex = options.indexOf(durationMinutes).coerceAtLeast(0),
+                            title = stringResource(R.string.add_task_duration_label),
+                            onDismiss = { dialogOpen = false },
+                            onConfirm = { index ->
+                                durationMinutes = options[index]
+                                dialogOpen = false
+                            },
+                            formatValue = { minutes ->
+                                val idx = options.indexOf(minutes)
+                                if (idx in labelsByIndex.indices) labelsByIndex[idx] else minutes.toString()
+                            },
+                        )
+                    }
                 }
             }
 
-            LabeledSection(stringResource(R.string.add_task_duration_label)) {
-                // Tap the field â†’ a centered AlertDialog opens with a scroll wheel to pick the
-                // minutes, then "Set" commits (Cancel discards). Metadata is edited in the small
-                // dialog instead of bloating the form, and the wheel reuses the shared,
-                // dependency-free WheelPicker.
-                var dialogOpen by remember { mutableStateOf(false) }
-                val options: List<Int?> = remember { listOf(null) + DURATION_OPTIONS_MIN }
-                val notSetLabel = stringResource(R.string.add_task_duration_not_set)
-                // Precompute labels in composable context; the WheelPicker `formatValue` lambda
-                // is not @Composable, so it must not call stringResource itself.
-                val labelsByIndex: List<String> = options.map { minutes ->
-                    if (minutes == null) notSetLabel
-                    else stringResource(R.string.add_task_duration_minutes, minutes)
-                }
-                val displayText = durationMinutes
-                    ?.let { stringResource(R.string.add_task_duration_minutes, it) }
-                    ?: notSetLabel
-
-                // The tappable field (collapsed state).
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 48.dp)
-                        .clip(RoundedCornerShape(Radius.field))
-                        .background(Nemo.colors.fog)
-                        .pressable(
-                            shape = RoundedCornerShape(Radius.field),
-                            onClick = { dialogOpen = true },
-                        )
-                        .padding(horizontal = Spacing.x4),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Text(
-                        text = displayText,
-                        fontFamily = ManropeFamily,
-                        fontSize = 14.sp,
-                        color = if (durationMinutes == null) Nemo.colors.placeholder else Nemo.colors.ink,
-                    )
-                    Text(
-                        text = stringResource(R.string.add_task_duration_choose),
-                        fontFamily = ManropeFamily,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 12.sp,
-                        color = Nemo.colors.mute,
-                    )
-                }
-
-                if (dialogOpen) {
-                    WheelPickerDialog(
-                        values = options,
-                        initialIndex = options.indexOf(durationMinutes).coerceAtLeast(0),
-                        title = stringResource(R.string.add_task_duration_label),
-                        onDismiss = { dialogOpen = false },
-                        onConfirm = { index ->
-                            durationMinutes = options[index]
-                            dialogOpen = false
-                        },
-                        formatValue = { minutes ->
-                            val idx = options.indexOf(minutes)
-                            if (idx in labelsByIndex.indices) labelsByIndex[idx] else minutes.toString()
-                        },
-                    )
+            // Direct Subtasks list matching canvas vrE9D
+            LabeledSection(
+                if (subtasks.isEmpty()) "Subtasks" else "Subtasks (${subtasks.size})"
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
+                    subtasks.forEachIndexed { index, sub ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(Radius.field))
+                                .background(Nemo.colors.fog)
+                                .padding(horizontal = Spacing.x3, vertical = Spacing.x2),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = sub,
+                                fontFamily = ManropeFamily,
+                                fontSize = 13.sp,
+                                color = Nemo.colors.ink,
+                                modifier = Modifier.weight(1f),
+                            )
+                            Icon(
+                                painter = painterResource(R.drawable.ic_close),
+                                contentDescription = stringResource(R.string.cd_close_sheet),
+                                tint = Nemo.colors.placeholder,
+                                modifier = Modifier
+                                    .minTouchTarget()
+                                    .size(16.dp)
+                                    .clickable { subtasks.removeAt(index) },
+                            )
+                        }
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            Field(
+                                value = subtaskInput,
+                                onValueChange = { subtaskInput = it },
+                                hint = stringResource(R.string.add_task_subtask_hint),
+                                enabled = !isSubmitting,
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(Spacing.x2))
+                        TextButton(
+                            enabled = !isSubmitting,
+                            onClick = {
+                                val clean = subtaskInput.trim()
+                                if (clean.isNotEmpty()) {
+                                    subtasks.add(clean)
+                                    subtaskInput = ""
+                                }
+                            },
+                        ) {
+                            Text(
+                                text = stringResource(R.string.add_task_subtask_add),
+                                fontFamily = ManropeFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 13.sp,
+                                color = Nemo.colors.ink,
+                            )
+                        }
+                    }
                 }
             }
 
-            // "More" disclosure (design-spec.md §7 #5): repeat, category and subtasks sit here.
+            // "More" disclosure for Recurrence and Category
             MoreToggle(expanded = moreExpanded, onToggle = { moreExpanded = !moreExpanded })
 
             if (moreExpanded) {
@@ -294,59 +384,8 @@ fun AddTaskSheet(
                         value = category,
                         onValueChange = { category = it },
                         hint = stringResource(R.string.add_task_category_hint),
+                        enabled = !isSubmitting,
                     )
-                }
-
-                LabeledSection(stringResource(R.string.add_task_subtasks_label, subtasks.size)) {
-                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
-                        subtasks.forEachIndexed { index, sub ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(
-                                    text = "• $sub",
-                                    fontFamily = ManropeFamily,
-                                    fontSize = 13.sp,
-                                    color = Nemo.colors.inkSecondary,
-                                    modifier = Modifier.weight(1f),
-                                )
-                                Icon(
-                                    painter = painterResource(R.drawable.ic_close),
-                                    contentDescription = null,
-                                    tint = Nemo.colors.placeholder,
-                                    modifier = Modifier
-                                        .width(16.dp)
-                                        .clickable { subtasks.removeAt(index) },
-                                )
-                            }
-                        }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(modifier = Modifier.weight(1f)) {
-                                Field(
-                                    value = subtaskInput,
-                                    onValueChange = { subtaskInput = it },
-                                    hint = stringResource(R.string.add_task_subtask_hint),
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(Spacing.x2))
-                            TextButton(onClick = {
-                                val clean = subtaskInput.trim()
-                                if (clean.isNotEmpty()) {
-                                    subtasks.add(clean)
-                                    subtaskInput = ""
-                                }
-                            }) {
-                                Text(
-                                    text = stringResource(R.string.add_task_subtask_add),
-                                    fontFamily = ManropeFamily,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 13.sp,
-                                    color = Nemo.colors.ink,
-                                )
-                            }
-                        }
-                    }
                 }
             }
 
@@ -361,15 +400,18 @@ fun AddTaskSheet(
 
             PrimaryButton(
                 label = stringResource(R.string.add_task_save),
-                enabled = title.isNotBlank(),
+                enabled = title.isNotBlank() && !isSubmitting,
+                loading = isSubmitting,
+                loadingText = stringResource(R.string.add_task_saving),
                 onClick = {
+                    if (isSubmitting) return@PrimaryButton
+                    isSubmitting = true
                     val draft = TaskDraft(
                         title = title.trim(),
                         description = description.trim().ifEmpty { null },
                         deadline = deadlineHours?.let {
-                            val today = java.time.LocalDate.now()
                             java.time.LocalDateTime.of(today, java.time.LocalTime.of(it, 0))
-                                .atZone(java.time.ZoneId.systemDefault())
+                                .atZone(zone)
                                 .toInstant().toEpochMilli()
                         },
                         priority = priority,
@@ -379,8 +421,12 @@ fun AddTaskSheet(
                         recurrence = recurrence,
                     )
                     onSave(draft) { result ->
-                        error = result
-                        if (result is CreateTaskResult.Success) onDismiss()
+                        if (result is CreateTaskResult.Success) {
+                            onDismiss()
+                        } else {
+                            error = result
+                            isSubmitting = false
+                        }
                     }
                 },
             )
@@ -446,6 +492,7 @@ private fun Field(
     onValueChange: (String) -> Unit,
     hint: String,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     Box(
         modifier = modifier
@@ -467,11 +514,12 @@ private fun Field(
         BasicTextField(
             value = value,
             onValueChange = onValueChange,
+            enabled = enabled,
             singleLine = true,
             textStyle = TextStyle(
                 fontFamily = ManropeFamily,
                 fontSize = 14.sp,
-                color = Nemo.colors.ink,
+                color = if (enabled) Nemo.colors.ink else Nemo.colors.mute,
             ),
             modifier = Modifier.fillMaxWidth(),
         )

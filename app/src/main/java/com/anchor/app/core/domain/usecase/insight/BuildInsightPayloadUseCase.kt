@@ -49,8 +49,9 @@ class BuildInsightPayloadUseCase @Inject constructor(
         val screenTimeMs = daily?.totalScreenTimeMs?.takeIf { it > 0L }
 
         // Longest distraction session, derived from per-day aggregates (never raw sessions).
-        val longestDistraction = daily?.topApps?.maxByOrNull { it.totalTimeMs }
-            ?.takeIf { app -> categoryByPkg[app.packageName]?.isDistraction == true }
+        val longestDistraction = daily?.topApps
+            ?.filter { app -> categoryByPkg[app.packageName]?.isDistraction == true }
+            ?.maxByOrNull { it.totalTimeMs }
         val distractionCategory = longestDistraction?.let { app ->
             categoryByPkg[app.packageName]?.category?.let(::humanizeCategory)
         }

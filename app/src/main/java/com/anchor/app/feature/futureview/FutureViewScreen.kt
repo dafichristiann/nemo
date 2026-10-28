@@ -28,6 +28,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.anchor.app.R
+import com.anchor.app.core.design.components.MascotExpression
+import com.anchor.app.core.design.components.NemoMascot
 import com.anchor.app.core.design.components.PrimaryButton
 import com.anchor.app.core.design.components.SectionHeader
 import com.anchor.app.core.design.components.pressable
@@ -74,41 +76,67 @@ fun FutureViewScreen(
         verticalArrangement = Arrangement.spacedBy(Spacing.x4),
     ) {
         Row(
-            modifier = Modifier
-                .clip(PillShape)
-                .pressable(
-                    shape = PillShape,
-                    pressedScale = 0.96f,
-                    onClick = onBack,
-                )
-                .padding(vertical = Spacing.x1, horizontal = Spacing.x1),
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Spacing.x1),
         ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_back),
-                contentDescription = stringResource(R.string.detail_back),
-                tint = Nemo.colors.ink,
-                modifier = Modifier.size(20.dp),
-            )
-            Text(
-                text = stringResource(R.string.detail_back),
-                fontFamily = ManropeFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp,
-                color = Nemo.colors.ink,
-            )
+            Row(
+                modifier = Modifier
+                    .clip(PillShape)
+                    .pressable(
+                        shape = PillShape,
+                        pressedScale = 0.96f,
+                        onClick = onBack,
+                    )
+                    .padding(vertical = Spacing.x1, horizontal = Spacing.x1),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.x1),
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_back),
+                    contentDescription = stringResource(R.string.detail_back),
+                    tint = Nemo.colors.ink,
+                    modifier = Modifier.size(20.dp),
+                )
+                Text(
+                    text = stringResource(R.string.detail_back),
+                    fontFamily = ManropeFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                    color = Nemo.colors.ink,
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .clip(PillShape)
+                    .background(Nemo.colors.fog)
+                    .padding(horizontal = Spacing.x3, vertical = 4.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.future_pill_tag),
+                    fontFamily = ManropeFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 10.sp,
+                    letterSpacing = 0.6.sp,
+                    color = Nemo.colors.inkSecondary,
+                )
+            }
         }
 
         Text(
             text = stringResource(R.string.future_title),
             fontFamily = FrauncesFamily,
             fontWeight = FontWeight.Normal,
-            fontSize = 26.sp,
+            fontSize = 28.sp,
+            lineHeight = 34.sp,
+            letterSpacing = (-0.3).sp,
             color = Nemo.colors.ink,
         )
         Text(
-            text = stringResource(R.string.future_disclaimer),
+            text = stringResource(
+                R.string.future_disclaimer_formatted,
+                state.task?.title ?: "Draft Chapter 3",
+            ),
             fontFamily = ManropeFamily,
             fontSize = 13.sp,
             color = Nemo.colors.inkSecondary,
@@ -143,7 +171,7 @@ fun FutureViewScreen(
 
         val taskId = state.task?.id
         PrimaryButton(
-            label = stringResource(R.string.future_start_focus),
+            label = stringResource(R.string.future_start_focus_duration, 45),
             onClick = { taskId?.let(onStartFocus) },
         )
     }
@@ -165,6 +193,9 @@ private fun ScenarioCard(
     val titleColor = if (emphasis) Nemo.colors.onInk else Nemo.colors.mute
     val valueColor = if (emphasis) Nemo.colors.onInk else Nemo.colors.ink
     val metaColor = if (emphasis) Nemo.colors.onInk.copy(alpha = 0.7f) else Nemo.colors.inkSecondary
+    val chipText = if (emphasis) stringResource(R.string.future_scenario_chip_free) else stringResource(R.string.future_scenario_chip_stress)
+    val chipBg = if (emphasis) Nemo.colors.surface.copy(alpha = 0.2f) else Nemo.colors.background
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -173,14 +204,55 @@ private fun ScenarioCard(
             .padding(Spacing.x4),
         verticalArrangement = Arrangement.spacedBy(Spacing.x2),
     ) {
-        Text(
-            text = label,
-            fontFamily = ManropeFamily,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 12.sp,
-            letterSpacing = 0.6.sp,
-            color = titleColor,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(PillShape)
+                        .background(if (emphasis) Nemo.colors.onInk else Nemo.colors.ink),
+                )
+                Text(
+                    text = label,
+                    fontFamily = ManropeFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 12.sp,
+                    letterSpacing = 0.6.sp,
+                    color = titleColor,
+                )
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.x2),
+            ) {
+                if (emphasis) {
+                    NemoMascot(MascotExpression.HAPPY, size = 28.dp)
+                } else {
+                    NemoMascot(MascotExpression.ANGRY, size = 28.dp)
+                }
+                Box(
+                    modifier = Modifier
+                        .clip(PillShape)
+                        .background(chipBg)
+                        .padding(horizontal = Spacing.x2, vertical = 2.dp),
+                ) {
+                    Text(
+                        text = chipText,
+                        fontFamily = ManropeFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 11.sp,
+                        color = if (emphasis) Nemo.colors.onInk else Nemo.colors.danger,
+                    )
+                }
+            }
+        }
         Text(
             text = stringResource(
                 R.string.future_scenario_range,
@@ -203,7 +275,22 @@ private fun ScenarioCard(
 
 @Composable
 private fun DominoSection(domino: DominoEffect, onOpenTask: (String) -> Unit) {
-    SectionHeader(title = stringResource(R.string.future_domino_title))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        SectionHeader(title = stringResource(R.string.future_domino_header))
+        if (domino.affectedCount > 0) {
+            Text(
+                text = stringResource(R.string.future_domino_count_label, domino.affectedCount),
+                fontFamily = ManropeFamily,
+                fontWeight = FontWeight.Medium,
+                fontSize = 12.sp,
+                color = Nemo.colors.mute,
+            )
+        }
+    }
 
     if (domino.affectedCount == 0) {
         Text(
@@ -214,14 +301,6 @@ private fun DominoSection(domino: DominoEffect, onOpenTask: (String) -> Unit) {
         )
         return
     }
-
-    // Estimative count — never deterministic (FR-DE4).
-    Text(
-        text = stringResource(R.string.future_domino_count, domino.affectedCount),
-        fontFamily = ManropeFamily,
-        fontSize = 13.sp,
-        color = Nemo.colors.inkSecondary,
-    )
 
     Column(
         modifier = Modifier
@@ -246,7 +325,7 @@ private fun DominoSection(domino: DominoEffect, onOpenTask: (String) -> Unit) {
             )
             DominoRow(
                 title = node.title,
-                tag = null,
+                tag = "-40m buffer",
                 onClick = { onOpenTask(node.taskId) },
             )
         }

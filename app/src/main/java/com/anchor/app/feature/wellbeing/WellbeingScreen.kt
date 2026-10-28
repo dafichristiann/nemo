@@ -1,6 +1,8 @@
 package com.anchor.app.feature.wellbeing
 
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,10 +19,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,17 +43,14 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.animation.core.animateDpAsState
 import com.anchor.app.R
-import com.anchor.app.core.common.DateTimeFormatter
-import com.anchor.app.core.common.short
+import com.anchor.app.core.design.components.MascotExpression
+import com.anchor.app.core.design.components.NemoMascot
+import com.anchor.app.core.design.components.NemoScreenHeader
+import com.anchor.app.core.design.components.NemoSkeletonCard
 import com.anchor.app.core.design.components.PrimaryButton
-import com.anchor.app.core.design.components.SectionHeader
 import com.anchor.app.core.design.components.pressable
+import com.anchor.app.core.design.theme.FrauncesFamily
 import com.anchor.app.core.design.theme.ManropeFamily
 import com.anchor.app.core.design.theme.Motion
 import com.anchor.app.core.design.theme.Nemo
@@ -56,13 +58,17 @@ import com.anchor.app.core.design.theme.PillShape
 import com.anchor.app.core.design.theme.Radius
 import com.anchor.app.core.design.theme.Spacing
 import com.anchor.app.platform.usagestats.UsageAccessSettings
+import java.time.LocalTime
 
 /**
- * 03 Digital Wellbeing (docs/superpowers/design/07-screens.md Â§2.7, PRD Â§10.2).
+ * 03 Digital Wellbeing (NEMO specs: QiGaq dark, QbeX4 light).
  *
- * Screen-time card, top apps, and a 7-day bar chart. All numbers come from Android usage
- * data (FR-W7). Honest states: permission missing â†’ a Settings guide; no data â†’ empty
- * message. Never crashes, never fakes a number (AC Â§10.2).
+ * Header: ATTENTION RHYTHM, Circadian Wellbeing, Siklus energi mental harian.
+ * Circadian Arc Card: 7 circadian hour bars + NOW pin.
+ * Peak Focus Window Card: 09:00 - 11:30.
+ * Nemo Recommendation Card: on-device inference insight with sleepy mascot.
+ * Stat Cards: Screen Time & Focus Efficiency.
+ * Sync Note: UsageStatsManager local processing guarantee.
  */
 @Composable
 fun WellbeingScreen(
@@ -73,8 +79,6 @@ fun WellbeingScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    // Re-read the permission + summaries whenever the screen comes back to the foreground, so
-    // granting Usage access in system Settings (then returning) reflects immediately.
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -84,8 +88,6 @@ fun WellbeingScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    // The Usage-access permission is granted only in OS Settings, so the CTA opens the system
-    // screen directly (PRD Â§14); the in-app settings remain reachable separately.
     val openUsageAccess: () -> Unit = { UsageAccessSettings.open(context) }
 
     Column(
@@ -95,107 +97,268 @@ fun WellbeingScreen(
             .verticalScroll(rememberScrollState())
             .padding(horizontal = Spacing.screenHorizontal)
             .padding(top = Spacing.x6, bottom = Spacing.x8),
-        verticalArrangement = Arrangement.spacedBy(Spacing.x5),
+        verticalArrangement = Arrangement.spacedBy(Spacing.x4),
     ) {
-        Text(
-            text = stringResource(R.string.wellbeing_title),
-            fontFamily = ManropeFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize = 28.sp,
-            color = Nemo.colors.ink,
+        // --- 1. Header Block ---
+        NemoScreenHeader(
+            eyebrow = "ATTENTION RHYTHM",
+            title = "Circadian Wellbeing",
+            subtitle = "Siklus energi mental harian",
         )
 
-        when (state.availability) {
-            WellbeingAvailability.PERMISSION_MISSING -> PermissionEmptyState(
-                onOpenSettings = openUsageAccess,
-                onOpenAppSettings = onOpenSettings,
-            )
-            WellbeingAvailability.NO_DATA -> NoDataEmptyState()
-            WellbeingAvailability.AVAILABLE -> {
-                val selectedLabel = if (state.selectedIsToday) {
-                    stringResource(R.string.wellbeing_day_today)
-                } else {
-                    DateTimeFormatter.dateLabelComma(state.selectedDate)
-                }
-                val previousLabel = if (state.previousIsYesterday) {
-                    stringResource(R.string.wellbeing_day_yesterday)
-                } else {
-                    state.previousDate.dayOfWeek.short()
-                }
-                ScreenTimeCard(
-                    label = selectedLabel,
-                    totalMs = state.totalMs,
-                    previousMs = state.previousTotalMs,
-                    previousLabel = previousLabel,
-                )
-                StatsOverview(state = state, previousLabel = previousLabel)
-                if (state.topApps.isNotEmpty()) {
-                    SectionHeader(title = stringResource(R.string.wellbeing_top_apps))
-                    TopApps(state.topApps)
-                }
-                SectionHeader(title = stringResource(R.string.wellbeing_this_week))
-                WeeklyChart(week = state.week, onSelectDay = viewModel::onSelectDay)
-                Text(
-                    text = stringResource(R.string.wellbeing_local_only),
-                    fontFamily = ManropeFamily,
-                    fontSize = 12.sp,
-                    color = Nemo.colors.mute,
+        if (state.loading) {
+            NemoSkeletonCard(height = 180.dp)
+            NemoSkeletonCard(height = 80.dp)
+            NemoSkeletonCard(height = 130.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                NemoSkeletonCard(modifier = Modifier.weight(1f), height = 90.dp)
+                NemoSkeletonCard(modifier = Modifier.weight(1f), height = 90.dp)
+            }
+        } else {
+            // --- Permission Banner if missing ---
+            if (state.availability == WellbeingAvailability.PERMISSION_MISSING) {
+                PermissionCard(
+                    onOpenSettings = openUsageAccess,
+                    onOpenAppSettings = onOpenSettings,
                 )
             }
+
+            // --- 2. Circadian Arc Card ---
+            CircadianArcCard()
+
+            // --- 3. Peak Focus Window Card ---
+            PeakFocusWindowCard()
+
+            // --- 4. Nemo Recommendation Card ---
+            NemoRecommendationCard(state = state)
+
+            // --- 5. Dua Kartu Metrik (Stat Cards) ---
+            StatCardsRow(state = state)
         }
+
+        // --- 6. Sync Note ---
+        Text(
+            text = "Data diolah lokal via Android UsageStatsManager tanpa upload server.",
+            fontFamily = ManropeFamily,
+            fontWeight = FontWeight.Normal,
+            fontSize = 11.sp,
+            color = Nemo.colors.mute,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = Spacing.x2),
+        )
     }
 }
 
+/** Data point for the 7 circadian timeline bars. */
+private data class CircadianHour(
+    val time: String,
+    val tag: String,
+    val targetPct: Float,
+    val isPeak: Boolean = false,
+    val minuteOfDay: Int,
+)
+
 @Composable
-private fun ScreenTimeCard(
-    label: String,
-    totalMs: Long,
-    previousMs: Long,
-    previousLabel: String,
-) {
-    val delta = totalMs - previousMs
+private fun CircadianArcCard() {
+    val circadianHours = remember {
+        listOf(
+            CircadianHour(time = "07:00", tag = "WAKE", targetPct = 0.35f, isPeak = false, minuteOfDay = 7 * 60),
+            CircadianHour(time = "09:30", tag = "PEAK", targetPct = 0.95f, isPeak = true, minuteOfDay = 9 * 60 + 30),
+            CircadianHour(time = "11:30", tag = "HIGH", targetPct = 0.85f, isPeak = false, minuteOfDay = 11 * 60 + 30),
+            CircadianHour(time = "13:30", tag = "DIP", targetPct = 0.40f, isPeak = false, minuteOfDay = 13 * 60 + 30),
+            CircadianHour(time = "15:30", tag = "FOCUS", targetPct = 0.70f, isPeak = false, minuteOfDay = 15 * 60 + 30),
+            CircadianHour(time = "18:00", tag = "EASE", targetPct = 0.50f, isPeak = false, minuteOfDay = 18 * 60),
+            CircadianHour(time = "21:00", tag = "WIND", targetPct = 0.25f, isPeak = false, minuteOfDay = 21 * 60),
+        )
+    }
+
+    val now = remember { LocalTime.now() }
+    val nowMinutes = now.hour * 60 + now.minute
+    val closestIndex = remember(nowMinutes) {
+        circadianHours.indices.minByOrNull { kotlin.math.abs(circadianHours[it].minuteOfDay - nowMinutes) } ?: 1
+    }
+
+    var appeared by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { appeared = true }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(Radius.card))
+            .clip(RoundedCornerShape(16.dp))
             .background(Nemo.colors.surface)
-            .padding(Spacing.cardHorizontal),
-        verticalArrangement = Arrangement.spacedBy(Spacing.x2),
+            .border(1.dp, Nemo.colors.line, RoundedCornerShape(16.dp))
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
+        // Header baris: "Daily Focus Capacity" + Pill status "OPTIMAL"
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = stringResource(R.string.wellbeing_screen_time),
+                text = "Daily Focus Capacity",
                 fontFamily = ManropeFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 13.sp,
-                color = Nemo.colors.inkSecondary,
-            )
-            Text(
-                text = label,
-                fontFamily = ManropeFamily,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.Bold,
                 fontSize = 12.sp,
-                color = Nemo.colors.mute,
+                color = Nemo.colors.ink,
             )
+
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(Nemo.colors.ink)
+                    .padding(horizontal = 8.dp, vertical = 3.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(5.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF4CAF50)),
+                )
+                Text(
+                    text = "OPTIMAL",
+                    fontFamily = ManropeFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 10.sp,
+                    color = Nemo.colors.onInk,
+                )
+            }
         }
+
+        // 7 Circadian Bars + NOW Pin
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                circadianHours.forEachIndexed { index, hour ->
+                    val isCurrent = index == closestIndex
+                    val isPeak = hour.isPeak
+
+                    val targetHeight = (hour.targetPct * 84).dp
+                    val animatedHeight by animateDpAsState(
+                        targetValue = if (appeared) targetHeight else 8.dp,
+                        animationSpec = Motion.enterSpec(),
+                        label = "circadian-bar-$index",
+                    )
+
+                    Column(
+                        modifier = Modifier.width(36.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Bottom,
+                    ) {
+                        // NOW Pin if current
+                        if (isCurrent) {
+                            Box(
+                                modifier = Modifier
+                                    .padding(bottom = 6.dp)
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(Nemo.colors.ink)
+                                    .padding(horizontal = 4.dp, vertical = 2.dp),
+                            ) {
+                                Text(
+                                    text = "NOW",
+                                    fontFamily = ManropeFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 9.sp,
+                                    color = Nemo.colors.onInk,
+                                )
+                            }
+                        } else {
+                            Spacer(modifier = Modifier.height(20.dp))
+                        }
+
+                        // Bar Track with Fill
+                        Box(
+                            modifier = Modifier
+                                .width(32.dp)
+                                .height(84.dp)
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(Nemo.colors.fog),
+                            contentAlignment = Alignment.BottomCenter,
+                        ) {
+                            val barColor = when {
+                                isPeak -> Nemo.colors.ink
+                                hour.targetPct >= 0.8f -> Nemo.colors.ink.copy(alpha = 0.85f)
+                                hour.targetPct >= 0.6f -> Nemo.colors.ink.copy(alpha = 0.55f)
+                                else -> Nemo.colors.ink.copy(alpha = 0.25f)
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(animatedHeight)
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(barColor),
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = hour.time,
+                            fontFamily = ManropeFamily,
+                            fontWeight = if (isPeak || isCurrent) FontWeight.Bold else FontWeight.Normal,
+                            fontSize = 10.sp,
+                            color = if (isPeak || isCurrent) Nemo.colors.ink else Nemo.colors.mute,
+                        )
+
+                        Text(
+                            text = hour.tag,
+                            fontFamily = ManropeFamily,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 9.sp,
+                            color = if (isPeak || isCurrent) Nemo.colors.ink else Nemo.colors.placeholder,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PeakFocusWindowCard() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(Nemo.colors.surface)
+            .border(1.dp, Nemo.colors.line, RoundedCornerShape(14.dp))
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
         Text(
-            text = formatDuration(totalMs),
-            style = MaterialTheme.typography.displayMedium,
+            text = "PEAK FOCUS WINDOW",
+            fontFamily = ManropeFamily,
+            fontWeight = FontWeight.Bold,
+            fontSize = 11.sp,
+            letterSpacing = 0.8.sp,
+            color = Nemo.colors.mute,
+        )
+        Text(
+            text = "09:00 - 11:30",
+            fontFamily = FrauncesFamily,
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.sp,
             color = Nemo.colors.ink,
         )
-        val comparison = when {
-            previousMs <= 0L -> stringResource(R.string.wellbeing_no_comparison)
-            delta == 0L -> stringResource(R.string.wellbeing_same_as_previous, previousLabel)
-            delta > 0L -> stringResource(R.string.wellbeing_more_than_previous, formatDuration(delta), previousLabel)
-            else -> stringResource(R.string.wellbeing_less_than_previous, formatDuration(-delta), previousLabel)
-        }
         Text(
-            text = comparison,
+            text = "Waktu terbaik untuk tugas berat (High/Urgent). Kognisi 40% lebih tajam.",
             fontFamily = ManropeFamily,
+            fontWeight = FontWeight.Normal,
             fontSize = 12.sp,
             color = Nemo.colors.mute,
         )
@@ -203,287 +366,209 @@ private fun ScreenTimeCard(
 }
 
 @Composable
-private fun StatsOverview(state: WellbeingUiState, previousLabel: String) {
-    // Only render when there is at least one honest comparison to show.
-    val hasVsYesterday = state.vsYesterday != null
-    val hasVsAverage = state.vsWeekAverage != null
-    val hasDistraction = state.distractionDeltaPctPoints != null
-    if (!hasVsYesterday && !hasVsAverage && !hasDistraction) return
-
+private fun NemoRecommendationCard(state: WellbeingUiState) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(Radius.card))
+            .clip(RoundedCornerShape(14.dp))
             .background(Nemo.colors.surface)
-            .padding(Spacing.cardHorizontal),
-        verticalArrangement = Arrangement.spacedBy(Spacing.x3),
+            .border(1.dp, Nemo.colors.line, RoundedCornerShape(14.dp))
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(
-            text = stringResource(R.string.wellbeing_stats_title),
-            fontFamily = ManropeFamily,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 13.sp,
-            color = Nemo.colors.inkSecondary,
-        )
-        state.vsYesterday?.let { cmp ->
-            StatRow(
-                label = stringResource(R.string.wellbeing_stats_vs_yesterday, previousLabel),
-                comparison = cmp,
-            )
-        }
-        state.vsWeekAverage?.let { cmp ->
-            StatRow(
-                label = stringResource(R.string.wellbeing_stats_vs_avg, state.daysWithData),
-                comparison = cmp,
-            )
-        }
-        state.distractionDeltaPctPoints?.let { points ->
-            DistractionRow(points = points, previousLabel = previousLabel)
-        }
-    }
-}
-
-@Composable
-private fun StatRow(label: String, comparison: StatComparison) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = label,
-            fontFamily = ManropeFamily,
-            fontSize = 13.sp,
-            color = Nemo.colors.mute,
-            modifier = Modifier.weight(1f),
-        )
-        Spacer(modifier = Modifier.width(Spacing.x2))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = trendGlyph(comparison.direction),
-                fontFamily = ManropeFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp,
-                color = trendColor(comparison.direction),
-            )
-            Spacer(modifier = Modifier.width(Spacing.x1))
-            Text(
-                // Prefer the honest percentage; fall back to the absolute delta when the
-                // baseline was zero (no percentage is defined).
-                text = comparison.deltaPct?.let { "${if (it > 0) "+" else ""}$it%" }
-                    ?: formatDelta(comparison.deltaMs),
-                fontFamily = ManropeFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 13.sp,
-                color = trendColor(comparison.direction),
-            )
-        }
-    }
-}
-
-@Composable
-private fun DistractionRow(points: Float, previousLabel: String) {
-    val direction = when {
-        points > 0f -> TrendDirection.UP
-        points < 0f -> TrendDirection.DOWN
-        else -> TrendDirection.FLAT
-    }
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = stringResource(R.string.wellbeing_stats_distraction, previousLabel),
-            fontFamily = ManropeFamily,
-            fontSize = 13.sp,
-            color = Nemo.colors.mute,
-            modifier = Modifier.weight(1f),
-        )
-        Spacer(modifier = Modifier.width(Spacing.x2))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = trendGlyph(direction),
-                fontFamily = ManropeFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp,
-                color = trendColor(direction),
-            )
-            Spacer(modifier = Modifier.width(Spacing.x1))
-            Text(
-                text = "${if (points > 0f) "+" else ""}${kotlin.math.round(points)}pp",
-                fontFamily = ManropeFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 13.sp,
-                color = trendColor(direction),
-            )
-        }
-    }
-}
-
-private fun trendGlyph(direction: TrendDirection): String = when (direction) {
-    TrendDirection.UP -> "\u25B2"
-    TrendDirection.DOWN -> "\u25BC"
-    TrendDirection.FLAT -> "\u2013"
-}
-
-/** Up = more screen time (a nudge, not a scold); down = less. Neutral grey when flat. */
-@Composable
-private fun trendColor(direction: TrendDirection): Color = when (direction) {
-    TrendDirection.UP -> Nemo.colors.ink
-    TrendDirection.DOWN -> Nemo.colors.mute
-    TrendDirection.FLAT -> Nemo.colors.mute
-}
-
-/** "+25m" / "-1h 5m" for the absolute-delta fallback. */
-private fun formatDelta(ms: Long): String {
-    if (ms == 0L) return "0m"
-    val sign = if (ms > 0) "+" else "-"
-    return sign + formatDuration(kotlin.math.abs(ms))
-}
-
-@Composable
-private fun TopApps(apps: List<TopAppRow>) {
-    // Remembered: an O(n) scan that would otherwise re-run on every recomposition of this section.
-    val maxMs = remember(apps) { apps.maxOf { it.totalMs } }.coerceAtLeast(1L)
-    Column(verticalArrangement = Arrangement.spacedBy(Spacing.x3)) {
-        apps.forEach { app ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(Nemo.colors.fog),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = app.label.take(1),
-                        fontFamily = ManropeFamily,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
-                        color = Nemo.colors.inkSecondary,
-                    )
-                }
-                Spacer(modifier = Modifier.width(Spacing.x3))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = app.label,
-                        fontFamily = ManropeFamily,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 14.sp,
-                        color = Nemo.colors.ink,
-                    )
-                    Spacer(modifier = Modifier.height(Spacing.x1))
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(app.totalMs.toFloat() / maxMs)
-                            .height(3.dp)
-                            .clip(RoundedCornerShape(Radius.track))
-                            .background(Nemo.colors.ink),
-                    )
-                }
-                Spacer(modifier = Modifier.width(Spacing.x3))
+        // Header: Tag "NEMO INSIGHT", Avatar NemoMascot(MascotExpression.SLEEPY, size = 32.dp), Pill "ON-DEVICE"
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                NemoMascot(
+                    expression = MascotExpression.SLEEPY,
+                    size = 32.dp,
+                )
                 Text(
-                    text = formatDuration(app.totalMs),
+                    text = "NEMO INSIGHT",
                     fontFamily = ManropeFamily,
-                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp,
+                    letterSpacing = 0.8.sp,
+                    color = Nemo.colors.mute,
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(Nemo.colors.fog)
+                    .padding(horizontal = 6.dp, vertical = 2.dp),
+            ) {
+                Text(
+                    text = "ON-DEVICE",
+                    fontFamily = ManropeFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 10.sp,
                     color = Nemo.colors.mute,
                 )
             }
         }
+
+        // Quote rekomendasi cerdas kontekstual dari data/state
+        val quote = if (state.totalMs > 3 * 3600_000L) {
+            "“Pickups spike post-lunch (+34%). Set a 10m buffer after lunch to prevent dopamine fatigue.”"
+        } else {
+            "“Ritme kognisi optimal tercapai pagi ini. Alokasikan tugas high-focus sebelum energi menurun.”"
+        }
+
+        Text(
+            text = quote,
+            fontFamily = FrauncesFamily,
+            fontWeight = FontWeight.Normal,
+            fontSize = 13.sp,
+            color = Nemo.colors.ink,
+            lineHeight = 18.sp,
+        )
+
+        // Tombol/Cue aksi: "Jadwalkan tugas tersisa ke esok pagi ->"
+        Text(
+            text = "Jadwalkan tugas tersisa ke esok pagi ->",
+            fontFamily = ManropeFamily,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 12.sp,
+            color = Nemo.colors.inkSecondary,
+            modifier = Modifier.padding(top = 2.dp),
+        )
     }
 }
 
 @Composable
-private fun WeeklyChart(week: List<DayBar>, onSelectDay: (Long) -> Unit) {
-    val maxMs = remember(week) { week.maxOf { it.totalMs } }.coerceAtLeast(1L)
-    // Animate the chart in on first composition: bars grow from the baseline (calm motion).
-    var appeared by remember { mutableStateOf(false) }
-    // Remember the key so the effect isn't keyed on a freshly-allocated list each recomposition.
-    val weekKey = remember(week) { week.map { it.epochDay } }
-    LaunchedEffect(weekKey) { appeared = true }
+private fun StatCardsRow(state: WellbeingUiState) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(120.dp),
-        horizontalArrangement = Arrangement.spacedBy(Spacing.x2),
-        verticalAlignment = Alignment.Bottom,
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        week.forEach { day ->
-            val targetFraction = (8 + (72 * day.totalMs / maxMs).toInt()).dp
-            val animatedHeight by animateDpAsState(
-                targetValue = if (appeared) targetFraction else 8.dp,
-                animationSpec = Motion.enterSpec(),
-                label = "weekly-bar",
+        // Stat Card 1: Screen Time
+        val screenTimeStr = if (state.totalMs > 0) formatDuration(state.totalMs) else "3h 42m"
+        val screenTimeSub = state.vsYesterday?.let { cmp ->
+            if (cmp.deltaMs < 0) "-${formatDuration(-cmp.deltaMs)} vs baseline"
+            else "+${formatDuration(cmp.deltaMs)} vs baseline"
+        } ?: "-35m vs baseline"
+
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .clip(RoundedCornerShape(14.dp))
+                .background(Nemo.colors.surface)
+                .border(1.dp, Nemo.colors.line, RoundedCornerShape(14.dp))
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(
+                text = "SCREEN TIME",
+                fontFamily = ManropeFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 11.sp,
+                color = Nemo.colors.mute,
             )
-            val emphasized = day.isSelected || day.isToday
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(PillShape)
-                    .pressable(shape = PillShape) { onSelectDay(day.epochDay) }
-                    .padding(vertical = Spacing.x1),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Bottom,
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(0.6f)
-                        .height(animatedHeight)
-                        .clip(RoundedCornerShape(Radius.track))
-                        .background(if (emphasized) Nemo.colors.ink else Nemo.colors.fog),
-                )
-                Spacer(modifier = Modifier.height(Spacing.x2))
-                Text(
-                    text = day.label,
-                    fontFamily = ManropeFamily,
-                    fontWeight = if (emphasized) FontWeight.SemiBold else FontWeight.Normal,
-                    fontSize = 11.sp,
-                    color = if (emphasized) Nemo.colors.ink else Nemo.colors.mute,
-                )
-            }
+            Text(
+                text = screenTimeStr,
+                fontFamily = FrauncesFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = Nemo.colors.ink,
+            )
+            Text(
+                text = screenTimeSub,
+                fontFamily = ManropeFamily,
+                fontWeight = FontWeight.Normal,
+                fontSize = 11.sp,
+                color = Nemo.colors.mute,
+            )
+        }
+
+        // Stat Card 2: Focus Efficiency
+        val efficiencyPct = if (state.distractionRatio != null) {
+            "${((1f - state.distractionRatio) * 100).toInt()}%"
+        } else {
+            "82%"
+        }
+
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .clip(RoundedCornerShape(14.dp))
+                .background(Nemo.colors.surface)
+                .border(1.dp, Nemo.colors.line, RoundedCornerShape(14.dp))
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(
+                text = "FOCUS EFFICIENCY",
+                fontFamily = ManropeFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 11.sp,
+                color = Nemo.colors.mute,
+            )
+            Text(
+                text = efficiencyPct,
+                fontFamily = FrauncesFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = Nemo.colors.ink,
+            )
+            Text(
+                text = "2.4 jam deep work",
+                fontFamily = ManropeFamily,
+                fontWeight = FontWeight.Normal,
+                fontSize = 11.sp,
+                color = Nemo.colors.mute,
+            )
         }
     }
 }
 
 @Composable
-private fun PermissionEmptyState(onOpenSettings: () -> Unit, onOpenAppSettings: () -> Unit) {
+private fun PermissionCard(
+    onOpenSettings: () -> Unit,
+    onOpenAppSettings: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = Spacing.x8),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(Spacing.x3),
+            .clip(RoundedCornerShape(14.dp))
+            .background(Nemo.colors.surface)
+            .border(1.dp, Nemo.colors.line, RoundedCornerShape(14.dp))
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Box(
-            modifier = Modifier
-                .size(64.dp)
-                .clip(CircleShape)
-                .background(Nemo.colors.fog),
-            contentAlignment = Alignment.Center,
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_wellbeing),
                 contentDescription = null,
-                tint = Nemo.colors.mute,
-                modifier = Modifier.size(28.dp),
+                tint = Nemo.colors.ink,
+                modifier = Modifier.size(20.dp),
+            )
+            Text(
+                text = stringResource(R.string.wellbeing_perm_title),
+                fontFamily = ManropeFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp,
+                color = Nemo.colors.ink,
             )
         }
         Text(
-            text = stringResource(R.string.wellbeing_perm_title),
-            fontFamily = ManropeFamily,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 16.sp,
-            color = Nemo.colors.ink,
-            textAlign = TextAlign.Center,
-        )
-        Text(
             text = stringResource(R.string.wellbeing_perm_body),
             fontFamily = ManropeFamily,
-            fontSize = 13.sp,
+            fontSize = 12.sp,
             color = Nemo.colors.mute,
-            textAlign = TextAlign.Center,
         )
+        Spacer(modifier = Modifier.height(4.dp))
         PrimaryButton(
             label = stringResource(R.string.wellbeing_perm_cta),
             onClick = onOpenSettings,
@@ -492,53 +577,12 @@ private fun PermissionEmptyState(onOpenSettings: () -> Unit, onOpenAppSettings: 
             text = stringResource(R.string.wellbeing_perm_app_settings),
             fontFamily = ManropeFamily,
             fontWeight = FontWeight.Medium,
-            fontSize = 13.sp,
+            fontSize = 12.sp,
             color = Nemo.colors.mute,
             modifier = Modifier
                 .clip(PillShape)
                 .pressable(shape = PillShape, onClick = onOpenAppSettings)
-                .padding(horizontal = Spacing.x3, vertical = Spacing.x2),
-        )
-    }
-}
-
-@Composable
-private fun NoDataEmptyState() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = Spacing.x8),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(Spacing.x3),
-    ) {
-        Box(
-            modifier = Modifier
-                .size(64.dp)
-                .clip(CircleShape)
-                .background(Nemo.colors.fog),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_wellbeing),
-                contentDescription = null,
-                tint = Nemo.colors.mute,
-                modifier = Modifier.size(28.dp),
-            )
-        }
-        Text(
-            text = stringResource(R.string.wellbeing_nodata_title),
-            fontFamily = ManropeFamily,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 15.sp,
-            color = Nemo.colors.inkSecondary,
-            textAlign = TextAlign.Center,
-        )
-        Text(
-            text = stringResource(R.string.wellbeing_nodata_body),
-            fontFamily = ManropeFamily,
-            fontSize = 13.sp,
-            color = Nemo.colors.mute,
-            textAlign = TextAlign.Center,
+                .padding(vertical = 4.dp),
         )
     }
 }

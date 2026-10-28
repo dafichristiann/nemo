@@ -52,6 +52,7 @@
     <string name="task_filter_upcoming">Upcoming</string>
     <string name="task_filter_overdue">Overdue</string>
     <string name="task_filter_completed">Completed</string>
+    <string name="task_completed_badge">Completed</string>
 
     <string name="home_empty_title">No tasks yet — plan your day.</string>
     <string name="home_empty_body">Tap + to add your first task.</string>
@@ -93,6 +94,10 @@
     <string name="recurrence_daily">Daily</string>
     <string name="recurrence_weekly">Weekly</string>
     <string name="add_task_save">Save Task</string>
+    <string name="add_task_saving">Saving…</string>
+    <string name="task_toast_done">Task completed</string>
+    <string name="task_toast_created">Task created</string>
+    <string name="task_toast_undo">Undo</string>
     <string name="cd_close_sheet">Close</string>
     <string name="cd_selected">Selected</string>
 
@@ -117,6 +122,7 @@
     <string name="detail_action_start_focus">Start Focus Session</string>
     <string name="detail_action_reschedule">Reschedule</string>
     <string name="detail_action_complete">Mark as Done</string>
+    <string name="detail_action_todo">Mark as Todo</string>
     <string name="detail_action_complete_via_focus">Start Focus to Complete</string>
     <string name="detail_action_delete">Delete Task</string>
     <string name="detail_future_callout">See what happens if you delay</string>
@@ -130,9 +136,13 @@
     <string name="settings_section_profile">Profile</string>
     <string name="settings_profile_nickname_title">Nickname</string>
     <string name="settings_profile_nickname_hint">Your nickname</string>
+    <string name="settings_confirm_nickname">Confirm nickname</string>
     <string name="settings_profile_focus_area_title">Main focus</string>
     <string name="settings_profile_duration_title">Default focus length</string>
     <string name="settings_profile_duration_value">%1$d min</string>
+    <string name="settings_profile_language_title">Language</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_language_id">Indonesia (Santai)</string>
 
     <string name="settings_section_privacy">Privacy &amp; AI</string>
     <string name="settings_section_data">Data controls</string>
@@ -284,14 +294,14 @@
     <string name="focus_active_pause">Pause</string>
     <string name="focus_active_resume">Resume</string>
     <string name="focus_active_finish">Finish</string>
-    <string name="focus_finish_confirm_title">Finish this session?</string>
-    <string name="focus_finish_confirm_body">The session will end and the task will be marked as done.</string>
-    <string name="focus_finish_confirm_confirm">Finish &amp; complete</string>
+    <string name="focus_finish_confirm_title">End this session?</string>
+    <string name="focus_finish_confirm_body">The session will end. Tasks are only completed when the full planned focus is reached.</string>
+    <string name="focus_finish_confirm_confirm">End session</string>
     <string name="focus_active_remaining_label">remaining</string>
     <string name="focus_active_paused_label">paused</string>
     <string name="focus_emergency_exit">Emergency exit</string>
     <string name="focus_finished_verified">Task completed — you focused %1$d min on \"%2$s\".</string>
-    <string name="focus_finished_not_verified">Task completed. You ended early (%1$d min); the full session is what makes it stick.</string>
+    <string name="focus_finished_not_verified">Session ended early (%1$d min). Task remains in progress until a full session is completed.</string>
 
     <string name="focus_channel_name">Focus sessions</string>
     <string name="focus_channel_desc">Shows an ongoing focus session with a way to exit at any time.</string>
@@ -316,6 +326,94 @@
     <string name="future_domino_add_button">Link task</string>
     <string name="future_domino_cycle_warning">That would create a circular link, so it wasn\'t added.</string>
     <string name="future_domino_none_available">No other tasks to link yet.</string>
+
+    <!-- Canvas gamabaran.pen exact tokens -->
+    <string name="onboarding_welcome_title_1">Nemo</string>
+    <string name="onboarding_welcome_title_2">Focus on what matters.</string>
+    <string name="onboarding_welcome_subtitle">Nemo menyadari saat kamu menjauh dari tugas yang penting — dan membantu kamu kembali secara tenang, tanpa paksaan.</string>
+    <string name="onboarding_welcome_cta">Get Started</string>
+    <string name="onboarding_welcome_skip">Skip</string>
+    <string name="onboarding_perm_step_indicator">SETUP 2 OF 2</string>
+    <string name="onboarding_perm_headline_1">Smart Todo works</string>
+    <string name="onboarding_perm_headline_2">right away.</string>
+
+    <string name="tasks_screen_title">Today\'s Focus</string>
+    <string name="tasks_tab_domino">Domino Chains</string>
+    <string name="tasks_quick_add_hint">Add a new intention…</string>
+    <string name="tasks_shortcut_kbd">⌘K</string>
+    <string name="tasks_domino_anchor">⛓ DOMINO ANCHOR</string>
+    <string name="tasks_unblocks_prefix">Unblocks: </string>
+
+    <string name="wellbeing_micro_tag">ATTENTION ARC &amp; RHYTHM</string>
+    <string name="wellbeing_arc_title">Cognitive Wellbeing</string>
+    <string name="wellbeing_arc_subtitle">Natural focus capacity tracked across 24h cycle.</string>
+    <string name="wellbeing_cognitive_stamina">COGNITIVE STAMINA: 82%</string>
+    <string name="wellbeing_peak_window">PEAK WINDOW</string>
+    <string name="wellbeing_zone_tag">CURRENT COGNITIVE ZONE</string>
+    <string name="wellbeing_zone_title">Peak Focus Window: 08:30 - 11:30 AM</string>
+    <string name="wellbeing_zone_desc">Optimal alertness. 1h 49m remaining in deep flow window.</string>
+    <string name="wellbeing_rec_tag">NEMO ON-DEVICE INFERENCE</string>
+    <string name="wellbeing_local_badge">LOCAL ONLY</string>
+    <string name="wellbeing_rec_quote">“Pickups spike post-lunch (+34%). Set a 10m buffer after lunch to prevent dopamine fatigue.”</string>
+    <string name="wellbeing_rec_action">Suggested: Auto-arm strict friction at 13:00</string>
+    <string name="wellbeing_stat_debt_lbl">ATTENTION DEBT</string>
+    <string name="wellbeing_stat_debt_val">12m</string>
+    <string name="wellbeing_stat_debt_sub">Optimal (-18m vs avg)</string>
+    <string name="wellbeing_stat_frict_lbl">FRICTION DEFLECTIONS</string>
+    <string name="wellbeing_stat_frict_val">8 of 9</string>
+    <string name="wellbeing_stat_frict_sub">89% resisted impulse</string>
+    <string name="wellbeing_sync_note">Calibrated to your local chronotype. Zero external analytics.</string>
+
+    <string name="intervention_tag_mindful">MINDFUL INTERVENTION</string>
+    <string name="intervention_breath_seconds">4s</string>
+    <string name="intervention_breath_cue">breathe in slowly</string>
+    <string name="intervention_headline">Pause for a moment.</string>
+    <string name="intervention_subheadline">%1$s was requested while your \'%2$s\' session has %3$d minutes remaining.</string>
+    <string name="intervention_coach_tag">NEMO INTENTIONALITY CHECK</string>
+    <string name="intervention_coach_quote">“Is this opening intentional, or an unconscious reflex to friction?”</string>
+    <string name="intervention_action_return">Return to Focus Session</string>
+    <string name="intervention_action_continue_5m">Continue for 5 minutes only</string>
+    <string name="intervention_action_emergency_exit">Emergency exit · No guilt, no streak penalty</string>
+
+    <string name="focus_setup_sub">Choose a task and your session rules</string>
+    <string name="focus_mode_gentle_sub">Awareness</string>
+    <string name="focus_mode_strict_sub">App block</string>
+    <string name="focus_mode_custom_sub">Custom rule</string>
+    <string name="focus_active_strict_pill">STRICT FOCUS</string>
+    <string name="focus_active_soundscape">432Hz Brown Noise</string>
+    <string name="focus_active_intention_micro">ACTIVE INTENTION</string>
+    <string name="focus_active_subtitle_of">OF %1$d MIN SESSION</string>
+    <string name="focus_active_steps_header">INTENTIONAL SUB-STEPS</string>
+    <string name="focus_active_unblock">Need quick reference? Emergency 2-min app unblock</string>
+
+    <string name="future_pill_tag">PROJECTION • NOT CERTAINTY</string>
+    <string name="future_disclaimer_formatted">Dynamic schedule simulation based on \'%1$s\'.</string>
+    <string name="future_domino_header">DOMINO RIPPLE EFFECT</string>
+    <string name="future_domino_count_label">%1$d downstream tasks</string>
+    <string name="future_scenario_chip_free">Evening Free</string>
+    <string name="future_scenario_chip_stress">+2h Night Stress</string>
+    <string name="future_start_focus_duration">Start Focus Now (%1$dm)</string>
+
+    <string name="insights_s1_lbl">Tasks done</string>
+    <string name="insights_s2_lbl">Focus time</string>
+    <string name="insights_s3_lbl">Screen time</string>
+    <string name="insights_distraction_session">Longest distraction session</string>
+    <string name="insights_tag_synthesis">SYNTHESIS • DAILY DISCOVERY</string>
+    <string name="insights_tag_suggestion_gentle">GENTLE SUGGESTION</string>
+    <string name="insights_attribution">Generated locally on-device · Private</string>
+    <string name="insights_pattern_header">RECURRING PATTERNS</string>
+
+    <string name="settings_p1_granted">Granted</string>
+    <string name="settings_p2_off">Off — tap to enable</string>
+    <string name="settings_assure_full">Raw usage data never leaves your phone.\nAI only receives aggregated summaries.</string>
+    <string name="settings_version_title">Nemo OS · v1.0.4</string>
+    <string name="settings_mission_sub">Calm Attention Architecture · Open Source</string>
+    <string name="settings_theme_toggle_light">Switch to light mode</string>
+    <string name="settings_theme_toggle_dark">Switch to dark mode</string>
+
+    <string name="detail_edit">Edit</string>
+    <string name="detail_steps_header">STEPS</string>
+    <string name="detail_active_step_tag">(Active)</string>
 
     <!-- 08 Insights - Daily Reflection (07-screens.md §2.12, PRD §10.8-10.9) -->
     <string name="insights_title">Insights</string>

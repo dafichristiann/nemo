@@ -34,11 +34,24 @@ class AnchorAccessibilityService : AccessibilityService() {
     /** Debounce: avoid re-showing the overlay for consecutive events of the same package. */
     private var lastBlockedPackage: String? = null
 
+    companion object {
+        private val SYSTEM_IMMUNE_PACKAGES = setOf(
+            "android",
+            "com.android.settings",
+            "com.android.phone",
+            "com.android.server.telecom",
+            "com.google.android.dialer",
+            "com.android.systemui",
+            "com.google.android.packageinstaller",
+            "com.android.packageinstaller",
+        )
+    }
+
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         val pkg = event?.packageName?.toString() ?: return
 
-        // Never block ourselves — the overlay and the app must always be reachable.
-        if (pkg == packageName) return
+        // Never block ourselves or critical system packages (dialer, settings, installer).
+        if (pkg == packageName || pkg in SYSTEM_IMMUNE_PACKAGES) return
 
         val snapshot = blockingState.snapshot()
         val isBlocked = snapshot.sessionActive && pkg in snapshot.blockedApps

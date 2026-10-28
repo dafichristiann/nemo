@@ -7,12 +7,26 @@
 - **Privasi terlihat.** Penegasan "data tetap di HP" muncul di Onboarding Izin, Wellbeing, dan Settings.
 - **Nada tulisan:** pendek, hangat, tanpa menghakimi. Pakai "may", "could", "no pressure"; hindari "must", "failed", "overdue!".
 
-## 2. Logo
-- Maskot lira berambut angin, siluet hitam dengan detail putih. File: `assets/logo/nemo-mark-{black|white}-*.png`.
-- Day pakai versi **hitam**, Night pakai versi **putih**. Detail putih pada logo asli sengaja transparan, jadi warna latar tampak melaluinya.
-- Ruang bebas minimal 25% dari lebar logo di semua sisi. Ukuran minimum 24dp (pada ukuran kecil pakai siluet, tanpa bintang).
-- Dilarang: diberi warna, diberi bayangan/gradasi, dimiringkan, diletakkan di atas foto ramai.
-- Ikon launcher: adaptive foreground hitam di atas latar putih, plus lapisan monochrome untuk Android 13 themed icon. Logo berada di zona aman tengah (±52% kanvas).
+## 2. Maskot & Identitas Visual (Nemo)
+- **Karakter:** Anak laki-laki chibi, kepala saja (tanpa leher dan badan), digambar dengan gaya tinta spidol hitam-putih: rambut runcing berantakan dengan goresan putih tipis, kacamata bulat tebal, telinga kecil, hidung titik, mulut kecil. Tanpa warna, bayangan, atau gradasi.
+- **Peran:** Menggantikan seluruh logo/ilustrasi lama, ikon bulat empty state, dan intro video Splash. Bertindak sebagai identitas, ilustrasi, dan pendamping kontekstual di seluruh 19 layar.
+- **12 Ekspresi Karakter:**
+  1. `mascot_neutral` (Splash 1.5s, header Tasks siang/malam, Focus Active, notifikasi fokus)
+  2. `mascot_happy` (Splash 2s memantul, onboarding nickname terisi, izin aktif semua, Skenario A Future View, penegasan privasi)
+  3. `mascot_sad` (Overdue banner, sesi fokus diakhiri awal, intervensi Contextual, Delete all data)
+  4. `mascot_angry` (Overlay "Back to focus?", Skenario B Future View "IF I KEEP DELAYING")
+  5. `mascot_surprised` (Cadangan)
+  6. `mascot_sleepy` (Wellbeing belum ada data, Focus Active saat pause, Insights empty, App Categories empty)
+  7. `mascot_confused` (Focus Setup fallback notice, circular link warning Domino, Blocked Apps empty)
+  8. `mascot_laughing` (Progress 100% Tasks, Focus selesai penuh verified)
+  9. `mascot_shy` (Onboarding Izin meminta akses, Wellbeing permission prompt)
+  10. `mascot_thinking` (Task Detail callout Future View, Intervensi Level 1 Gentle, Focus Setup tugas kosong)
+  11. `mascot_wink` (Alternatif idle)
+  12. `mascot_talking` (Tasks empty state, Onboarding Profil sapaan, INSIGHT quote card, Intervensi Focus)
+- **Aset Tambahan:** `mascot_blink` (siklus kedip 150ms tiap 3-5 detik), `mascot_silhouette` (ikon monokrom status bar notifikasi & themed icon Android 13+), `app_icon` (Neutral di latar putih, safe zone tengah).
+- **Skala Ukuran:** Besar (~120dp untuk Splash, Onboarding, Empty State), Sedang (~80dp untuk Overlay pemblokiran & Intervensi), Kecil (~48dp untuk Header & notice).
+- **Mode Tampilan:** Garis hitam transparan langsung di latar Day; dibungkus dalam badge lingkaran putih pada latar Night (`#0A0A0A`) agar siluet rambut tidak hilang.
+- **Animasi:** Crossfade transisi 120ms, kedip idle 150ms, pantulan pelan via kode Compose; nonaktif jika sistem mengaktifkan "Remove animations".
 
 ## 3. Warna
 | Peran | Day | Night | Dipakai untuk |
@@ -78,7 +92,7 @@ Rujukan visual: `preview/nemo-night-recommended.html`.
 
 | # | Layar | Komposisi | Komponen utama | Catatan UX |
 |---|---|---|---|---|
-| 1 | Splash | Logo + "Nemo" di tengah, gelombang angin samar 7% di bawah | Logo, teks | Klip video ±3,5 dtk, maksimum 4,5 dtk lalu lanjut sendiri. Ikuti tema sistem. |
+| 1 | Splash | Maskot di tengah layar + teks "Nemo" di bawah | Maskot animasi, teks | Urutan animasi maskot ±3,5 dtk (`Neutral` 1,5s → `Happy` 2s memantul pelan) tanpa pemutar video, batas waktu 4,5 dtk. Ikuti tema sistem (Night: badge lingkaran putih). |
 | 2 | Onboarding Profil | "Setup 2 of 3", track, judul, 3 isian | TextField, Chip, Button | Semua opsional. Tersimpan otomatis. "Skip for now" selalu ada. |
 | 3 | Onboarding Izin | Judul + 3 baris izin + catatan privasi | ListRow, Button kecil, Pill | Status "Enabled" menggantikan tombol. Diperbarui saat kembali ke app. |
 | 4 | Tasks | Sapaan, week strip, progres, tab filter, daftar tugas, FAB | TaskRow, ProgressTrack, Fab | Hari ini = pil ink. Tab filter berupa teks bergaris bawah. Banner overdue hanya bila ada. |

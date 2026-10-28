@@ -1,8 +1,8 @@
-# PRD — Anchor (Personal Focus Assistant)
+# PRD — Nemo (Personal Focus Assistant)
 
-> **Status:** Approved / Locked for Architecture · **Version:** 0.5
-> **Tanggal:** 2026-10-07 (v0.2) · 2026-10-08 (v0.3) · 2026-10-08 (v0.4) · 2026-10-08 (v0.5)
-> **Dokumen terkait:** `00-product-brief.md`
+> **Status:** Approved / Locked for Architecture · **Version:** 0.6
+> **Tanggal:** 2026-10-07 (v0.2) · 2026-10-08 (v0.3) · 2026-10-08 (v0.4) · 2026-10-08 (v0.5) · 2026-10-27 (v0.6)
+> **Dokumen terkait:** `00-product-brief.md`, `justmd/fitur-aplikasi-nemo-maskot.md`
 > **Catatan:** PRD ini mendefinisikan aturan perilaku (*behavioral rules*) yang telah dikunci.
 > **v0.3:** mengaktifkan AI Personal Insight via **Gemini opt-in** (§10.8, §13.1); Phase 6
 > item "Insight AI" dipromosikan. Perubahan ini melonggarkan prinsip "no egress" **hanya**
@@ -18,18 +18,24 @@
 > Menambah atribut `completionSource` (MANUAL/VERIFIED) pada Task model. Perubahan ini
 > tetap tunduk pada prinsip **Autonomy > Forced Behavior**: yang berubah hanyalah **apa
 > yang dicatat** dan **jalur yang tersedia**, bukan penambahan hukuman/paksaan.
+> **v0.6:** menyinkronkan penamaan resmi produk menjadi **Nemo** (nama paket internal
+> `com.anchor.app`), mengintegrasikan sistem karakter **Maskot Nemo** (kepala chibi bertinta
+> hitam, 12 ekspresi) sebagai pendamping visual dan identitas (§4, §10.0), mengganti intro
+> video Splash dengan urutan gambar animasi maskot tanpa dependensi video codec (§10.11),
+> serta memadankan seluruh spesifikasi ekspresi maskot, empty state, dan alur 19 halaman
+> sesuai `justmd/fitur-aplikasi-nemo-maskot.md`.
 
 ---
 
 ## 0. Executive Summary
 
-Anchor adalah aplikasi Android personal (single-user) yang menghubungkan **niat**
+Nemo (nama internal paket `com.anchor.app`) adalah aplikasi Android personal (single-user) yang menghubungkan **niat**
 (to-do list) dengan **perilaku nyata** (penggunaan perangkat). Ia menyadari ketika
 user menjauh dari tugas yang sudah ia anggap penting, lalu memberi intervensi
 kontekstual yang lembut, menunjukkan konsekuensi waktu dari penundaan, dan membantu
 user masuk ke sesi fokus — semuanya tanpa menghakimi dan tanpa memaksa.
 
-Anchor **bukan** to-do list biasa, **bukan** Digital Wellbeing biasa, dan **bukan**
+Nemo **bukan** to-do list biasa, **bukan** Digital Wellbeing biasa, dan **bukan**
 app-blocker. Ia adalah *jembatan* antara keduanya.
 
 Target MVP: **Phase 1–5 berjalan baik di perangkat nyata**. Backend tidak diperlukan.
@@ -62,21 +68,22 @@ Pembeda utama: **intervensi kontekstual berbasis baseline personal**, bukan atur
 
 ## 3. Product Vision
 
-> **Anchor** = asisten tenang yang hidup di dalam HP-mu. Ia mengerti apa yang kamu
+> **Nemo** = asisten tenang yang hidup di dalam HP-mu. Ia mengerti apa yang kamu
 > rencanakan, sadar ketika perilakumu menjauh darinya, menunjukkan ke mana pilihan
 > itu membawa, dan dengan lembut membantumu kembali.
 
-**Prinsip naratif:** Anchor adalah *"teman yang sadar ketika gue mulai menjauh dari
+**Prinsip naratif:** Nemo adalah *"teman yang sadar ketika gue mulai menjauh dari
 apa yang gue bilang penting"* — **bukan** *"aplikasi yang memaksa gue berhenti
 menggunakan HP."*
 
 ## 4. Product Principles
 
-1. **Awareness > Control**
-2. **Guidance > Punishment**
-3. **Consistency > Perfection**
-4. **Autonomy > Forced Behavior**
-5. **Personal Baseline > Universal Rules**
+1. **Awareness > Control** — Nemo menyadarkan, bukan memaksa. Setiap intervensi selalu punya cara untuk diabaikan ("Not now", "Emergency exit").
+2. **Guidance > Punishment** — membimbing kembali ke niat, tanpa rasa bersalah.
+3. **Consistency > Perfection** — menghargai proses dan usaha bertahap.
+4. **Autonomy > Forced Behavior** — pengguna selalu memegang kendali penuh.
+5. **Personal Baseline > Universal Rules** — tolok ukur relatif terhadap kebiasaan pribadi, bukan standar sembarang.
+6. **Wajah Aplikasi (Maskot Pendamping) [LOCKED v0.6]** — satu karakter maskot (kepala chibi bergaya tinta hitam, 12 ekspresi) yang menyertai identitas, ilustrasi, dan momen penting di seluruh layar secara tenang, dekoratif, dan tidak menghakimi.
 
 **Nada intervensi:** calm · supportive · concise · non-judgmental.
 
@@ -86,11 +93,11 @@ menggunakan HP."*
 |---|---|---|
 | G1 | User dapat membuat & mengelola task dengan lengkap | Task CRUD, subtask, deadline, priority |
 | G2 | User dapat melihat pola penggunaan perangkat secara lokal | Wellbeing screen, screen time, app usage |
-| G3 | Anchor mendeteksi drift berbasis baseline personal | Deviasi sesi > threshold |
-| G4 | Anchor memberi intervensi kontekstual yang tidak spam | Max ~3/hari, ada cooldown, bisa dismiss |
+| G3 | Nemo mendeteksi drift berbasis baseline personal | Deviasi sesi > threshold |
+| G4 | Nemo memberi intervensi kontekstual yang tidak spam | Max ~3/hari, ada cooldown, bisa dismiss |
 | G5 | User dapat masuk & menyelesaikan sesi fokus | Focus session completeness |
 | G6 | User dapat melihat konsekuensi waktu dari penundaan | Future View, Domino Effect |
-| G7 | Anchor memberi insight personal dari data nyata | Daily Reflection + pattern |
+| G7 | Nemo memberi insight personal dari data nyata | Daily Reflection + pattern |
 | G8 | Aplikasi tetap berguna tanpa internet & tanpa izin khusus | Graceful degradation |
 | G9 | Aplikasi hemat baterai & lancar di RAM 3–4 GB | Profiling, performa |
 
@@ -134,7 +141,7 @@ Semua ini **configurable** dan **dipelajari dari data aktual**, bukan diasumsika
 | Tahap | Deskripsi | Di mana di UI | Phase |
 |---|---|---|---|
 | **PLAN** | User membuat task: judul, deadline, priority, estimasi durasi, kategori, subtask | Tasks | 1 |
-| **OBSERVE** | Anchor mengumpulkan data penggunaan perangkat secara lokal | Wellbeing | 2 |
+| **OBSERVE** | Nemo mengumpulkan data penggunaan perangkat secara lokal | Wellbeing | 2 |
 | **DETECT DRIFT** | Bandingkan perilaku dengan baseline personal per-app/per-sesi | (background) | 2–3 |
 | **INTERVENTION** | Sampaikan secara kontekstual, hubungkan dengan task tertunda | Notification / In-app | 3 |
 | **FOCUS** | Bantu user masuk sesi fokus pada task terpilih | Focus | 3 |
@@ -149,6 +156,50 @@ Semua ini **configurable** dan **dipelajari dari data aktual**, bukan diasumsika
 > Format tiap fitur: **Purpose · User Story · Functional Requirement · UX Behavior ·
 > Edge Cases · Acceptance Criteria (Given/When/Then)**.
 > Acceptance Criteria mengikuti filosofi §28 master prompt.
+
+---
+
+### 10.0 Maskot Nemo & Identitas Visual [LOCKED v0.6]
+
+**Purpose:** Menghadirkan wajah visual aplikasi yang tenang, ramah, dan tidak menghakimi — menggantikan seluruh ilustrasi lama, video intro Splash, dan ikon bulat abstrak.
+
+**Karakter Maskot:**
+Anak laki-laki chibi, **kepala saja** (tanpa leher dan badan), digambar dengan tinta spidol hitam-putih: rambut runcing berantakan dengan goresan putih tipis, kacamata bulat tebal, telinga kecil, hidung titik, dan mulut kecil. Tanpa warna, bayangan, atau gradasi.
+
+**Tiga Peran Maskot:**
+1. **Identitas:** Ikon aplikasi launcher, visual intro Splash, dan ikon notifikasi.
+2. **Ilustrasi:** Pengganti ikon generik pada *empty state* dan header sapaan.
+3. **Pendamping:** Bereaksi secara kontekstual pada momen penting (menyapa, merayakan fokus selesai penuh, menegur halus saat distraksi). Maskot tidak pernah menggantikan teks dan tidak pernah menutupi tombol/interaksi.
+
+**Aset 12 Ekspresi + Aset Tambahan:**
+| # | Berkas | Ekspresi | Ciri Utama | Pemakaian Utama |
+|---|---|---|---|---|
+| 1 | `mascot_neutral` | Neutral | Mata melirik ke samping, mulut datar | Splash (1.5s), Header Tasks siang/malam, Focus Active, Notif Fokus |
+| 2 | `mascot_happy` | Happy | Mata melengkung, senyum terbuka | Splash (2s), Profil (nickname terisi), Izin aktif semua, Skenario A Future View, Penegasan privasi |
+| 3 | `mascot_sad` | Sad | Alis turun, air mata, mulut cemberut | Overdue banner, Sesi fokus diakhiri awal, Intervensi Contextual, Delete all data |
+| 4 | `mascot_angry` | Angry | Alis menukik, gigi rapat, urat dahi | Overlay "Back to focus?", Skenario B Future View ("IF I KEEP DELAYING") |
+| 5 | `mascot_surprised`| Surprised | Mata bulat lebar, mulut "O", garis kejut | Cadangan (belum terpakai) |
+| 6 | `mascot_sleepy` | Sleepy | Mata setengah tertutup, tanda "zzz" | Wellbeing no data, Focus Active saat pause, Insights empty, App Categories empty |
+| 7 | `mascot_confused` | Confused | Satu alis naik, mulut gelombang, tanda "?" | Focus Setup fallback notice, Warning link siklus Domino, Blocked Apps empty |
+| 8 | `mascot_laughing` | Laughing | Mata menyipit, mulut tawa lebar | Progress 100% Tasks, Focus selesai penuh (verified) |
+| 9 | `mascot_shy` | Shy | Mata menghindar, rona pipi, mulut gelombang| Onboarding Izin (minta sopan), Wellbeing permission needed |
+| 10 | `mascot_thinking` | Thinking | Mata melirik ke atas, tanda "..." | Task Detail callout Future View, Intervensi Gentle, Focus Setup tugas kosong |
+| 11 | `mascot_wink` | Wink | Satu mata tertutup, senyum kecil | Idle alternative |
+| 12 | `mascot_talking` | Talking | Mata terbuka, mulut oval berbicara | Tasks empty state, Onboarding profil menyapa, INSIGHT card, Intervensi Focus |
+| + | `mascot_blink` | Blink | Kedua mata terpejam | Siklus kedip idle (150ms tiap 3–5 detik acak) |
+| + | `mascot_silhouette`| Silhouette | Siluet monokrom garis rambut + kacamata | Small icon status bar notifikasi & themed icon Android 13+ |
+| + | `app_icon` | Launcher Icon | Neutral di safe zone tengah latar putih | Launcher icon 1024x1024 & listing toko aplikasi |
+
+**Skala Ukuran:**
+- **Besar (~120dp):** Splash, onboarding, dan empty state.
+- **Sedang (~80dp):** Overlay "Back to focus?" dan kartu intervensi.
+- **Kecil (~48dp):** Header, notice info, dan kartu di layar fungsional.
+
+**Aturan Visual & Aksesibilitas:**
+- **Mode Terang:** Maskot garis hitam di atas kanvas transparan diletakkan langsung.
+- **Mode Gelap (`#0A0A0A`):** Maskot dibungkus dalam badge lingkaran putih agar rambut hitamnya tidak tenggelam.
+- **Aksesibilitas:** Bersifat dekoratif; pembaca layar (TalkBack) melewatinya (`contentDescription = null`), seluruh status tercantum dalam teks.
+- **Animasi:** Crossfade transisi 120ms, kedip idle 150ms, gerak pantul/miring via kode (bukan spritesheet video); dinonaktifkan otomatis bila "Remove animations" aktif di sistem.
 
 ---
 
@@ -234,7 +285,7 @@ Untuk mendukung recurring task tanpa mengacaukan riwayat & progress, model dipis
 - **Prinsip Autonomy:** Task overdue **TIDAK** otomatis dipindahkan menjadi Today. User memiliki kontrol penuh untuk memilih aksi: *Reschedule*, *Complete*, *Keep for Today*, atau *Dismiss*.
 - **Tanpa Notifikasi Menghakimi:** Tidak ada modal pop-up mengganggu atau notifikasi yang menghujat penundaan.
 
-**Reschedule (FR-T12):** User dapat memindah deadline; Anchor mencatat kejadian reschedule (untuk insight pola penundaan).
+**Reschedule (FR-T12):** User dapat memindah deadline; Nemo mencatat kejadian reschedule (untuk insight pola penundaan).
 
 **Task States:**
 ```
@@ -377,12 +428,12 @@ WeeklyUsageSummary (agregat mingguan)
 ```
 Given  user belum memberikan izin PACKAGE_USAGE_STATS
 When   user membuka Wellbeing
-Then   Anchor menampilkan panduan izin yang jelas, TIDAK crash,
+Then   Nemo menampilkan panduan izin yang jelas, TIDAK crash,
        dan aplikasi tetap berfungsi sebagai Smart Todo
 
 Given  izin usage diberikan & data tersedia 7 hari
 When   user membuka Wellbeing
-Then   Anchor menampilkan total screen time, top apps, dan tren mingguan
+Then   Nemo menampilkan total screen time, top apps, dan tren mingguan
        yang dihitung dari data lokal (bukan AI, bukan fake data)
 ```
 
@@ -459,22 +510,22 @@ tepat, dengan pilihan — bukan perintah.
 
 **Edge Cases:**
 - Notification permission ditolak → fallback in-app saja.
-- User sedang di dalam Anchor → jangan kirim notification untuk hal yang sama.
+- User sedang di dalam Nemo → jangan kirim notification untuk hal yang sama.
 - Emergency / kondisi khusus user → hormati (tidak ada mekanisme paksa).
 
 **Acceptance Criteria:**
 ```
 Given  user punya high-priority task belum selesai
 When   user scrolling jauh di atas personal baseline
-Then   Anchor DAPAT memberi contextual intervention
+Then   Nemo DAPAT memberi contextual intervention
 
 Given  user menekan "Later"
 When   dalam periode cooldown user kembali scrolling app yang sama
-Then   Anchor TIDAK langsung mengirim intervensi lagi
+Then   Nemo TIDAK langsung mengirim intervensi lagi
 
 Given  hari ini sudah ada 3 intervensi bermakna
 When   sinyal drift baru muncul
-Then   Anchor menahan intervensi tambahan (maksimum harian dihormati)
+Then   Nemo menahan intervensi tambahan (maksimum harian dihormati)
 ```
 
 ---
@@ -497,7 +548,7 @@ Then   Anchor menahan intervensi tambahan (maksimum harian dihormati)
   `FOCUS_BLOCKING_ENABLED`, (b) toggle opt-in di Settings (`focusBlockingEnabled`, default OFF),
   dan (c) izin `AccessibilityService` aktif di OS. Bila salah satu tidak terpenuhi → sesi berjalan
   sebagai **Gentle** + user diberi tahu (FR-F8). **Tidak pernah gagal keras.**
-- **Semantik non-paksa.** Saat user membuka app yang diblokir selama sesi, Anchor menampilkan
+- **Semantik non-paksa.** Saat user membuka app yang diblokir selama sesi, Nemo menampilkan
   **overlay "kembali fokus"** (bukan memaksa keluar tanpa penjelasan) — konsisten dengan
   prinsip *Awareness > Control* (§4). Overlay muncul **setiap kali** user masuk kembali ke app
   terblokir. User tetap dapat menutupnya dan lanjut; tidak ada mekanisme kunci yang tidak bisa
@@ -602,12 +653,12 @@ IF I CONTINUE DELAYING
 ```
 Given  task punya deadline 23:59, estimasi 2 jam, waktu sekarang 15:10
 When   user membuka "See what happens"
-Then   Anchor menampilkan dua skenario (mulai sekarang vs menunda)
+Then   Nemo menampilkan dua skenario (mulai sekarang vs menunda)
        dengan disclaimer "based on your current schedule"
 
 Given  task tidak punya estimasi durasi
 When   user membuka Future View
-Then   Anchor memakai default internal (heuristics) dan MENANDAI asumsi dengan jelas
+Then   Nemo memakai default internal (heuristics) dan MENANDAI asumsi dengan jelas
        (bukan menyajikan angka seolah pasti)
 ```
 
@@ -655,12 +706,12 @@ Web Assignment
 ```
 Given  task "Web Assignment" punya 3 task bergantung padanya
 When   user membuka Domino Effect
-Then   Anchor menampilkan rantai & pesan "1 task may affect 3 upcoming tasks"
+Then   Nemo menampilkan rantai & pesan "1 task may affect 3 upcoming tasks"
        dengan bahasa estimatif (bukan pasti)
 
 Given  user mencoba membuat dependency yang membentuk siklus
 When   menyimpan
-Then   Anchor mencegah siklus & menjelaskan kenapa
+Then   Nemo mencegah siklus & menjelaskan kenapa
 ```
 
 ---
@@ -723,16 +774,16 @@ yang didukung data — dengan fallback lokal.
 ```
 Given  AI dinonaktifkan / offline
 When   user membuka Insights
-Then   Anchor menampilkan rule-based insight lokal, TANPA error
+Then   Nemo menampilkan rule-based insight lokal, TANPA error
 
 Given  AI aktif & data cukup
 When   analisis harian dijalankan
-Then   Anchor menyimpan insight berstruktur dari Gemini
+Then   Nemo menyimpan insight berstruktur dari Gemini
        & menampilkan sumbernya dengan jujur
 
 Given  payload berisi raw usage
 When   hendak dikirim
-Then   Anchor MENOLAK & hanya mengirim agregat
+Then   Nemo MENOLAK & hanya mengirim agregat
 ```
 
 ---
@@ -784,12 +835,12 @@ SUGGESTION
 ```
 Given  user menyelesaikan 2 dari 3 task hari ini
 When   Daily Reflection dihasilkan
-Then   Anchor menampilkan ringkasan yang tenang & mendukung,
+Then   Nemo menampilkan ringkasan yang tenang & mendukung,
        dengan insight yang didukung data
 
 Given  tidak ada data usage hari itu
 When   Daily Reflection ditampilkan
-Then   Anchor menyembunyikan bagian screen time (bukan menampilkan 0 menyesatkan)
+Then   Nemo menyembunyikan bagian screen time (bukan menampilkan 0 menyesatkan)
 ```
 
 ---
@@ -817,14 +868,46 @@ Then   Anchor menyembunyikan bagian screen time (bukan menampilkan 0 menyesatkan
 
 **Acceptance Criteria:**
 ```
-Given  user pertama kali membuka Anchor
+Given  user pertama kali membuka Nemo
 When   onboarding muncul
-Then   Anchor TIDAK memaksa semua izin; Smart Todo bisa dipakai langsung
+Then   Nemo TIDAK memaksa semua izin; Smart Todo bisa dipakai langsung
 
 Given  user menghapus semua data
 When   dikonfirmasi
 Then   semua data lokal terhapus (kecuali yang user pilih untuk dipertahankan)
 ```
+
+---
+
+### 10.11 Splash Screen & Onboarding Flows [LOCKED v0.6]
+
+**Purpose:** Memperkenalkan identitas aplikasi secara hangat melalui animasi maskot, lalu membantu pengguna baru mengatur profil dasar dan izin secara transparan dan non-intrusif.
+
+#### 1. Splash Screen
+- **Mekanisme Animasi:** Urutan gambar maskot Compose (tanpa pemutar video / tanpa dependensi video codec) selama ±3.5 detik, diiringi audio chime singkat.
+  - Detik 0–1.5: `mascot_neutral` di tengah layar, berkedip sekali.
+  - Detik 1.5–3.5: Berganti halus ke `mascot_happy` sambil memantul pelan ke atas-bawah.
+  - Teks "Nemo" di bawah maskot.
+- **Dukungan Tema:** Mode terang (latar putih, maskot transparan) dan Mode gelap (latar `#0A0A0A`, maskot dalam badge lingkaran putih).
+- **Graceful Fallback:** Timeout keras 4.5 detik untuk menjamin layar tidak pernah menggantung.
+- **Cold Start Only:** Hanya muncul pada *cold start* pertama per sesi OS, tidak berulang pada rotasi layar.
+
+#### 2. Onboarding — Profil (Setup 2 of 3)
+- **Tujuan:** Pengumpulan tiga preferensi personal yang sepenuhnya **opsional**:
+  1. Nickname (maksimal 24 karakter, tersimpan otomatis saat diketik).
+  2. Main Focus (Segmented Chip: `College` • `Career` • `Personal Growth`).
+  3. Default Focus Session Length (`25 min` • `45 min` • `60 min`, default 25 min).
+- **Maskot:** Maskot besar ekspresi `Talking` di atas judul, beralih ke `Happy` begitu nickname terisi.
+- **Aksi:** Tombol utama **"Continue"** (menuju langkah Izin jika belum lengkap) dan **"Skip for now"** (langsung ke shell utama tab Tasks).
+
+#### 3. Onboarding — Izin (Setup 3 of 3)
+- **Tujuan:** Menawarkan aktivasi izin opsional secara transparan:
+  1. `Usage access` (untuk Wellbeing & deteksi drift).
+  2. `Notifications` (untuk intervensi lembut & notifikasi fokus).
+  3. `App blocking` (untuk Strict/Custom mode via Accessibility).
+- **Maskot:** Maskot besar ekspresi `Shy` (meminta izin dengan santun), beralih ke `Happy` saat semua izin aktif.
+- **Status & Privasi:** Kartu berlabel status "Enabled" begitu izin didapat dari OS; kartu privasi dengan ikon gembok "All data is stored locally on your phone."
+- **Aksi:** Tombol **"Continue"** atau **"Skip for now"** menyelesaikan onboarding dan mengarahkan ke tab Tasks.
 
 ---
 
@@ -880,7 +963,7 @@ Local Aggregation (DailySummary & WeeklySummary)
 
 ### 13.1 AI Egress (aktif via Gemini — keputusan v0.3)
 
-Saat user **menyalakan** toggle AI, Anchor mengizinkan satu jalur egress:
+Saat user **menyalakan** toggle AI, Nemo mengizinkan satu jalur egress:
 
 | Aspek | Ketentuan |
 |---|---|
@@ -890,7 +973,7 @@ Saat user **menyalakan** toggle AI, Anchor mengizinkan satu jalur egress:
 | Izin | `INTERNET` (+ `ACCESS_NETWORK_STATE`) hanya terpakai saat AI ON. Tanpa AI ON, tidak ada request. |
 | Kegagalan | Timeout/offline/429/invalid key/respons tidak sesuai schema → fallback rule-based, tanpa crash & tanpa dialog. |
 | Key | Disimpan di `local.properties` (git-ignored) → `BuildConfig.GEMINI_API_KEY`. **Tidak** di-commit. |
-| Transparansi | UI menandai sumber: "Generated by Anchor AI…" vs "Generated locally on your device". |
+| Transparansi | UI menandai sumber: "Generated by Nemo AI…" vs "Generated locally on your device". |
 
 > Ini melonggarkan prinsip "tanpa backend / tanpa egress" **hanya untuk AI opt-in**.
 > Semua fase lain tetap 100% offline. Bila AI OFF (default), egress = nol.

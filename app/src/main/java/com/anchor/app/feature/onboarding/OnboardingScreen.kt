@@ -21,10 +21,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -76,11 +78,101 @@ import com.anchor.app.platform.accessibility.AccessibilityStatus
 import com.anchor.app.platform.usagestats.UsageAccessSettings
 
 /**
- * 00b Permission Onboarding (docs 07-screens.md Ã‚Â§2.4).
+ * 00 - Splash & Onboarding (docs/superpowers/design/gamabaran.pen WCFeF).
+ */
+@Composable
+fun WelcomeOnboardingScreen(
+    onGetStarted: () -> Unit,
+    onSkip: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Nemo.colors.background)
+            .padding(horizontal = Spacing.screenHorizontal)
+            .padding(top = Spacing.x6, bottom = Spacing.x8),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+        ) {
+            Text(
+                text = stringResource(R.string.onboarding_welcome_skip),
+                fontFamily = ManropeFamily,
+                fontWeight = FontWeight.Medium,
+                fontSize = 14.sp,
+                color = Nemo.colors.mute,
+                modifier = Modifier
+                    .clip(PillShape)
+                    .clickable(onClick = onSkip)
+                    .padding(horizontal = Spacing.x2, vertical = Spacing.x1),
+            )
+        }
+
+        Spacer(modifier = Modifier.height(Spacing.x8))
+
+        // Avatar Card (Maskot Nemo)
+        Box(
+            modifier = Modifier
+                .size(160.dp)
+                .clip(CircleShape)
+                .background(Nemo.colors.surface)
+                .border(1.dp, Nemo.colors.line, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            com.anchor.app.core.design.components.NemoMascot(
+                expression = com.anchor.app.core.design.components.MascotExpression.HAPPY,
+                size = 110.dp,
+            )
+        }
+
+        Spacer(modifier = Modifier.height(Spacing.x8))
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(Spacing.x2),
+        ) {
+            Text(
+                text = stringResource(R.string.onboarding_welcome_title_1),
+                fontFamily = ManropeFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 32.sp,
+                color = Nemo.colors.ink,
+            )
+            Text(
+                text = stringResource(R.string.onboarding_welcome_title_2),
+                fontFamily = ManropeFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 20.sp,
+                color = Nemo.colors.ink,
+            )
+            Spacer(modifier = Modifier.height(Spacing.x2))
+            Text(
+                text = stringResource(R.string.onboarding_welcome_subtitle),
+                fontFamily = ManropeFamily,
+                fontWeight = FontWeight.Normal,
+                fontSize = 14.sp,
+                lineHeight = 22.sp,
+                color = Nemo.colors.inkSecondary,
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        PrimaryButton(
+            label = stringResource(R.string.onboarding_welcome_cta),
+            onClick = onGetStarted,
+        )
+    }
+}
+
+/**
+ * 00b Permission Onboarding (docs 07-screens.md §2.4, gamabaran.pen r4bPS8).
  *
  * Step indicator, progress track, two optional permission cards, a local-only privacy
- * card, and Continue / Skip. Permissions are never forced; both cards are informational
- * in Sprint 1 and get live status wiring alongside Wellbeing (Sprint 2).
+ * card with trust mascot avatar, and Continue / Skip for now.
  */
 @Composable
 fun PermissionOnboardingScreen(
@@ -96,24 +188,19 @@ fun PermissionOnboardingScreen(
         )
     }
     var usageGranted by remember { mutableStateOf(false) }
-    var blockingGranted by remember { mutableStateOf(AccessibilityStatus().isEnabled(context)) }
 
-    // Usage access + App blocking are granted only in OS Settings, so re-check when we return
-    // (docs 08 Ã‚Â§2).
+    // Usage access granted only in OS Settings, so re-check when we return
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 usageGranted = usageAccessGranted(context)
-                blockingGranted = AccessibilityStatus().isEnabled(context)
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    // Ask for notifications here (the "enable notifications" step most apps use first); if the
-    // user declines, guide them to the notification settings screen.
     val notifLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { granted ->
@@ -131,21 +218,31 @@ fun PermissionOnboardingScreen(
         verticalArrangement = Arrangement.spacedBy(Spacing.x4),
     ) {
         Text(
-            text = stringResource(R.string.onboarding_perm_step, 3, 3),
+            text = stringResource(R.string.onboarding_perm_step_indicator),
             fontFamily = ManropeFamily,
-            fontWeight = FontWeight.Medium,
+            fontWeight = FontWeight.SemiBold,
             fontSize = 12.sp,
+            letterSpacing = 0.8.sp,
             color = Nemo.colors.mute,
         )
         ProgressTrack(progress = 1f)
 
-        Text(
-            text = stringResource(R.string.onboarding_perm_headline),
-            fontFamily = ManropeFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize = 28.sp,
-            color = Nemo.colors.ink,
-        )
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = stringResource(R.string.onboarding_perm_headline_1),
+                fontFamily = ManropeFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 28.sp,
+                color = Nemo.colors.ink,
+            )
+            Text(
+                text = stringResource(R.string.onboarding_perm_headline_2),
+                fontFamily = ManropeFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 28.sp,
+                color = Nemo.colors.ink,
+            )
+        }
         Text(
             text = stringResource(R.string.onboarding_perm_sub),
             fontFamily = ManropeFamily,
@@ -158,30 +255,27 @@ fun PermissionOnboardingScreen(
             title = stringResource(R.string.onboarding_perm_usage_title),
             subtitle = stringResource(R.string.onboarding_perm_usage_sub),
             granted = usageGranted,
+            iconRes = R.drawable.ic_wellbeing,
             onEnable = { UsageAccessSettings.open(context) },
         )
         PermissionCard(
             title = stringResource(R.string.onboarding_perm_notif_title),
             subtitle = stringResource(R.string.onboarding_perm_notif_sub),
             granted = notificationsGranted,
+            iconRes = R.drawable.ic_insights,
             onEnable = { requestNotifications(notifLauncher, context) },
-        )
-        PermissionCard(
-            title = stringResource(R.string.onboarding_perm_blocking_title),
-            subtitle = stringResource(R.string.onboarding_perm_blocking_sub),
-            granted = blockingGranted,
-            onEnable = { AccessibilityStatus().open(context) },
         )
 
         Banner {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_lock),
-                    contentDescription = null,
-                    tint = Nemo.colors.inkSecondary,
-                    modifier = Modifier.size(18.dp),
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                com.anchor.app.core.design.components.NemoMascot(
+                    expression = com.anchor.app.core.design.components.MascotExpression.HAPPY,
+                    size = 24.dp,
                 )
-                Spacer(modifier = Modifier.width(Spacing.x2))
+                Spacer(modifier = Modifier.width(Spacing.x3))
                 Text(
                     text = stringResource(R.string.onboarding_privacy_card),
                     fontFamily = ManropeFamily,
@@ -241,6 +335,21 @@ fun ProfileSetupScreen(
             color = Nemo.colors.mute,
         )
         ProgressTrack(progress = 2f / 3f)
+
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center,
+        ) {
+            val mascotExp = if (settings.nickname.isNotBlank()) {
+                com.anchor.app.core.design.components.MascotExpression.HAPPY
+            } else {
+                com.anchor.app.core.design.components.MascotExpression.TALKING
+            }
+            com.anchor.app.core.design.components.NemoMascot(
+                expression = mascotExp,
+                size = 100.dp,
+            )
+        }
 
         Text(
             text = stringResource(R.string.onboarding_profile_headline),
@@ -407,6 +516,7 @@ private fun PermissionCard(
     subtitle: String,
     granted: Boolean,
     onEnable: () -> Unit,
+    iconRes: Int? = null,
 ) {
     Row(
         modifier = Modifier
@@ -418,6 +528,23 @@ private fun PermissionCard(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        if (iconRes != null) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(Nemo.colors.fog),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(iconRes),
+                    contentDescription = null,
+                    tint = Nemo.colors.ink,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
+            Spacer(modifier = Modifier.width(Spacing.x3))
+        }
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.x1)) {
             Text(text = title, fontFamily = ManropeFamily, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Nemo.colors.ink)
             Text(text = subtitle, fontFamily = ManropeFamily, fontSize = 12.sp, color = Nemo.colors.mute)

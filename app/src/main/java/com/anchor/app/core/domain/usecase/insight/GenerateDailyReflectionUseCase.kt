@@ -37,7 +37,12 @@ class GenerateDailyReflectionUseCase @Inject constructor(
         force: Boolean = false,
     ): Insight {
         if (!force) {
-            insightRepository.dailyReflection(dateEpochDay)?.let { return it }
+            val cached = insightRepository.dailyReflection(dateEpochDay)
+            if (cached != null) {
+                val isToday = dateEpochDay == timeProvider.todayEpochDay()
+                val isFresh = (timeProvider.nowMillis() - cached.createdAt) < 3 * 3600_000L
+                if (!isToday || isFresh) return cached
+            }
         }
 
         val payload = buildPayload(dateEpochDay)

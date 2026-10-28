@@ -79,6 +79,10 @@ class AndroidUsageStatsSource @Inject constructor(
                     if (event.packageName == currentPackage) {
                         addIfValid(result, event.packageName, currentStart, event.timeStamp)
                         currentPackage = null
+                    } else if (currentPackage == null) {
+                        // App opened before startMillis and closed inside this window:
+                        // clamp start to startMillis so active usage is not lost.
+                        addIfValid(result, event.packageName, startMillis, event.timeStamp)
                     }
                 }
             }

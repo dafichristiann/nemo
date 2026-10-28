@@ -23,6 +23,7 @@ import javax.inject.Inject
 
 /** UI state for the Task Detail screen (07-screens.md §2.14). */
 data class TaskDetailUiState(
+    val isLoading: Boolean = true,
     val task: Task? = null,
     val subtasks: List<Subtask> = emptyList(),
     val deadlineLabel: String? = null,
@@ -56,6 +57,7 @@ class TaskDetailViewModel @Inject constructor(
         val now = timeProvider.nowMillis()
         val zone = timeProvider.zoneId()
         TaskDetailUiState(
+            isLoading = false,
             task = task,
             subtasks = subtasks,
             deadlineLabel = task?.deadline?.let { DateTimeFormatter.deadlineLabel(it, now, zone) },
@@ -80,6 +82,16 @@ class TaskDetailViewModel @Inject constructor(
 
     fun onReschedule(newDeadline: Long?) =
         viewModelScope.launch(dispatchers.io) { rescheduleTask(taskId, newDeadline) }
+
+    fun onToggleDone() = viewModelScope.launch(dispatchers.io) {
+        val current = uiState.value.task ?: return@launch
+        val now = timeProvider.nowMillis()
+        if (current.isDone) {
+            taskRepository.setStatus(taskId, com.anchor.app.core.domain.model.TaskStatus.TODO)
+        } else {
+            taskRepository.markDone(taskId, now, com.anchor.app.core.domain.model.CompletionSource.MANUAL)
+        }
+    }
 
     fun onDelete() = viewModelScope.launch(dispatchers.io) { taskRepository.delete(taskId) }
 

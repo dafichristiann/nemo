@@ -1,7 +1,6 @@
 package com.anchor.app.feature.tasks
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,7 +28,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -41,10 +39,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.anchor.app.R
 import com.anchor.app.core.design.components.Divider
-import com.anchor.app.core.design.components.PrimaryButton
+import com.anchor.app.core.design.components.NemoButton
+import com.anchor.app.core.design.components.NemoButtonStyle
 import com.anchor.app.core.design.components.ProgressTrack
 import com.anchor.app.core.design.components.NemoPill
+import com.anchor.app.core.design.components.NemoSkeletonCard
+import com.anchor.app.core.design.components.NemoSkeletonRow
 import com.anchor.app.core.design.components.SectionHeader
+import com.anchor.app.core.design.components.nemoShimmer
 import com.anchor.app.core.design.components.pressable
 import com.anchor.app.core.design.theme.FrauncesFamily
 import com.anchor.app.core.design.theme.ManropeFamily
@@ -82,31 +84,110 @@ fun TaskDetailScreen(
             .padding(top = Spacing.x6, bottom = Spacing.x8),
         verticalArrangement = Arrangement.spacedBy(Spacing.x4),
     ) {
-        // Header: back + title
-        Row(
-            modifier = Modifier
-                .clip(PillShape)
-                .pressable(
-                    shape = PillShape,
-                    pressedScale = 0.96f,
-                    onClick = onBack,
+        if (state.isLoading && task == null) {
+            // Header baris back/edit skeleton
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(60.dp)
+                        .height(24.dp)
+                        .clip(PillShape)
+                        .pressable(
+                            shape = PillShape,
+                            pressedScale = 0.96f,
+                            onClick = onBack,
+                        )
+                        .nemoShimmer(),
                 )
-                .padding(vertical = Spacing.x1, horizontal = Spacing.x1),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Spacing.x1),
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_back),
-                contentDescription = stringResource(R.string.detail_back),
-                tint = Nemo.colors.ink,
-                modifier = Modifier.size(20.dp),
+                Box(
+                    modifier = Modifier
+                        .width(40.dp)
+                        .height(24.dp)
+                        .clip(PillShape)
+                        .nemoShimmer(),
+                )
+            }
+
+            // Priority bar skeleton
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(3.dp)
+                    .clip(RoundedCornerShape(Radius.track))
+                    .nemoShimmer(),
             )
+
+            // Baris judul skeleton
+            NemoSkeletonCard(height = 36.dp)
+
+            // Dua pill badge skeleton
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.x2),
+            ) {
+                NemoSkeletonCard(modifier = Modifier.weight(1f), height = 24.dp)
+                NemoSkeletonCard(modifier = Modifier.weight(1f), height = 24.dp)
+            }
+
+            // Meta info skeleton
+            NemoSkeletonCard(height = 40.dp)
+
+            // Progress track skeleton
+            NemoSkeletonCard(height = 6.dp)
+
+            // 2 baris NemoSkeletonRow() untuk placeholder subtasks/steps
+            NemoSkeletonRow()
+            NemoSkeletonRow()
+
+            return@Column
+        }
+
+        // Header: back + Edit
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Row(
+                modifier = Modifier
+                    .clip(PillShape)
+                    .pressable(
+                        shape = PillShape,
+                        pressedScale = 0.96f,
+                        onClick = onBack,
+                    )
+                    .padding(vertical = Spacing.x1, horizontal = Spacing.x1),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.x1),
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_back),
+                    contentDescription = stringResource(R.string.detail_back),
+                    tint = Nemo.colors.ink,
+                    modifier = Modifier.size(20.dp),
+                )
+                Text(
+                    text = stringResource(R.string.detail_back),
+                    fontFamily = ManropeFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                    color = Nemo.colors.ink,
+                )
+            }
             Text(
-                text = stringResource(R.string.detail_back),
+                text = stringResource(R.string.detail_edit),
                 fontFamily = ManropeFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp,
                 color = Nemo.colors.ink,
+                modifier = Modifier
+                    .clip(PillShape)
+                    .pressable(shape = PillShape, onClick = {})
+                    .padding(horizontal = Spacing.x2, vertical = Spacing.x1),
             )
         }
 
@@ -133,7 +214,9 @@ fun TaskDetailScreen(
             text = task.title,
             fontFamily = FrauncesFamily,
             fontWeight = FontWeight.Normal,
-            fontSize = 26.sp,
+            fontSize = 28.sp,
+            lineHeight = 34.sp,
+            letterSpacing = (-0.3).sp,
             color = Nemo.colors.ink,
         )
 
@@ -173,8 +256,8 @@ fun TaskDetailScreen(
 
         Divider()
 
-        // Subtasks
-        SectionHeader(title = stringResource(R.string.detail_subtasks_title))
+        // Subtasks / Steps
+        SectionHeader(title = stringResource(R.string.detail_steps_header))
         if (state.subtasks.isEmpty()) {
             Text(
                 text = stringResource(R.string.detail_no_subtasks),
@@ -189,13 +272,23 @@ fun TaskDetailScreen(
                 val orderedSubtasks = remember(state.subtasks) {
                     state.subtasks.sortedBy { it.orderIndex }
                 }
-                orderedSubtasks.forEach { sub ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                val firstIncompleteIndex = orderedSubtasks.indexOfFirst { !it.isDone }
+                orderedSubtasks.forEachIndexed { idx, sub ->
+                    val isActive = idx == firstIncompleteIndex
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(Radius.card))
+                            .background(if (isActive) Nemo.colors.fog else Nemo.colors.background)
+                            .padding(horizontal = Spacing.x2, vertical = Spacing.x2),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
                         RoundCheckbox(checked = sub.isDone, onToggle = { viewModel.onToggleSubtask(sub) })
                         Spacer(modifier = Modifier.width(Spacing.x3))
                         Text(
-                            text = sub.title,
+                            text = if (isActive) "${sub.title} ${stringResource(R.string.detail_active_step_tag)}" else sub.title,
                             fontFamily = ManropeFamily,
+                            fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
                             fontSize = 14.sp,
                             color = if (sub.isDone) Nemo.colors.mute else Nemo.colors.ink,
                             textDecoration = if (sub.isDone) TextDecoration.LineThrough else null,
@@ -254,30 +347,55 @@ fun TaskDetailScreen(
             }
         }
 
-        // Future View callout (07-screens.md Ã‚Â§2.14; opens screen 07)
-        Box(
+        // Future View callout (07-screens.md §2.14; opens screen 07)
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(Radius.card))
                 .background(Nemo.colors.fog)
                 .clickable { onOpenFutureView(task.id) }
                 .padding(Spacing.x4),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.x3),
         ) {
+            com.anchor.app.core.design.components.NemoMascot(
+                expression = com.anchor.app.core.design.components.MascotExpression.THINKING,
+                size = 32.dp,
+            )
             Text(
                 text = stringResource(R.string.detail_future_callout),
                 fontFamily = ManropeFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = 13.sp,
                 color = Nemo.colors.inkSecondary,
+                modifier = Modifier.weight(1f),
             )
         }
 
-        // Actions. Completion requires a focus session (PRD v0.5 Ã‚Â§10.1), so the primary action
-        // opens Focus for this task instead of completing it directly.
-        PrimaryButton(
-            label = stringResource(R.string.detail_action_complete_via_focus),
-            onClick = { onStartFocusToComplete(task.id) },
-        )
+        // Actions: Mark Done / Todo and Focus side-by-side per specification
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.x2),
+        ) {
+            val isDone = task.isDone
+            val doneLabel = if (isDone) {
+                stringResource(R.string.detail_action_todo)
+            } else {
+                stringResource(R.string.detail_action_complete)
+            }
+            NemoButton(
+                text = doneLabel,
+                onClick = { viewModel.onToggleDone() },
+                modifier = Modifier.weight(1f),
+                style = if (isDone) NemoButtonStyle.Secondary else NemoButtonStyle.Primary,
+            )
+            NemoButton(
+                text = stringResource(R.string.detail_action_complete_via_focus),
+                onClick = { onStartFocusToComplete(task.id) },
+                modifier = Modifier.weight(1f),
+                style = if (isDone) NemoButtonStyle.Primary else NemoButtonStyle.Secondary,
+            )
+        }
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.x2)) {
             SecondaryAction(stringResource(R.string.detail_action_reschedule)) {
                 showReschedule = true

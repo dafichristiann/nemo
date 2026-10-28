@@ -23,7 +23,7 @@ class DailyReflectionWorker @AssistedInject constructor(
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result = runCatching {
-        generateDailyReflection()
+        generateDailyReflection(force = true)
         Result.success()
     }.getOrElse {
         Result.retry()

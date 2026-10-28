@@ -69,7 +69,7 @@ class ObserveTasksUseCaseTest {
         )
 
         val ids = ObserveTasksUseCase(repo, time)(TaskFilter.TODAY).first().map { it.id }.toSet()
-        assertEquals(setOf("in-day", "late-night-in-day"), ids)
+        assertEquals(setOf("in-day", "late-night-in-day", "no-deadline"), ids)
     }
 
     @Test

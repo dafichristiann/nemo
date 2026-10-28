@@ -1,8 +1,8 @@
-# Anchor — Build & Release Guide
+# Nemo — Build & Release Guide
 
 > **Status:** Release tooling · **Terkait:** `docs/superpowers/design/05-mvp-scope.md`,
-> `09-privacy-and-security.md`, `14-hardening-report.md`
-> **Catatan:** Panduan praktis membangun & merilis APK/AAB Anchor. Default locale English,
+> `09-privacy-and-security.md`, `14-hardening-report.md`, `justmd/fitur-aplikasi-nemo-maskot.md`
+> **Catatan:** Panduan praktis membangun & merilis APK/AAB Nemo (paket `com.anchor.app`). Default locale English,
 > Bahasa Indonesia tersedia (`values-id`).
 
 ---

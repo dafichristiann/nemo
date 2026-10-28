@@ -1,11 +1,11 @@
-# Anchor — Design & Product Documentation
+# Nemo — Design & Product Documentation
 
-> **Anchor (Personal Focus Assistant)** — asisten fokus personal untuk Android.
+> **Nemo (Personal Focus Assistant)** (nama internal paket `com.anchor.app`) — asisten fokus personal untuk Android.
 > Menghubungkan **niat** (to-do) dengan **perilaku nyata** (penggunaan perangkat):
 > menyadari saat kamu menjauh dari tugas penting, lalu membantu kembali dengan lembut —
 > **tanpa memaksa, tanpa menghakimi, tanpa mengirim datamu ke mana pun.**
 
-Dokumentasi ini adalah *source of truth* untuk desain, arsitektur, dan MVP Anchor.
+Dokumentasi ini adalah *source of truth* untuk desain, arsitektur, dan MVP Nemo.
 
 ---
 
@@ -14,12 +14,12 @@ Dokumentasi ini adalah *source of truth* untuk desain, arsitektur, dan MVP Ancho
 | Jika kamu… | Baca |
 |---|---|
 | Baru pertama kali | `00-product-brief.md` |
-| Mau tahu aturan perilaku produk | `01-prd.md` ⭐ *(dokumen terkunci / locked)* |
+| Mau tahu aturan perilaku produk | `01-prd.md` ⭐ *(dokumen terkunci / locked v0.6)* |
 | Mau bangun arsitektur | `02-architecture.md` |
 | Mau tahu skema database | `03-database-schema.md` |
 | Mau paham mesin intervensi | `04-intervention-engine.md` |
 | Mau tahu ruang lingkup MVP | `05-mvp-scope.md` |
-| Mau membangun UI | `06-design-system.md` + `07-screens.md` |
+| Mau membangun UI | `06-design-system.md` + `07-screens.md` (dan `justmd/fitur-aplikasi-nemo-maskot.md`) |
 | Mau implementasi izin | `08-permissions.md` |
 | Mau implementasi privasi/keamanan | `09-privacy-and-security.md` |
 | Mau tahu risiko & mitigasi | `10-risk-register.md` |
@@ -27,7 +27,6 @@ Dokumentasi ini adalah *source of truth* untuk desain, arsitektur, dan MVP Ancho
 | Mau mulai ngoding | `12-sprint-backlog.md` |
 | Mau tahu hardening/rilis | `14-hardening-report.md` (dan `../RELEASE.md`) |
 | Mau lihat rencana Phase 6 | `15-post-mvp-roadmap.md` |
-| Mau lihat mockup | `gamabaran.pen` |
 
 ---
 
@@ -36,13 +35,13 @@ Dokumentasi ini adalah *source of truth* untuk desain, arsitektur, dan MVP Ancho
 | # | Dokumen | Isi | Status |
 |---|---|---|---|
 | 00 | `00-product-brief.md` | Ringkasan *why*, masalah, solusi, ruang lingkup | Approved |
-| 01 | `01-prd.md` | Product Requirements — aturan perilaku & acceptance criteria | **Locked v0.2** |
+| 01 | `01-prd.md` | Product Requirements — aturan perilaku, maskot & AC | **Locked v0.6** |
 | 02 | `02-architecture.md` | Arsitektur teknis, modul, worker, degradasi | Derived |
 | 03 | `03-database-schema.md` | Skema Room, relasi, migrasi, retention | Derived |
 | 04 | `04-intervention-engine.md` | Drift detector + intervention engine | Derived |
 | 05 | `05-mvp-scope.md` | Fase MVP, DoD, urutan kerja | Derived |
 | 06 | `06-design-system.md` | Token visual & komponen | Derived |
-| 07 | `07-screens.md` | Inventaris layar & alur | Derived |
+| 07 | `07-screens.md` | Inventaris 19 layar & alur maskot | Derived (v0.6) |
 | 08 | `08-permissions.md` | Detail izin, alur, fallback, degradasi | Derived (PRD §14) |
 | 09 | `09-privacy-and-security.md` | Klasifikasi data, egress AI, retention, hapus data | Derived (PRD §13) |
 | 10 | `10-risk-register.md` | Register risiko lengkap + mitigasi | Derived (PRD §15) |
@@ -52,8 +51,6 @@ Dokumentasi ini adalah *source of truth* untuk desain, arsitektur, dan MVP Ancho
 | 14 | `14-hardening-report.md` | Verifikasi Sprint 8 (hardening) | Report |
 | 15 | `15-post-mvp-roadmap.md` | Roadmap Phase 6 (backlog ide, bukan komitmen) | Backlog |
 | 16 | `16-ai-insight-gemini.md` | AI Insight aktif via Gemini (opt-in) | Spec |
-| — | `gamabaran.pen` | Mockup desain (pen.dev) | Mockup |
-| — | `build_pen.js` / `_cleanup.js` | Pembangun & pembersih file `.pen` | Tooling |
 
 > **Hierarki otoritas:** `01-prd.md` adalah **dokumen terkunci**. Semua dokumen lain
 > *mengalir dari* PRD. Jika terjadi konflik, **PRD menang**. Untuk mengubah perilaku

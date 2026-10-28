@@ -30,7 +30,8 @@ class FakeTaskRepository : TaskRepository {
             it.status in OPEN &&
                 (
                     (it.deadline != null && it.deadline!! >= startOfDay && it.deadline!! < endOfDay) ||
-                        it.definitionOccurrenceDate == todayEpochDay
+                        it.definitionOccurrenceDate == todayEpochDay ||
+                        (it.deadline == null && it.definitionOccurrenceDate == null)
                     )
         }
     }

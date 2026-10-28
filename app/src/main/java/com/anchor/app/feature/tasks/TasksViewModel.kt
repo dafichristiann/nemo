@@ -5,10 +5,13 @@ import androidx.lifecycle.viewModelScope
 import com.anchor.app.core.common.DateTimeFormatter
 import com.anchor.app.core.common.DispatcherProvider
 import com.anchor.app.core.common.TimeProvider
+import com.anchor.app.core.domain.model.CompletionSource
 import com.anchor.app.core.domain.model.RecurrenceRule
 import com.anchor.app.core.domain.model.Task
 import com.anchor.app.core.domain.model.TaskPriority
+import com.anchor.app.core.domain.model.TaskStatus
 import com.anchor.app.core.domain.repository.SettingsRepository
+import com.anchor.app.core.domain.repository.TaskRepository
 import com.anchor.app.core.domain.usecase.task.CreateTaskInput
 import com.anchor.app.core.domain.usecase.task.CreateTaskResult
 import com.anchor.app.core.domain.usecase.task.CreateTaskUseCase
@@ -22,6 +25,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
@@ -37,14 +41,24 @@ data class TaskRowUi(
     val overdue: Boolean,
 )
 
+/** Data for floating toast feedback on task actions. */
+data class TaskToast(
+    val message: String,
+    val actionLabel: String? = null,
+    val taskId: String? = null,
+)
+
 /** Aggregated Home screen state (PRD FR-T10). */
 @androidx.compose.runtime.Immutable
 data class TasksUiState(
+    val isLoading: Boolean = true,
     val filter: TaskFilter = TaskFilter.TODAY,
     val rows: List<TaskRowUi> = emptyList(),
     /** Overdue open tasks, shown in their own section — excluded from [rows] (no double entry). */
     val overdueRows: List<TaskRowUi> = emptyList(),
     val overdueCount: Int = 0,
+    val todayCount: Int = 0,
+    val upcomingCount: Int = 0,
     val today: java.time.LocalDate = java.time.LocalDate.now(),
     val zone: java.time.ZoneId = java.time.ZoneId.systemDefault(),
     /** User's preferred name for the personalized greeting; blank = plain greeting. */
@@ -65,6 +79,7 @@ class TasksViewModel @Inject constructor(
     private val createTask: CreateTaskUseCase,
     private val rescheduleTask: RescheduleTaskUseCase,
     private val generateRecurring: GenerateRecurringTasksUseCase,
+    private val taskRepository: TaskRepository,
     private val settingsRepository: SettingsRepository,
     private val timeProvider: TimeProvider,
     private val dispatchers: DispatcherProvider,
@@ -72,12 +87,18 @@ class TasksViewModel @Inject constructor(
 
     private val filter = MutableStateFlow(TaskFilter.TODAY)
 
+    private val inFlightTaskToggles = mutableSetOf<String>()
+
     val uiState: StateFlow<TasksUiState> = combine(
         filter.flatMapLatest { observeTasks(it) },
         observeOverdue(),
         filter,
         settingsRepository.observe(),
-    ) { tasks, overdue, currentFilter, settings ->
+        combine(
+            observeTasks(TaskFilter.TODAY),
+            observeTasks(TaskFilter.UPCOMING),
+        ) { today, upcoming -> today to upcoming },
+    ) { tasks, overdue, currentFilter, settings, (todayTasks, upcomingTasks) ->
         val now = timeProvider.nowMillis()
         val zone = timeProvider.zoneId()
         // Overdue tasks get their own section, so they must NOT also appear in the normal list.
@@ -88,11 +109,15 @@ class TasksViewModel @Inject constructor(
         } else {
             tasks.filterNot { it.id in overdueIds }
         }
+        val visibleTodayTasks = todayTasks.filterNot { it.id in overdueIds }
         TasksUiState(
+            isLoading = false,
             filter = currentFilter,
             rows = visibleTasks.map { it.toRowUi(now, zone) },
             overdueRows = overdue.map { it.toRowUi(now, zone) },
             overdueCount = overdue.size,
+            todayCount = visibleTodayTasks.size,
+            upcomingCount = upcomingTasks.size,
             today = timeProvider.today(),
             zone = zone,
             nickname = settings.nickname,
@@ -102,6 +127,24 @@ class TasksViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = TasksUiState(),
     )
+
+    private val _toast = MutableStateFlow<TaskToast?>(null)
+    val toast: StateFlow<TaskToast?> = _toast.asStateFlow()
+
+    fun showToast(message: String, actionLabel: String? = null, taskId: String? = null) {
+        _toast.value = TaskToast(message = message, actionLabel = actionLabel, taskId = taskId)
+    }
+
+    fun dismissToast() {
+        _toast.value = null
+    }
+
+    fun undoToggleDone(taskId: String) {
+        viewModelScope.launch(dispatchers.io) {
+            taskRepository.setStatus(taskId, TaskStatus.TODO)
+            _toast.value = null
+        }
+    }
 
     init {
         // Ensure today's recurring instances exist (idempotent) on first open (FR-T7).
@@ -138,12 +181,52 @@ class TasksViewModel @Inject constructor(
                     subtaskTitles = subtaskTitles,
                 ),
             )
+            if (result is CreateTaskResult.Success) {
+                _toast.value = TaskToast(
+                    message = "Task created",
+                    actionLabel = null,
+                    taskId = result.taskId,
+                )
+            }
             launch(dispatchers.main) { onResult(result) }
         }
     }
 
     fun onReschedule(taskId: String, newDeadline: Long?) {
         viewModelScope.launch(dispatchers.io) { rescheduleTask(taskId, newDeadline) }
+    }
+
+    fun onToggleTaskDone(
+        taskId: String,
+        currentStatus: TaskStatus,
+        doneMessage: String = "Task completed",
+        undoLabel: String = "Undo",
+    ) {
+        synchronized(inFlightTaskToggles) {
+            if (!inFlightTaskToggles.add(taskId)) {
+                return
+            }
+        }
+        viewModelScope.launch(dispatchers.io) {
+            try {
+                val now = timeProvider.nowMillis()
+                if (currentStatus == TaskStatus.DONE) {
+                    taskRepository.setStatus(taskId, TaskStatus.TODO)
+                    _toast.value = null
+                } else {
+                    taskRepository.markDone(taskId, now, CompletionSource.MANUAL)
+                    _toast.value = TaskToast(
+                        message = doneMessage,
+                        actionLabel = undoLabel,
+                        taskId = taskId,
+                    )
+                }
+            } finally {
+                synchronized(inFlightTaskToggles) {
+                    inFlightTaskToggles.remove(taskId)
+                }
+            }
+        }
     }
 
     /** "Keep for Today": push the deadline to today 23:59 and clear overdue (FR-T11). */

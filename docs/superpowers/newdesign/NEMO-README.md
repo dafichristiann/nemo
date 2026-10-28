@@ -32,5 +32,5 @@ Kode ini belum saya compile di project Anda. Jalankan build dulu dan sesuaikan k
 
 ## Yang perlu Anda putuskan/lengkapi
 - **Layar yang belum dimockup:** Future View versi Day, App Categories, dan notifikasi Day. Spesifikasinya sudah ada di `docs/design-spec.md`.
-- **Video splash:** dokumen fitur menyebut klip video terang & gelap. Aset video tidak termasuk di paket ini.
+- **Animasi Splash:** Splash memakai urutan gambar animasi maskot Compose (`Neutral` 1,5s → `Happy` 2s) tanpa memerlukan berkas video MP4 (bebas dari codec video). Aset maskot mencakup 12 ekspresi anak laki-laki chibi bergaya tinta hitam.
 - **Lisensi font:** Manrope dan Fraunces berlisensi SIL OFL, jadi aman dibundel di aplikasi.

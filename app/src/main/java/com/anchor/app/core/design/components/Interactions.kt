@@ -1,5 +1,6 @@
 package com.anchor.app.core.design.components
 
+import android.os.SystemClock
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -7,7 +8,9 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.scale
@@ -45,6 +48,7 @@ fun Modifier.pressable(
     enabled: Boolean = true,
     shape: Shape = DefaultPressableShape,
     pressedScale: Float = 0.97f,
+    debounceTimeMs: Long = 400L,
     onClick: () -> Unit,
 ): Modifier = composed {
     if (!enabled) {
@@ -57,12 +61,23 @@ fun Modifier.pressable(
         animationSpec = Motion.instantSpec(),
         label = "pressable-scale",
     )
+    var lastClickTime by remember { mutableLongStateOf(0L) }
     this
         .scale(scale)
         .clickable(
             interactionSource = interactionSource,
             indication = null,
-            onClick = onClick,
+            onClick = {
+                if (debounceTimeMs <= 0L) {
+                    onClick()
+                } else {
+                    val currentTime = SystemClock.uptimeMillis()
+                    if (currentTime - lastClickTime >= debounceTimeMs) {
+                        lastClickTime = currentTime
+                        onClick()
+                    }
+                }
+            },
         )
 }
 
@@ -72,3 +87,26 @@ fun Modifier.pressable(
  */
 fun Modifier.minTouchTarget(min: Dp = MinTouchTarget): Modifier =
     sizeIn(minWidth = min, minHeight = min)
+
+/**
+ * Clickable modifier that debounces clicks to prevent accidental double-taps or rapid repeated triggers.
+ *
+ * @param debounceTimeMs minimum time window in milliseconds between allowed clicks (default 400ms).
+ * @param enabled whether the click listener is active.
+ * @param onClick action to invoke when clicked after debounce window passes.
+ */
+fun Modifier.debouncedClickable(
+    debounceTimeMs: Long = 400L,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+): Modifier = composed {
+    var lastClickTime by remember { mutableLongStateOf(0L) }
+    this.clickable(enabled = enabled) {
+        val currentTime = SystemClock.uptimeMillis()
+        if (currentTime - lastClickTime >= debounceTimeMs) {
+            lastClickTime = currentTime
+            onClick()
+        }
+    }
+}
+

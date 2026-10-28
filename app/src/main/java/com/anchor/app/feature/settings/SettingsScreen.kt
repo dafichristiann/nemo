@@ -20,8 +20,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -36,11 +39,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -50,6 +57,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.anchor.app.R
 import com.anchor.app.core.design.components.Divider
+import com.anchor.app.core.design.components.NemoScreenHeader
 import com.anchor.app.core.design.components.NemoSwitch
 import com.anchor.app.core.design.components.SectionHeader
 import com.anchor.app.core.design.components.SegmentedChips
@@ -57,6 +65,7 @@ import com.anchor.app.core.design.components.minTouchTarget
 import com.anchor.app.core.design.components.pressable
 import com.anchor.app.core.design.theme.ManropeFamily
 import com.anchor.app.core.design.theme.Nemo
+import com.anchor.app.core.design.theme.NemoNight
 import com.anchor.app.core.design.theme.PillShape
 import com.anchor.app.core.design.theme.Radius
 import com.anchor.app.core.design.theme.Spacing
@@ -111,28 +120,38 @@ fun SettingsScreen(
             .padding(top = Spacing.x6, bottom = Spacing.x8),
         verticalArrangement = Arrangement.spacedBy(Spacing.x4),
     ) {
-        Row(
-            modifier = Modifier
-                .clip(PillShape)
-                .pressable(shape = PillShape, pressedScale = 0.96f, onClick = onBack)
-                .padding(vertical = Spacing.x1, horizontal = Spacing.x1),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Spacing.x1),
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_back),
-                contentDescription = null,
-                tint = Nemo.colors.ink,
-                modifier = Modifier.size(18.dp),
-            )
-            Text(
-                text = stringResource(R.string.settings_title),
-                fontFamily = ManropeFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = 28.sp,
-                color = Nemo.colors.ink,
-            )
-        }
+        val isDark = Nemo.colors.background == NemoNight.background
+
+        NemoScreenHeader(
+            eyebrow = "PREFERENCES",
+            title = stringResource(R.string.settings_title),
+            onBack = onBack,
+            action = {
+                // Single Theme Mode Toggle Button (Alternating Sun / Moon)
+                Box(
+                    modifier = Modifier
+                        .size(34.dp)
+                        .clip(CircleShape)
+                        .background(Nemo.colors.surface)
+                        .border(1.dp, Nemo.colors.line, CircleShape)
+                        .pressable(shape = CircleShape, pressedScale = 0.90f) {
+                            viewModel.toggleTheme(isDark)
+                        },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        painter = painterResource(
+                            if (isDark) R.drawable.ic_light_mode else R.drawable.ic_dark_mode,
+                        ),
+                        contentDescription = stringResource(
+                            if (isDark) R.string.settings_theme_toggle_light else R.string.settings_theme_toggle_dark,
+                        ),
+                        tint = Nemo.colors.ink,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+            },
+        )
 
         // --- Profile (nickname Â· main focus Â· default focus length) ---
         SectionHeader(title = stringResource(R.string.settings_section_profile))
@@ -183,6 +202,26 @@ fun SettingsScreen(
                     .indexOf(settings.defaultFocusDurationMin)
                     .coerceAtLeast(0),
                 onSelect = { viewModel.setDefaultFocusDurationMin(AppSettings.FOCUS_DURATION_OPTIONS_MIN[it]) },
+            )
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
+            Text(
+                text = stringResource(R.string.settings_profile_language_title),
+                fontFamily = ManropeFamily,
+                fontWeight = FontWeight.Medium,
+                fontSize = 14.sp,
+                color = Nemo.colors.ink,
+            )
+            val isIndo = settings.locale.startsWith("id", ignoreCase = true) || settings.locale.startsWith("in", ignoreCase = true)
+            SegmentedChips(
+                options = listOf(
+                    stringResource(R.string.settings_language_en),
+                    stringResource(R.string.settings_language_id),
+                ),
+                selectedIndex = if (isIndo) 1 else 0,
+                onSelect = { index ->
+                    viewModel.setLocale(if (index == 1) "id" else "en")
+                },
             )
         }
 
@@ -266,47 +305,121 @@ fun SettingsScreen(
 
         // --- Data controls (FR-S5) ---
         SectionHeader(title = stringResource(R.string.settings_section_data))
-        Text(
-            text = stringResource(R.string.settings_retention_label, settings.usageRetentionDays),
-            fontFamily = ManropeFamily,
-            fontSize = 13.sp,
-            color = Nemo.colors.inkSecondary,
-        )
-        Box(
+        Row(
             modifier = Modifier
-                .clip(PillShape)
-                .border(1.dp, Nemo.colors.dangerLine, PillShape)
-                .pressable(shape = PillShape, onClick = { viewModel.onDeleteAllData() })
-                .padding(horizontal = Spacing.x4, vertical = Spacing.x3),
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(Radius.card))
+                .border(1.dp, Nemo.colors.line, RoundedCornerShape(Radius.card))
+                .background(Nemo.colors.surface)
+                .padding(Spacing.cardHorizontal),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = "Data Retention",
+                    fontFamily = ManropeFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                    color = Nemo.colors.ink,
+                )
+                Text(
+                    text = stringResource(R.string.settings_retention_label, settings.usageRetentionDays),
+                    fontFamily = ManropeFamily,
+                    fontSize = 12.sp,
+                    color = Nemo.colors.mute,
+                )
+            }
             Text(
-                text = stringResource(R.string.settings_delete_all),
+                text = "›",
                 fontFamily = ManropeFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 13.sp,
-                color = Nemo.colors.danger,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                color = Nemo.colors.mute,
+            )
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.x3),
+        ) {
+            Box(
+                modifier = Modifier
+                    .clip(PillShape)
+                    .border(1.dp, Nemo.colors.dangerLine, PillShape)
+                    .pressable(shape = PillShape, onClick = { viewModel.onDeleteAllData() })
+                    .padding(horizontal = Spacing.x4, vertical = Spacing.x3),
+            ) {
+                Text(
+                    text = stringResource(R.string.settings_delete_all),
+                    fontFamily = ManropeFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 13.sp,
+                    color = Nemo.colors.danger,
+                )
+            }
+            com.anchor.app.core.design.components.NemoMascot(
+                expression = com.anchor.app.core.design.components.MascotExpression.SAD,
+                size = 28.dp,
             )
         }
 
         Divider()
-        Text(
-            text = stringResource(R.string.settings_assurance),
-            fontFamily = ManropeFamily,
-            fontSize = 12.sp,
-            color = Nemo.colors.mute,
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.x2),
+        ) {
+            com.anchor.app.core.design.components.NemoMascot(
+                expression = com.anchor.app.core.design.components.MascotExpression.HAPPY,
+                size = 28.dp,
+            )
+            Text(
+                text = stringResource(R.string.settings_assure_full),
+                fontFamily = ManropeFamily,
+                fontSize = 12.sp,
+                color = Nemo.colors.mute,
+            )
+        }
+
+        Spacer(modifier = Modifier.height(Spacing.x4))
+
+        // About Nemo Profile Card (gambaran.pen dJPpZ)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(Radius.card))
+                .background(Nemo.colors.surface)
+                .border(1.dp, Nemo.colors.line, RoundedCornerShape(Radius.card))
+                .padding(horizontal = Spacing.x4, vertical = Spacing.x3),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.x3),
+        ) {
+            com.anchor.app.core.design.components.NemoMascot(
+                expression = com.anchor.app.core.design.components.MascotExpression.SHY,
+                size = 40.dp,
+            )
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = "Nemo OS \u00B7 v1.0.4",
+                    fontFamily = ManropeFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp,
+                    color = Nemo.colors.ink,
+                )
+                Text(
+                    text = "Calm Attention Architecture \u00B7 Open Source",
+                    fontFamily = ManropeFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 11.sp,
+                    color = Nemo.colors.mute,
+                )
+            }
+        }
     }
 }
 
 /**
- * Soft single-line nickname input matching the app's other fields (AddTaskSheet Â§Field).
- *
- * The field keeps its own local text state while the user types, then persists on each change.
- * Binding the value straight to the persisted setting caused dropped characters and a jumping
- * cursor: every keystroke round-tripped through Room (which also trims), so the field re-rendered
- * with a stale value mid-typing. The local state is re-synced from [value] only when the incoming
- * value genuinely differs from what is shown (e.g. the first load, or an external change) â€” never
- * while the user is actively composing.
+ * Soft single-line nickname input matching the app's other fields (AddTaskSheet §Field)
+ * with a confirmation checkmark button on the trailing end.
  */
 @Composable
 private fun SettingsNicknameField(
@@ -315,46 +428,84 @@ private fun SettingsNicknameField(
     hint: String,
     modifier: Modifier = Modifier,
 ) {
-    // Local editing buffer â€” the single source of truth for what's on screen.
     var text by rememberSaveable { mutableStateOf(value) }
-    // Keep in sync when the persisted value changes externally (not from our own typing).
-    // Compare against the trimmed persisted value so the repository's trim doesn't fight the buffer.
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     LaunchedEffect(value) {
         if (value != text.trim()) text = value
     }
-    Box(
+
+    val confirm: () -> Unit = {
+        val trimmed = text.trim()
+        onValueChange(trimmed)
+        focusManager.clearFocus()
+        keyboardController?.hide()
+    }
+
+    val isModified = text.trim() != value.trim()
+
+    Row(
         modifier = modifier
             .fillMaxWidth()
             .height(48.dp)
             .clip(RoundedCornerShape(Radius.field))
             .background(Nemo.colors.fog)
             .padding(horizontal = Spacing.x4),
-        contentAlignment = Alignment.CenterStart,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.x2),
     ) {
-        if (text.isEmpty()) {
-            Text(
-                text = hint,
-                fontFamily = ManropeFamily,
-                fontSize = 14.sp,
-                color = Nemo.colors.mute,
+        Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            if (text.isEmpty()) {
+                Text(
+                    text = hint,
+                    fontFamily = ManropeFamily,
+                    fontSize = 14.sp,
+                    color = Nemo.colors.mute,
+                )
+            }
+            BasicTextField(
+                value = text,
+                onValueChange = { new ->
+                    text = new.take(AppSettings.MAX_NICKNAME_LENGTH)
+                },
+                singleLine = true,
+                textStyle = TextStyle(
+                    fontFamily = ManropeFamily,
+                    fontSize = 14.sp,
+                    color = Nemo.colors.ink,
+                ),
+                cursorBrush = SolidColor(Nemo.colors.ink),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { confirm() }),
+                modifier = Modifier.fillMaxWidth(),
             )
         }
-        BasicTextField(
-            value = text,
-            onValueChange = { new ->
-                val capped = new.take(AppSettings.MAX_NICKNAME_LENGTH)
-                text = capped
-                onValueChange(capped)
-            },
-            singleLine = true,
-            textStyle = TextStyle(
-                fontFamily = ManropeFamily,
-                fontSize = 14.sp,
-                color = Nemo.colors.ink,
-            ),
-            cursorBrush = androidx.compose.ui.graphics.SolidColor(Nemo.colors.ink),
-            modifier = Modifier.fillMaxWidth(),
-        )
+
+        // Confirmation checkmark button at the trailing end
+        Box(
+            modifier = Modifier
+                .size(30.dp)
+                .clip(CircleShape)
+                .background(if (isModified && text.isNotBlank()) Nemo.colors.ink else Nemo.colors.surface)
+                .border(
+                    width = 1.dp,
+                    color = if (isModified && text.isNotBlank()) Nemo.colors.ink else Nemo.colors.line,
+                    shape = CircleShape,
+                )
+                .pressable(shape = CircleShape, onClick = { confirm() }),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_tasks),
+                contentDescription = stringResource(R.string.settings_confirm_nickname),
+                tint = if (isModified && text.isNotBlank()) Nemo.colors.onInk else Nemo.colors.ink,
+                modifier = Modifier.size(14.dp),
+            )
+        }
     }
 }
 
@@ -398,6 +549,10 @@ private fun PermissionRow(
             .clip(RoundedCornerShape(Radius.card))
             .border(1.dp, Nemo.colors.line, RoundedCornerShape(Radius.card))
             .background(Nemo.colors.surface)
+            .pressable(
+                shape = RoundedCornerShape(Radius.card),
+                onClick = onEnable,
+            )
             .padding(Spacing.cardHorizontal),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
@@ -414,7 +569,7 @@ private fun PermissionRow(
                 color = Nemo.colors.ink,
             )
             Text(
-                text = description,
+                text = if (granted) stringResource(R.string.settings_p1_granted) else stringResource(R.string.settings_p2_off),
                 fontFamily = ManropeFamily,
                 fontSize = 12.sp,
                 lineHeight = 16.sp,
@@ -422,53 +577,12 @@ private fun PermissionRow(
             )
         }
         Spacer(modifier = Modifier.width(Spacing.x3))
-        if (granted) {
-            // ON: solid ink pill â€” same size/shape as the "Enable" button, only the colors differ,
-            // so the row does not shrink when a permission flips to "On".
-            Box(
-                modifier = Modifier
-                    .heightIn(min = 36.dp)
-                    .clip(PillShape)
-                    .background(Nemo.colors.ink)
-                    .border(1.dp, Nemo.colors.ink, PillShape)
-                    .minTouchTarget()
-                    .padding(horizontal = Spacing.x4),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = stringResource(R.string.settings_perm_granted),
-                    fontFamily = ManropeFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 13.sp,
-                    color = Nemo.colors.onInk,
-                )
-            }
-        } else {
-            // OFF (not yet granted): muted neutral pill, same size â€” reads as available, not urgent.
-            Box(
-                modifier = Modifier
-                    .heightIn(min = 36.dp)
-                    .clip(PillShape)
-                    .background(Nemo.colors.fog)
-                    .border(1.dp, Nemo.colors.line, PillShape)
-                    .pressable(
-                        shape = PillShape,
-                        pressedScale = 0.96f,
-                        onClick = onEnable,
-                    )
-                    .minTouchTarget()
-                    .padding(horizontal = Spacing.x4),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = stringResource(R.string.settings_perm_enable),
-                    fontFamily = ManropeFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 13.sp,
-                    color = Nemo.colors.inkSecondary,
-                )
-            }
-        }
+        Box(
+            modifier = Modifier
+                .size(10.dp)
+                .clip(PillShape)
+                .background(if (granted) Nemo.colors.ink else Nemo.colors.line),
+        )
     }
 }
 

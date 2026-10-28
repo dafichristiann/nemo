@@ -17,6 +17,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -42,12 +46,12 @@ fun NemoNavBar(
     onNavigate: (TopLevelDestination) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.fillMaxWidth().background(Nemo.colors.background)) {
+    Column(modifier = modifier.fillMaxWidth().background(Nemo.colors.surface)) {
         Divider(thickness = 1.dp, color = Nemo.colors.line)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(76.dp)
+                .height(68.dp)
                 .padding(horizontal = Spacing.x2),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
@@ -62,6 +66,10 @@ fun NemoNavBar(
                 Column(
                     modifier = Modifier
                         .weight(1f)
+                        .semantics {
+                            role = Role.Tab
+                            this.selected = selected
+                        }
                         .pressable(
                             pressedScale = 0.94f,
                             onClick = { onNavigate(destination) },
@@ -72,15 +80,15 @@ fun NemoNavBar(
                 ) {
                     Icon(
                         painter = painterResource(destination.iconRes),
-                        contentDescription = stringResource(destination.labelRes),
+                        contentDescription = null,
                         tint = tint,
-                        modifier = Modifier.size(22.dp),
+                        modifier = Modifier.size(20.dp),
                     )
                     Text(
                         text = stringResource(destination.labelRes),
                         fontFamily = ManropeFamily,
                         fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-                        fontSize = 10.5.sp,
+                        fontSize = 12.sp,
                         letterSpacing = 0.2.sp,
                         color = tint,
                     )

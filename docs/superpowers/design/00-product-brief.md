@@ -1,16 +1,16 @@
-# Product Brief — Anchor (Personal Focus Assistant)
+# Product Brief — Nemo (Personal Focus Assistant)
 
-> **Status:** Approved / Baseline · **Version:** 0.1
-> **Tanggal:** 2026-10-07
-> **Dokumen terkait:** `01-prd.md`
+> **Status:** Approved / Baseline · **Version:** 0.2
+> **Tanggal:** 2026-10-07 (v0.1) · 2026-10-27 (v0.2)
+> **Dokumen terkait:** `01-prd.md`, `justmd/fitur-aplikasi-nemo-maskot.md`
 > **Catatan:** Dokumen ini adalah *ringkasan satu halaman* yang menjelaskan **kenapa**
-> Anchor ada. PRD (`01-prd.md`) menjelaskan **apa** dan **bagaimana** perilakunya.
+> Nemo ada. PRD (`01-prd.md`) menjelaskan **apa** dan **bagaimana** perilakunya.
 
 ---
 
 ## 1. Satu Kalimat
 
-> **Anchor** adalah asisten fokus personal untuk Android yang menyadari ketika kamu
+> **Nemo** (nama paket `com.anchor.app`) adalah asisten fokus personal untuk Android yang menyadari ketika kamu
 > menjauh dari tugas penting, lalu dengan lembut membantumu kembali — tanpa memaksa,
 > tanpa menghakimi, tanpa mengirim datamu ke mana pun.
 
@@ -27,9 +27,9 @@ Tiga masalah inti (lihat PRD §1):
 
 ## 3. Solusi
 
-Anchor adalah **jembatan** antara dua hal yang biasanya terpisah:
+Nemo adalah **jembatan** antara dua hal yang biasanya terpisah:
 
-| Yang ada | Yang kurang | Peran Anchor |
+| Yang ada | Yang kurang | Peran Nemo |
 |---|---|---|
 | Smart Todo | Kesadaran perilaku | Menghubungkan task dengan perilaku nyata |
 | Digital Wellbeing | Konteks tugas | Memberi makna pada angka pemakaian HP |
@@ -55,6 +55,7 @@ Bukan aplikasi rilis publik, bukan multi-user, bukan parental control.
 3. **Consistency > Perfection**
 4. **Autonomy > Forced Behavior**
 5. **Personal Baseline > Universal Rules**
+6. **Wajah Aplikasi (Maskot Pendamping):** satu karakter maskot (anak laki-laki chibi bergaya tinta hitam, kepala saja, 12 ekspresi) yang menemani pengguna di seluruh alur 19 halaman, merefleksikan emosi secara tenang dan dekoratif tanpa menghakimi.
 
 **Nada:** calm · supportive · concise · non-judgmental.
 
@@ -64,11 +65,11 @@ MVP = **Phase 1–5** berjalan baik di perangkat nyata, **local-first**, **tanpa
 
 | Phase | Nama | Inti |
 |---|---|---|
-| 1 | Smart Todo | Task CRUD, recurring (Daily/Weekly), subtask, priority, overdue banner |
+| 1 | Smart Todo | Task CRUD, recurring (Daily/Weekly), subtask, priority, overdue banner, effort-based completion |
 | 2 | Digital Wellbeing | UsageStats lokal, screen time, baseline personal, pruning |
-| 3 | Intervention + Focus | Intervensi kontekstual (max 3/hari, cooldown 2 jam), Focus Mode |
+| 3 | Intervention + Focus | Intervensi kontekstual (max 3/hari, cooldown 2 jam), Focus Mode (Gentle/Strict/Custom) |
 | 4 | Future View + Domino | Konsekuensi waktu penundaan, dependency task |
-| 5 | AI Personal Insight | Daily reflection & pola (AI opsional + fallback rule-based) |
+| 5 | AI Personal Insight | Daily reflection & pola (AI opsional via Gemini + fallback rule-based) |
 | 6 | Advanced Blocking + Sync | **Post-MVP** |
 
 Detail lengkap: `01-prd.md` §10–§11, dan `05-mvp-scope.md`.
@@ -101,6 +102,7 @@ Bukan vanity metrics. Yang penting (PRD §17):
 - Sumber kebenaran data usage = `UsageStatsManager` (Android), **bukan** AI.
 - `PACKAGE_USAGE_STATS` = special permission (opt-in manual).
 - Raw `UsageSession` di-pruning otomatis (14–30 hari).
+- Splash intro memakai urutan gambar animasi maskot (tanpa video player).
 - Target: RAM < 150 MB, baterai ≤ 2–3%/24 jam.
 
 ## 10. Peta Dokumen
@@ -113,9 +115,9 @@ Bukan vanity metrics. Yang penting (PRD §17):
 | `03-database-schema.md` | Skema Room & model data |
 | `04-intervention-engine.md` | Mesin deteksi drift & intervensi |
 | `05-mvp-scope.md` | Ruang lingkup & fase MVP |
-| `design/06-design-system.md` | Token visual & komponen |
-| `design/07-screens.md` | Inventaris layar & alur |
-| `design/README.md` | Index folder design |
+| `06-design-system.md` | Token visual & komponen |
+| `07-screens.md` | Inventaris 19 layar & alur interaksi maskot |
+| `README.md` | Index folder design |
 
 ---
 

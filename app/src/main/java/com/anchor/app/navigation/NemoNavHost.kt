@@ -24,6 +24,7 @@ import com.anchor.app.feature.insights.InsightsScreen
 import com.anchor.app.feature.intervention.InterventionOverlay
 import com.anchor.app.feature.onboarding.PermissionOnboardingScreen
 import com.anchor.app.feature.onboarding.ProfileSetupScreen
+import com.anchor.app.feature.onboarding.WelcomeOnboardingScreen
 import com.anchor.app.feature.settings.AppCategoriesScreen
 import com.anchor.app.feature.settings.BlockedAppsScreen
 import com.anchor.app.feature.settings.SettingsScreen
@@ -35,6 +36,7 @@ import com.anchor.app.platform.accessibility.AccessibilityStatus
 
 /** All routes (docs 07-screens.md §1: "Detail & modal as separate routes"). */
 object Routes {
+    const val WELCOME_ONBOARDING = "onboarding/welcome"
     const val PROFILE_ONBOARDING = "onboarding/profile"
     const val PERMISSION_ONBOARDING = "onboarding/permissions"
     const val SETTINGS = "settings"
@@ -76,8 +78,18 @@ fun NemoNavHost(
     val deepLink = initialRoute?.takeIf { r -> TopLevelDestination.entries.any { it.route == r } }
     val startDestination = when (onboardingCompleted) {
         null -> null
-        false -> Routes.PROFILE_ONBOARDING
+        false -> Routes.WELCOME_ONBOARDING
         true -> deepLink ?: TopLevelDestination.TASKS.route
+    }
+
+    androidx.compose.runtime.LaunchedEffect(initialRoute, onboardingCompleted) {
+        if (initialRoute != null && onboardingCompleted == true) {
+            navController.navigate(initialRoute) {
+                popUpTo(TopLevelDestination.TASKS.route) { saveState = true }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
     }
 
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -113,11 +125,25 @@ fun NemoNavHost(
             startDestination = startDestination,
             modifier = Modifier.padding(innerPadding),
         ) {
+            composable(Routes.WELCOME_ONBOARDING) {
+                val finishOnboarding = {
+                    appViewModel.completeOnboarding()
+                    navController.navigate(TopLevelDestination.TASKS.route) {
+                        popUpTo(Routes.WELCOME_ONBOARDING) { inclusive = true }
+                    }
+                }
+                WelcomeOnboardingScreen(
+                    onGetStarted = {
+                        navController.navigate(Routes.PROFILE_ONBOARDING)
+                    },
+                    onSkip = finishOnboarding,
+                )
+            }
             composable(Routes.PROFILE_ONBOARDING) {
                 val finishOnboarding = {
                     appViewModel.completeOnboarding()
                     navController.navigate(TopLevelDestination.TASKS.route) {
-                        popUpTo(Routes.PROFILE_ONBOARDING) { inclusive = true }
+                        popUpTo(Routes.WELCOME_ONBOARDING) { inclusive = true }
                     }
                 }
                 ProfileSetupScreen(
@@ -138,7 +164,7 @@ fun NemoNavHost(
                 val finish = {
                     appViewModel.completeOnboarding()
                     navController.navigate(TopLevelDestination.TASKS.route) {
-                        popUpTo(Routes.PROFILE_ONBOARDING) { inclusive = true }
+                        popUpTo(Routes.WELCOME_ONBOARDING) { inclusive = true }
                     }
                 }
                 PermissionOnboardingScreen(onContinue = finish, onSkip = finish)

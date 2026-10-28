@@ -67,6 +67,7 @@ interface TaskDao {
           AND (
                 (deadline IS NOT NULL AND deadline >= :startOfDay AND deadline < :endOfDay)
                 OR definitionOccurrenceDate = :todayEpochDay
+                OR (deadline IS NULL AND definitionOccurrenceDate IS NULL)
               )
         ORDER BY
             CASE priority WHEN 'URGENT' THEN 0 WHEN 'HIGH' THEN 1 WHEN 'MEDIUM' THEN 2

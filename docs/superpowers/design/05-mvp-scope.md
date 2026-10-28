@@ -1,17 +1,17 @@
-# MVP Scope & Delivery Plan — Anchor (Personal Focus Assistant)
+# MVP Scope & Delivery Plan — Nemo (Personal Focus Assistant)
 
-> **Status:** Derived from PRD v0.2 (Locked) · **Version:** 0.1
-> **Tanggal:** 2026-10-07
-> **Dokumen terkait:** `01-prd.md` (§11, §18), `02-architecture.md`, `03-database-schema.md`
+> **Status:** Derived from PRD v0.6 (Locked) · **Version:** 0.2
+> **Tanggal:** 2026-10-07 (v0.1) · 2026-10-27 (v0.2)
+> **Dokumen terkait:** `01-prd.md` (§11, §18), `02-architecture.md`, `03-database-schema.md`, `justmd/fitur-aplikasi-nemo-maskot.md`
 > **Catatan:** Ruang lingkup & fase dikunci PRD. Dokumen ini menambahkan rincian
-> deliverable, Definition of Done, dan urutan kerja teknis.
+> deliverable, Definition of Done, dan urutan kerja teknis untuk 19 layar Nemo.
 
 ---
 
 ## 0. Definisi MVP
 
 > **MVP = Phase 1–5 berjalan baik di perangkat nyata.**
-> Local-first · tanpa backend · privacy-preserving. (PRD §0, §11)
+> Local-first · tanpa backend · privacy-preserving · Wajah aplikasi: Maskot Nemo. (PRD §0, §4, §11)
 
 **Definition of Done utama:** Phase 1–5 berfungsi end-to-end di real device,
 memenuhi target non-fungsional (PRD §12), tanpa crash pada kondisi izin ditolak.
@@ -65,7 +65,7 @@ Phase 1 (Smart Todo)
 - View: **All / Today / Upcoming / Completed**.
 - **Overdue Banner** (non-blocking, `Reschedule / Complete / Keep for Today / Dismiss`).
 - Progress dari subtask (auto-hitung) atau manual.
-- Settings dasar + onboarding non-memaksa (layar 00 & 00b).
+- Settings dasar + onboarding non-memaksa (Profil 2 of 3 & Izin 3 of 3), Splash animasi maskot (tanpa pemutar video).
 
 **DoD:** Acceptance Criteria PRD §10.1 lulus; overdue tidak auto-move; tidak crash pada
 judul kosong; reschedule tercatat.

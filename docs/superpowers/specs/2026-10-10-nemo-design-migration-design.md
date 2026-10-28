@@ -230,7 +230,7 @@ di-rename sesuai tabel.
 Hanya lapisan visual yang berubah, perilaku & navigasi tetap. Rujukan komposisi:
 `design-spec.md` §7.
 
-1. **Splash** — video, ikuti tema sistem (±3,5 dtk, maks 4,5 dtk).
+1. **Splash** — animasi maskot Compose (`Neutral` 1,5s → `Happy` 2s), ikuti tema sistem (±3,5 dtk, maks 4,5 dtk, tanpa video player).
 2. **Onboarding Profil** — "Setup 2 of 3", track, 3 isian (semua opsional).
 3. **Onboarding Izin** — judul + 3 baris izin + catatan privasi; status "Enabled".
 4. **Tasks** — sapaan, week strip, progres, tab filter, daftar tugas, FAB.
@@ -266,7 +266,7 @@ State kosong dipertahankan apa adanya (teks asli dari `design-spec.md` §7).
    Pastikan manifest memakai `@mipmap/ic_launcher` dan `@mipmap/ic_launcher_round`.
    `ic_launcher_background` = putih (day) / hitam (night) via `values`/`values-night`.
 4. **Ikon notifikasi:** pakai `ic_stat_nemo.png` sebagai small icon notifikasi.
-5. **Logo:** logo NEMO di layar splash (bila diperlukan sebagai overlay).
+5. **Maskot & Logo:** Aset ekspresi Maskot Nemo (12 ekspresi) dan launcher/notifikasi di layar splash dan alur 19 halaman.
 
 ---
 

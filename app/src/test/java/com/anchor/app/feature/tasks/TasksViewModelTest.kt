@@ -69,6 +69,7 @@ class TasksViewModelTest {
         createTask = CreateTaskUseCase(tasks, defs, FakeIdProvider(), time),
         rescheduleTask = RescheduleTaskUseCase(tasks, defs, FakeIdProvider("res"), time),
         generateRecurring = GenerateRecurringTasksUseCase(tasks, defs, FakeIdProvider("gen"), time),
+        taskRepository = tasks,
         settingsRepository = settings,
         timeProvider = time,
         dispatchers = TestDispatcherProvider(dispatcher),
@@ -214,6 +215,7 @@ class TasksViewModelTest {
             createTask = CreateTaskUseCase(dstTasks, defs, FakeIdProvider(), dstTime),
             rescheduleTask = RescheduleTaskUseCase(dstTasks, defs, FakeIdProvider("res"), dstTime),
             generateRecurring = GenerateRecurringTasksUseCase(dstTasks, defs, FakeIdProvider("gen"), dstTime),
+            taskRepository = dstTasks,
             settingsRepository = settings,
             timeProvider = dstTime,
             dispatchers = TestDispatcherProvider(dispatcher),
@@ -225,5 +227,116 @@ class TasksViewModelTest {
         val naive = dstTime.startOfDayMillis(dstNow) + 86_400_000L - 1
         assertEquals("deadline is the true end of the 23h local day", expected, dstTasks.tasks.value.single { it.id == "late" }.deadline)
         assertTrue("must differ from the naive +24h value on a DST day", expected != naive)
+    }
+
+    @Test
+    fun onToggleTaskDone_togglesBetweenDoneAndTodo() = runTest(dispatcher) {
+        val t = task("task1", fixedNow, TaskStatus.TODO)
+        tasks.tasks.value = listOf(t)
+        val vm = viewModel()
+
+        // Toggle from TODO to DONE
+        vm.onToggleTaskDone("task1", TaskStatus.TODO)
+        advanceUntilIdle()
+        assertEquals(TaskStatus.DONE, tasks.tasks.value.single { it.id == "task1" }.status)
+
+        // Toggle from DONE to TODO
+        vm.onToggleTaskDone("task1", TaskStatus.DONE)
+        advanceUntilIdle()
+        assertEquals(TaskStatus.TODO, tasks.tasks.value.single { it.id == "task1" }.status)
+    }
+
+    @Test
+    fun state_isLoadingBecomesFalseAfterDataLoads() = runTest(dispatcher) {
+        val vm = viewModel()
+        assertEquals(true, vm.uiState.value.isLoading)
+
+        keepCollecting(vm)
+        advanceUntilIdle()
+
+        assertEquals(false, vm.uiState.value.isLoading)
+    }
+
+    @Test
+    fun onToggleTaskDone_showsToastWithUndo_andUndoRevertsStatus() = runTest(dispatcher) {
+        val t = task("task1", fixedNow, TaskStatus.TODO)
+        tasks.tasks.value = listOf(t)
+        val vm = viewModel()
+        keepCollecting(vm)
+        advanceUntilIdle()
+
+        vm.onToggleTaskDone("task1", TaskStatus.TODO)
+        advanceUntilIdle()
+
+        val toast = vm.toast.value
+        org.junit.Assert.assertNotNull(toast)
+        assertEquals("Task completed", toast?.message)
+        assertEquals("Undo", toast?.actionLabel)
+        assertEquals("task1", toast?.taskId)
+        assertEquals(TaskStatus.DONE, tasks.tasks.value.single { it.id == "task1" }.status)
+
+        // Now undo
+        vm.undoToggleDone("task1")
+        advanceUntilIdle()
+
+        assertEquals(TaskStatus.TODO, tasks.tasks.value.single { it.id == "task1" }.status)
+        org.junit.Assert.assertNull(vm.toast.value)
+    }
+
+    @Test
+    fun filterCounts_todayAndUpcoming_areReflectedInUiState() = runTest(dispatcher) {
+        val startOfDay = time.startOfDayMillis(fixedNow)
+        tasks.tasks.value = listOf(
+            // Future today relative to fixedNow (09:30)
+            task("today1", startOfDay + 15 * 3_600_000L),
+            task("today2", startOfDay + 18 * 3_600_000L),
+            task("upcoming1", startOfDay + 86_400_000L),
+            task("overdue1", fixedNow - 1_000L),
+        )
+        val vm = viewModel()
+        keepCollecting(vm)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value
+        assertEquals(2, state.todayCount)
+        assertEquals(1, state.upcomingCount)
+        assertEquals(1, state.overdueCount)
+    }
+
+    @Test
+    fun onToggleTaskDone_inFlight_ignoresSecondCallUntilFirstCompletes() = runTest(dispatcher) {
+        val t = task("task1", fixedNow, TaskStatus.TODO)
+        var markDoneCalls = 0
+        val baseTasks = com.anchor.app.testutil.FakeTaskRepository()
+        baseTasks.tasks.value = listOf(t)
+        val customTasks = object : com.anchor.app.core.domain.repository.TaskRepository by baseTasks {
+            override suspend fun markDone(id: String, completedAt: Long, source: com.anchor.app.core.domain.model.CompletionSource) {
+                markDoneCalls++
+                kotlinx.coroutines.delay(1_000L)
+                baseTasks.markDone(id, completedAt, source)
+            }
+        }
+
+        val vm = TasksViewModel(
+            observeTasks = ObserveTasksUseCase(customTasks, time),
+            observeOverdue = ObserveOverdueTasksUseCase(customTasks, time),
+            createTask = CreateTaskUseCase(customTasks, defs, FakeIdProvider(), time),
+            rescheduleTask = RescheduleTaskUseCase(customTasks, defs, FakeIdProvider("res"), time),
+            generateRecurring = GenerateRecurringTasksUseCase(customTasks, defs, FakeIdProvider("gen"), time),
+            taskRepository = customTasks,
+            settingsRepository = settings,
+            timeProvider = time,
+            dispatchers = TestDispatcherProvider(dispatcher),
+        )
+
+        // First call starts and suspends in IO
+        vm.onToggleTaskDone("task1", TaskStatus.TODO)
+        // Second call while first is in-flight should be dropped immediately
+        vm.onToggleTaskDone("task1", TaskStatus.TODO)
+
+        advanceUntilIdle()
+
+        assertEquals(1, markDoneCalls)
+        assertEquals(TaskStatus.DONE, baseTasks.tasks.value.single { it.id == "task1" }.status)
     }
 }

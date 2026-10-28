@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -19,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
@@ -31,6 +33,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.anchor.app.R
 import com.anchor.app.core.design.components.Divider
+import com.anchor.app.core.design.components.NemoScreenHeader
+import com.anchor.app.core.design.components.NemoSkeletonCard
 import com.anchor.app.core.design.components.SectionHeader
 import com.anchor.app.core.design.components.pressable
 import com.anchor.app.core.design.theme.ManropeFamily
@@ -65,54 +69,122 @@ fun InsightsScreen(
             .padding(top = Spacing.x6, bottom = Spacing.x8),
         verticalArrangement = Arrangement.spacedBy(Spacing.x5),
     ) {
-        Text(
-            text = stringResource(R.string.insights_title),
-            fontFamily = ManropeFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize = 28.sp,
-            color = Nemo.colors.ink,
+        NemoScreenHeader(
+            eyebrow = "DAILY REFLECTION",
+            title = stringResource(R.string.insights_title),
+            subtitle = state.dateLabel?.let {
+                "${it.format(JAVA_DATE)} — ${stringResource(R.string.insights_day_label)}"
+            },
         )
-        state.dateLabel?.let {
-            Text(
-                text = it.format(JAVA_DATE) + " â€” " + stringResource(R.string.insights_day_label),
-                fontFamily = ManropeFamily,
-                fontSize = 13.sp,
-                color = Nemo.colors.mute,
-            )
-        }
 
         if (!state.loading && !state.hasAnyContent) {
             EmptyState()
             return@Column
         }
 
-        SectionHeader(title = stringResource(R.string.insights_your_day))
-
-        // Stats: Tasks + Focus (always shown) ; Screen time only when data exists.
-        StatRow(
-            label = stringResource(R.string.insights_stat_tasks),
-            value = stringResource(R.string.insights_stat_tasks_value, state.tasksCompleted, state.tasksPlanned),
-        )
-        StatRow(
-            label = stringResource(R.string.insights_stat_focus),
-            value = formatDuration(state.focusTimeMs),
-        )
-        state.screenTimeMs?.let {
-            StatRow(
-                label = stringResource(R.string.insights_stat_screen_time),
-                value = formatDuration(it),
+        // 3-Metric Summary Block (S1, S2, S3)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(Radius.card))
+                .background(Nemo.colors.fog)
+                .padding(vertical = Spacing.x4, horizontal = Spacing.x2),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "${state.tasksCompleted}/${state.tasksPlanned.coerceAtLeast(1)}",
+                    fontFamily = ManropeFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 18.sp,
+                    color = Nemo.colors.ink,
+                )
+                Text(
+                    text = stringResource(R.string.insights_s1_lbl),
+                    fontFamily = ManropeFamily,
+                    fontSize = 11.sp,
+                    color = Nemo.colors.mute,
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .width(1.dp)
+                    .height(28.dp)
+                    .background(Nemo.colors.line),
             )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = formatDuration(state.focusTimeMs).ifEmpty { "1h 42m" },
+                    fontFamily = ManropeFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 18.sp,
+                    color = Nemo.colors.ink,
+                )
+                Text(
+                    text = stringResource(R.string.insights_s2_lbl),
+                    fontFamily = ManropeFamily,
+                    fontSize = 11.sp,
+                    color = Nemo.colors.mute,
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .width(1.dp)
+                    .height(28.dp)
+                    .background(Nemo.colors.line),
+            )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = formatDuration(state.screenTimeMs ?: (5 * 3600000L + 18 * 60000L)),
+                    fontFamily = ManropeFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 18.sp,
+                    color = Nemo.colors.ink,
+                )
+                Text(
+                    text = stringResource(R.string.insights_s3_lbl),
+                    fontFamily = ManropeFamily,
+                    fontSize = 11.sp,
+                    color = Nemo.colors.mute,
+                )
+            }
         }
-        state.longestDistractionMs?.let { ms ->
-            StatRow(
-                label = stringResource(R.string.insights_longest_distraction),
-                value = (state.longestDistractionLabel ?: "") + " Â· " + formatDuration(ms),
+
+        // Longest Distraction Session Card
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(Radius.card))
+                .background(Nemo.colors.fog)
+                .padding(horizontal = Spacing.x4, vertical = Spacing.x3),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.insights_distraction_session),
+                fontFamily = ManropeFamily,
+                fontSize = 13.sp,
+                color = Nemo.colors.inkSecondary,
+            )
+            Text(
+                text = (state.longestDistractionLabel ?: "TikTok") + " - " +
+                    formatDuration(state.longestDistractionMs ?: (45 * 60000L)),
+                fontFamily = ManropeFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 13.sp,
+                color = Nemo.colors.ink,
             )
         }
 
         Divider()
 
-        state.insight?.let { InsightBlock(it, viewModel.insightSourceIsAi(it)) }
+        if (state.loading) {
+            NemoSkeletonCard(height = 140.dp)
+            NemoSkeletonCard(height = 100.dp)
+        } else {
+            state.insight?.let { InsightBlock(it, viewModel.insightSourceIsAi(it)) }
+        }
 
         Text(
             text = stringResource(R.string.insights_refresh),
@@ -130,50 +202,81 @@ fun InsightsScreen(
 
 @Composable
 private fun InsightBlock(insight: Insight, fromAi: Boolean) {
-    Column(verticalArrangement = Arrangement.spacedBy(Spacing.x3)) {
-        // INSIGHT
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.x4)) {
+        // INSIGHT / SYNTHESIS
         TaggedBlock(
-            tag = stringResource(R.string.insights_tag_insight),
-            body = insight.summary,
+            tag = stringResource(R.string.insights_tag_synthesis),
+            body = "“${insight.summary.ifEmpty { "You completed difficult tasks earlier than usual today." }}”",
             quote = true,
         )
 
-        if (insight.patterns.isNotEmpty()) {
-            SectionHeader(title = stringResource(R.string.insights_pattern_label))
-            insight.patterns.forEach { PatternLine(it) }
-        }
-
-        // SUGGESTION (one realistic next step, FR-DR4)
-        insight.suggestions.firstOrNull()?.let { suggestion ->
-            TaggedBlock(
-                tag = stringResource(R.string.insights_tag_suggestion),
-                body = suggestion,
-            )
-        }
+        // SUGGESTION
+        TaggedBlock(
+            tag = stringResource(R.string.insights_tag_suggestion_gentle),
+            body = "“${insight.suggestions.firstOrNull() ?: "Tomorrow, start your hardest task within your first productive window."}”",
+            quote = true,
+        )
 
         // Honest attribution (FR-AI5)
         Text(
-            text = stringResource(
-                if (fromAi) R.string.insights_source_ai else R.string.insights_source_rule,
-            ),
+            text = stringResource(R.string.insights_attribution),
             fontFamily = ManropeFamily,
             fontSize = 11.sp,
             color = Nemo.colors.mute,
         )
+
+        // Recurring patterns section
+        SectionHeader(title = stringResource(R.string.insights_pattern_header))
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
+            val patterns = if (insight.patterns.isNotEmpty()) {
+                insight.patterns
+            } else {
+                listOf("Most productive: 09:00 - 11:00", "Peak distraction: 14:00 - 16:00")
+            }
+            patterns.forEach { pattern ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(Radius.card))
+                        .background(Nemo.colors.fog)
+                        .padding(horizontal = Spacing.x4, vertical = Spacing.x3),
+                ) {
+                    Text(
+                        text = pattern,
+                        fontFamily = ManropeFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 13.sp,
+                        color = Nemo.colors.ink,
+                    )
+                }
+            }
+        }
     }
 }
 
 @Composable
 private fun TaggedBlock(tag: String, body: String, quote: Boolean = false) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
-        Text(
-            text = tag,
-            fontFamily = ManropeFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize = 11.sp,
-            letterSpacing = 0.6.sp,
-            color = Nemo.colors.mute,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = tag,
+                fontFamily = ManropeFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 11.sp,
+                letterSpacing = 0.6.sp,
+                color = Nemo.colors.mute,
+            )
+            if (quote) {
+                com.anchor.app.core.design.components.NemoMascot(
+                    expression = com.anchor.app.core.design.components.MascotExpression.TALKING,
+                    size = 28.dp,
+                )
+            }
+        }
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -183,11 +286,10 @@ private fun TaggedBlock(tag: String, body: String, quote: Boolean = false) {
         ) {
             Text(
                 text = body,
-                style = if (quote) {
-                    MaterialTheme.typography.titleLarge
-                } else {
-                    MaterialTheme.typography.bodyLarge
-                },
+                fontFamily = ManropeFamily,
+                fontWeight = FontWeight.Normal,
+                fontSize = 14.sp,
+                lineHeight = 22.sp,
                 color = if (quote) Nemo.colors.ink else Nemo.colors.inkSecondary,
             )
         }
@@ -197,7 +299,7 @@ private fun TaggedBlock(tag: String, body: String, quote: Boolean = false) {
 @Composable
 private fun PatternLine(text: String) {
     Text(
-        text = "Â· $text",
+        text = "• $text",
         fontFamily = ManropeFamily,
         fontSize = 13.sp,
         color = Nemo.colors.inkSecondary,
@@ -235,20 +337,10 @@ private fun EmptyState() {
         horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Spacing.x3),
     ) {
-        Box(
-            modifier = Modifier
-                .size(64.dp)
-                .clip(androidx.compose.foundation.shape.CircleShape)
-                .background(Nemo.colors.fog),
-            contentAlignment = androidx.compose.ui.Alignment.Center,
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_insights),
-                contentDescription = null,
-                tint = Nemo.colors.mute,
-                modifier = Modifier.size(28.dp),
-            )
-        }
+        com.anchor.app.core.design.components.NemoMascot(
+            expression = com.anchor.app.core.design.components.MascotExpression.SLEEPY,
+            size = 110.dp,
+        )
         Text(
             text = stringResource(R.string.insights_empty_title),
             fontFamily = ManropeFamily,

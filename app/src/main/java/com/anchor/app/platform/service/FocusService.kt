@@ -13,7 +13,16 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.anchor.app.MainActivity
 import com.anchor.app.R
+import com.anchor.app.core.common.TimeProvider
+import com.anchor.app.core.domain.model.FocusStatus
+import com.anchor.app.core.domain.repository.FocusRepository
+import com.anchor.app.core.domain.usecase.focus.FinishFocusUseCase
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * Foreground service that keeps the Focus session alive while it runs (FR-F7,
@@ -31,11 +40,33 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class FocusService : Service() {
 
+    @Inject
+    lateinit var focusRepository: FocusRepository
+
+    @Inject
+    lateinit var finishFocus: FinishFocusUseCase
+
+    @Inject
+    lateinit var timeProvider: TimeProvider
+
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_STOP -> {
+                serviceScope.launch {
+                    val session = focusRepository.current()
+                    if (session != null && (session.status == FocusStatus.ACTIVE || session.status == FocusStatus.PAUSED)) {
+                        val elapsed = if (session.status == FocusStatus.ACTIVE) {
+                            (timeProvider.nowMillis() - session.startedAt).coerceAtLeast(session.actualDurationMs)
+                        } else {
+                            session.actualDurationMs
+                        }
+                        finishFocus(session.id, elapsed, aborted = true)
+                    }
+                }
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
                 return START_NOT_STICKY

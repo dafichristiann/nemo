@@ -12,6 +12,7 @@ import com.anchor.app.core.domain.model.FocusSession
 import com.anchor.app.core.domain.model.FocusStatus
 import com.anchor.app.core.domain.model.Subtask
 import com.anchor.app.core.domain.model.Task
+import com.anchor.app.core.domain.model.TaskPriority
 import com.anchor.app.core.domain.model.TaskStatus
 import com.anchor.app.core.domain.repository.FocusRepository
 import com.anchor.app.core.domain.repository.SettingsRepository
@@ -25,11 +26,15 @@ import com.anchor.app.platform.accessibility.AccessibilityStatus
 import com.anchor.app.platform.service.FocusService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -52,7 +57,12 @@ internal fun effectiveBlockedApps(mode: FocusMode, blockedApps: Set<String>): Se
 
 /** One selectable task row on Focus Setup. */
 @androidx.compose.runtime.Immutable
-data class FocusTaskOption(val id: String, val title: String)
+data class FocusTaskOption(
+    val id: String,
+    val title: String,
+    val deadline: Long? = null,
+    val priority: TaskPriority = TaskPriority.MEDIUM,
+)
 
 /** Internal bundle of the Focus Setup selections, combined into [FocusUiState]. */
 private data class SetupSelection(
@@ -90,6 +100,7 @@ data class FocusUiState(
     val blockingReady: Boolean = false,
 ) {
     val isRunning: Boolean get() = active != null
+    val selectedTask: FocusTaskOption? get() = taskOptions.find { it.id == selectedTaskId }
 }
 
 /** Everything screen 06 needs to render (PRD §10.5 required fields). */
@@ -105,6 +116,7 @@ data class ActiveFocus(
     val currentStep: Subtask?,
     val totalSteps: Int,
     val doneSteps: Int,
+    val subtasks: List<Subtask> = emptyList(),
 ) {
     val remainingMs: Long?
         get() = plannedDurationSec?.let { (it * 1_000L - elapsedMs).coerceAtLeast(0L) }
@@ -151,9 +163,20 @@ class FocusViewModel @Inject constructor(
     /** True once the user picks a duration on the wheel; until then we mirror the profile default. */
     private var durationChosenByUser = false
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val currentSessionWithSubtasks = focusRepository.observeCurrent()
+        .flatMapLatest { session ->
+            val taskId = session?.taskId
+            if (taskId != null) {
+                taskRepository.observeSubtasks(taskId).map { subtasks -> session to subtasks }
+            } else {
+                flowOf(session to emptyList<Subtask>())
+            }
+        }
+
     val uiState: StateFlow<FocusUiState> = combine(
         taskRepository.observeAll(),
-        focusRepository.observeCurrent(),
+        currentSessionWithSubtasks,
         combine(
             selectedTaskId,
             selectedMode,
@@ -163,8 +186,9 @@ class FocusViewModel @Inject constructor(
         ),
         elapsedMs,
         settingsRepository.observe(),
-    ) { tasks, current, selection, elapsed, settings ->
-        buildState(tasks, current, selection, elapsed, settings)
+    ) { tasks, currentPair, selection, elapsed, settings ->
+        val (current, subtasks) = currentPair
+        buildState(tasks, current, subtasks, selection, elapsed, settings)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -191,9 +215,25 @@ class FocusViewModel @Inject constructor(
         // elapsed shown stays `now - startedAt` (accumulated duration is only folded in on pause).
         viewModelScope.launch {
             focusRepository.observeCurrent().collect { session ->
-                if (session != null && session.status == FocusStatus.ACTIVE) {
-                    val anchor = session.startedAt
-                    if (startedAt != anchor) startTicking(anchor)
+                if (session != null) {
+                    when (session.status) {
+                        FocusStatus.ACTIVE -> {
+                            val anchor = if (session.actualDurationMs > 0L) {
+                                timeProvider.nowMillis() - session.actualDurationMs
+                            } else {
+                                session.startedAt
+                            }
+                            if (startedAt != anchor) startTicking(anchor)
+                        }
+                        FocusStatus.PAUSED -> {
+                            stopTicking()
+                            elapsedMs.value = session.actualDurationMs
+                        }
+                        else -> {
+                            stopTicking()
+                            elapsedMs.value = 0L
+                        }
+                    }
                 }
             }
         }
@@ -220,15 +260,17 @@ class FocusViewModel @Inject constructor(
     private fun buildState(
         tasks: List<Task>,
         current: FocusSession?,
+        subtasks: List<Subtask>,
         selection: SetupSelection,
         elapsed: Long,
         settings: AppSettings,
     ): FocusUiState {
         val options = tasks
             .filter { it.status == TaskStatus.TODO || it.status == TaskStatus.IN_PROGRESS }
-            .map { FocusTaskOption(it.id, it.title) }
+            .map { FocusTaskOption(it.id, it.title, it.deadline, it.priority) }
 
         val active = current?.let { session ->
+            val doneCount = subtasks.count { it.isDone }
             ActiveFocus(
                 sessionId = session.id,
                 taskId = session.taskId,
@@ -237,9 +279,10 @@ class FocusViewModel @Inject constructor(
                 plannedDurationSec = session.plannedDurationSec,
                 elapsedMs = if (session.status == FocusStatus.ACTIVE) elapsed else session.actualDurationMs,
                 paused = session.status == FocusStatus.PAUSED,
-                currentStep = null,
-                totalSteps = 0,
-                doneSteps = 0,
+                currentStep = subtasks.firstOrNull { !it.isDone },
+                totalSteps = subtasks.size,
+                doneSteps = doneCount,
+                subtasks = subtasks,
             )
         }
         return FocusUiState(
@@ -255,6 +298,10 @@ class FocusViewModel @Inject constructor(
                 settings.focusBlockingEnabled &&
                 selection.serviceEnabled,
         )
+    }
+
+    fun toggleSubtask(subtask: Subtask) = viewModelScope.launch(dispatchers.io) {
+        taskRepository.updateSubtask(subtask.copy(isDone = !subtask.isDone))
     }
 
     fun onSelectTask(id: String) { selectedTaskId.value = id }

@@ -22,6 +22,7 @@ interface SettingsRepository {
     suspend fun setFocusArea(area: FocusArea)
     /** Persists the default focus-session length in minutes (25/45/60). */
     suspend fun setDefaultFocusDurationMin(minutes: Int)
+    suspend fun setLocale(locale: String)
     /** Erase all user data (PRD §10.10 "delete all data"). */
     suspend fun resetAll()
 }

@@ -25,8 +25,8 @@ class FocusBlockedAppsTest {
     }
 
     @Test
-    fun gentle_neverPausesAnything() {
-        assertTrue(effectiveBlockedApps(FocusMode.GENTLE, blocked).isEmpty())
+    fun gentle_preservesBlockedApps() {
+        assertEquals(blocked, effectiveBlockedApps(FocusMode.GENTLE, blocked))
     }
 
     @Test

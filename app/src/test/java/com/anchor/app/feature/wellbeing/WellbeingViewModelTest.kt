@@ -72,6 +72,11 @@ class WellbeingViewModelTest {
             categorizeApps = CategorizeAppsUseCase(usage),
             timeProvider = time,
         ),
+        computeCircadianCurve = com.anchor.app.core.domain.usecase.circadian.ComputeCircadianCurveUseCase(
+            detectWakeTime = com.anchor.app.core.domain.usecase.circadian.DetectWakeTimeUseCase(settings, usage, time),
+            focusRepository = com.anchor.app.testutil.FakeFocusRepository(),
+            timeProvider = time,
+        ),
         timeProvider = time,
         dispatchers = TestDispatcherProvider(dispatcher),
     )
@@ -195,5 +200,23 @@ class WellbeingViewModelTest {
         val delta = vm.uiState.value.distractionDeltaPctPoints
         assertTrue(delta != null)
         assertTrue(delta!! > 14f && delta < 16f)
+    }
+
+    @Test
+    fun onUpdateManualWakeTime_updatesSettingsAndCircadianCurve() = runTest(dispatcher) {
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        vm.onUpdateManualWakeTime(10, 15)
+        advanceUntilIdle()
+
+        val saved = settings.get()
+        assertEquals(today.toEpochDay(), saved.manualWakeTimeEpochDay)
+        assertEquals(10 * 60 + 15, saved.manualWakeTimeMinutes)
+
+        val curve = vm.uiState.value.circadianCurve
+        assertTrue(curve != null)
+        assertEquals(java.time.LocalTime.of(10, 15), curve!!.wakeResult.time)
+        assertTrue(curve.wakeResult.isManual)
     }
 }

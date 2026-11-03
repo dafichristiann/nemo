@@ -21,6 +21,7 @@ import com.anchor.app.core.domain.usecase.focus.FinishFocusUseCase
 import com.anchor.app.core.domain.usecase.focus.FinishFocusUseCase.FinishFocusResult
 import com.anchor.app.core.domain.usecase.focus.PauseFocusUseCase
 import com.anchor.app.core.domain.usecase.focus.StartFocusUseCase
+import com.anchor.app.core.domain.usecase.task.ManageSubtasksUseCase
 import com.anchor.app.BuildConfig
 import com.anchor.app.platform.accessibility.AccessibilityStatus
 import com.anchor.app.platform.service.FocusService
@@ -47,13 +48,13 @@ val FOCUS_DURATION_STEPS_SEC: List<Int> = (1..120).map { it * 5 } // 5s .. 600s 
 val FOCUS_DEFAULT_DURATION_SEC: Int = 25 * 60
 
 /**
- * Which apps a session should pause, given the chosen [mode] and the user's blocked set (FR-S4).
+ * Which apps a session should monitor or pause, given the chosen [mode] and the user's blocked set (FR-S4).
  *
- * Strict/Custom pause the user's blocked apps; Gentle never blocks anything (PRD §10.5), so it
- * always yields an empty set regardless of what Settings holds.
+ * Strict/Custom and Gentle (Santai) all monitor the selected blocked apps. In Gentle mode, an overlay
+ * is shown with an option to stay in the app or return to focus.
  */
 internal fun effectiveBlockedApps(mode: FocusMode, blockedApps: Set<String>): Set<String> =
-    if (mode == FocusMode.GENTLE) emptySet() else blockedApps
+    blockedApps
 
 /** One selectable task row on Focus Setup. */
 @androidx.compose.runtime.Immutable
@@ -62,6 +63,7 @@ data class FocusTaskOption(
     val title: String,
     val deadline: Long? = null,
     val priority: TaskPriority = TaskPriority.MEDIUM,
+    val estimatedDurationMin: Int? = null,
 )
 
 /** Internal bundle of the Focus Setup selections, combined into [FocusUiState]. */
@@ -70,14 +72,17 @@ private data class SetupSelection(
     val mode: FocusMode,
     val durationSec: Int,
     val serviceEnabled: Boolean,
+    val soundscapeEnabled: Boolean,
 )
 
 /** Result of the last finished session, for post-session feedback (PRD v0.5 §10.1). */
 @androidx.compose.runtime.Immutable
 data class CompletionResult(
+    val sessionId: String? = null,
     val taskTitle: String,
     val verified: Boolean,
     val focusMinutes: Int,
+    val rating: Int? = null,
 )
 
 /** UI state for screens 05 (Setup) and 06 (Active). */
@@ -87,6 +92,7 @@ data class FocusUiState(
     val selectedTaskId: String? = null,
     val selectedMode: FocusMode = FocusMode.GENTLE,
     val selectedDurationSec: Int = FOCUS_DEFAULT_DURATION_SEC,
+    val soundscapeEnabled: Boolean = true,
     val active: ActiveFocus? = null,
     val lastFallbackReason: String? = null,
     /** Outcome shown after a session ends (PRD v0.5 §10.1). Null once acknowledged/cleared. */
@@ -146,6 +152,8 @@ class FocusViewModel @Inject constructor(
     private val accessibilityStatus: AccessibilityStatus,
     private val timeProvider: TimeProvider,
     private val dispatchers: DispatcherProvider,
+    private val manageSubtasksUseCase: ManageSubtasksUseCase,
+    private val rateFocusSession: com.anchor.app.core.domain.usecase.focus.RateFocusSessionUseCase,
 ) : ViewModel() {
 
     /** Optional task preselected by navigation (Detail/FutureView "start focus for this task"). */
@@ -154,6 +162,7 @@ class FocusViewModel @Inject constructor(
     private val selectedTaskId = MutableStateFlow<String?>(initialTaskId)
     private val selectedMode = MutableStateFlow(FocusMode.GENTLE)
     private val selectedDurationSec = MutableStateFlow(FOCUS_DEFAULT_DURATION_SEC)
+    val soundscapeEnabled: MutableStateFlow<Boolean> = MutableStateFlow(true)
     private val elapsedMs = MutableStateFlow(0L)
     private val fallbackReason = MutableStateFlow<String?>(null)
     private val lastCompletion = MutableStateFlow<CompletionResult?>(null)
@@ -182,8 +191,10 @@ class FocusViewModel @Inject constructor(
             selectedMode,
             selectedDurationSec,
             serviceEnabled,
-            ::SetupSelection,
-        ),
+            soundscapeEnabled,
+        ) { taskId, mode, duration, service, soundscape ->
+            SetupSelection(taskId, mode, duration, service, soundscape)
+        },
         elapsedMs,
         settingsRepository.observe(),
     ) { tasks, currentPair, selection, elapsed, settings ->
@@ -197,8 +208,7 @@ class FocusViewModel @Inject constructor(
 
     init {
         // Keep the *actual* selection in sync with the effective default shown in the UI: when
-        // no task is chosen yet and open tasks exist, adopt the first one. Without this the setup
-        // screen would display a selection that `onBegin()` never sees (taskId stays null).
+        // no task is chosen yet and open tasks exist, adopt the first one.
         viewModelScope.launch {
             taskRepository.observeAll().collect { tasks ->
                 if (selectedTaskId.value == null) {
@@ -206,6 +216,28 @@ class FocusViewModel @Inject constructor(
                         it.status == TaskStatus.TODO || it.status == TaskStatus.IN_PROGRESS
                     }
                     if (firstOpen != null) selectedTaskId.value = firstOpen.id
+                }
+            }
+        }
+
+        // Duration is driven by the chosen task's initial estimatedDurationMin,
+        // falling back to user settings if unspecified.
+        viewModelScope.launch {
+            combine(
+                taskRepository.observeAll(),
+                selectedTaskId,
+                settingsRepository.observe(),
+            ) { tasks, chosenTaskId, settings ->
+                val effectiveTaskId = chosenTaskId ?: tasks.firstOrNull {
+                    it.status == TaskStatus.TODO || it.status == TaskStatus.IN_PROGRESS
+                }?.id
+                val activeTask = tasks.find { it.id == effectiveTaskId }
+                val durationMin = activeTask?.estimatedDurationMin?.takeIf { it > 0 }
+                    ?: settings.defaultFocusDurationMin.coerceAtLeast(1)
+                durationMin * 60
+            }.collect { calculatedDurationSec ->
+                if (!durationChosenByUser) {
+                    selectedDurationSec.value = calculatedDurationSec
                 }
             }
         }
@@ -237,15 +269,6 @@ class FocusViewModel @Inject constructor(
                 }
             }
         }
-        // Prefill the duration wheel from the user's profile default (onboarding/Settings) until
-        // they pick a value themselves — the wheel stays fully adjustable.
-        viewModelScope.launch {
-            settingsRepository.observe().collect { settings ->
-                if (!durationChosenByUser) {
-                    selectedDurationSec.value = settings.defaultFocusDurationMin * 60
-                }
-            }
-        }
         refreshBlockingStatus()
     }
 
@@ -267,7 +290,7 @@ class FocusViewModel @Inject constructor(
     ): FocusUiState {
         val options = tasks
             .filter { it.status == TaskStatus.TODO || it.status == TaskStatus.IN_PROGRESS }
-            .map { FocusTaskOption(it.id, it.title, it.deadline, it.priority) }
+            .map { FocusTaskOption(it.id, it.title, it.deadline, it.priority, it.estimatedDurationMin) }
 
         val active = current?.let { session ->
             val doneCount = subtasks.count { it.isDone }
@@ -290,6 +313,7 @@ class FocusViewModel @Inject constructor(
             selectedTaskId = selection.taskId ?: options.firstOrNull()?.id,
             selectedMode = selection.mode,
             selectedDurationSec = selection.durationSec,
+            soundscapeEnabled = selection.soundscapeEnabled,
             active = active,
             lastFallbackReason = fallbackReason.value,
             lastCompletion = lastCompletion.value,
@@ -301,7 +325,7 @@ class FocusViewModel @Inject constructor(
     }
 
     fun toggleSubtask(subtask: Subtask) = viewModelScope.launch(dispatchers.io) {
-        taskRepository.updateSubtask(subtask.copy(isDone = !subtask.isDone))
+        manageSubtasksUseCase.toggle(subtask)
     }
 
     fun onSelectTask(id: String) { selectedTaskId.value = id }
@@ -311,6 +335,24 @@ class FocusViewModel @Inject constructor(
     fun onSelectDuration(seconds: Int) {
         durationChosenByUser = true
         selectedDurationSec.value = seconds
+    }
+
+    fun onToggleSoundscape(enabled: Boolean) {
+        soundscapeEnabled.value = enabled
+    }
+
+    /** Quick toggle for soundscape (mute/unmute) during an active focus session. */
+    fun onToggleActiveSoundscape() {
+        val newValue = !soundscapeEnabled.value
+        soundscapeEnabled.value = newValue
+        val currentActive = uiState.value.active
+        if (currentActive != null && !currentActive.paused) {
+            if (newValue) {
+                FocusService.resume(context)
+            } else {
+                FocusService.pause(context)
+            }
+        }
     }
 
     /** Begins a session (FR-F1, FR-F2). Records the session and starts the foreground service. */
@@ -324,7 +366,7 @@ class FocusViewModel @Inject constructor(
         )
         fallbackReason.value = result.fallbackReason
         lastCompletion.value = null
-        FocusService.start(context)
+        FocusService.start(context, soundscapeEnabled = soundscapeEnabled.value)
         startTicking()
     }
 
@@ -335,6 +377,7 @@ class FocusViewModel @Inject constructor(
             val elapsed = currentElapsed()
             pauseFocus(session.id, elapsed)
             stopTicking()
+            FocusService.pause(context)
             // Freeze the clock: with startedAt cleared, currentElapsed() now returns the
             // accumulated elapsedMs, so a finish/abort while paused never counts the paused
             // interval as focus time (PRD v0.5 §10.1 effort-based completion).
@@ -350,14 +393,30 @@ class FocusViewModel @Inject constructor(
                 endedAt = null,
                 fallbackReason = session.fallbackReason,
             )
+            if (soundscapeEnabled.value) {
+                FocusService.resume(context)
+            }
             startTicking(anchor)
+        }
+    }
+
+    /** Auto-pause focus when user leaves the screen via back navigation (allows resuming later). */
+    fun autoPauseFocus() = viewModelScope.launch(dispatchers.io) {
+        val session = focusRepository.current() ?: return@launch
+        if (session.status == FocusStatus.ACTIVE) {
+            val elapsed = currentElapsed()
+            pauseFocus(session.id, elapsed)
+            stopTicking()
+            FocusService.pause(context)
+            elapsedMs.value = elapsed
+            startedAt = 0L
         }
     }
 
     /** Normal finish (FR-F6): records the duration and completes the linked task. */
     fun onFinish() = viewModelScope.launch(dispatchers.io) {
         val session = focusRepository.current() ?: return@launch
-        val result = finishFocus(session.id, currentElapsed(), aborted = false)
+        val result = finishFocus(session.id, currentElapsed(), aborted = false, forceCompleteTask = true)
         stopTicking()
         FocusService.stop(context)
         lastCompletion.value = result.toCompletionResult()
@@ -377,16 +436,26 @@ class FocusViewModel @Inject constructor(
     /** Clears the post-session feedback banner. */
     fun onDismissCompletion() { lastCompletion.value = null }
 
+    /** Rates the last completed session (1..5) for adaptive circadian learning. */
+    fun onRateLastSession(rating: Int) = viewModelScope.launch(dispatchers.io) {
+        val completion = lastCompletion.value ?: return@launch
+        val sid = completion.sessionId ?: return@launch
+        rateFocusSession(sid, rating)
+        lastCompletion.value = completion.copy(rating = rating)
+    }
+
     private suspend fun FinishFocusResult.toCompletionResult(): CompletionResult? {
         if (!completedTask) return null
         val taskId = taskId ?: return null
         val title = taskRepository.getById(taskId)?.title ?: return null
         return CompletionResult(
+            sessionId = sessionId,
             taskTitle = title,
             // `verified` reflects whether the session ran its full duration (effort signal),
             // shown as a softer/stronger feedback line — the task is completed either way.
             verified = verified,
             focusMinutes = (totalMs / 60_000L).toInt(),
+            rating = null,
         )
     }
 

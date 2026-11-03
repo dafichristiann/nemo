@@ -83,6 +83,7 @@ data class WellbeingUiState(
     val distractionDeltaPctPoints: Float? = null,
     /** Number of days in the window that have data (used to label the average honestly). */
     val daysWithData: Int = 0,
+    val circadianCurve: com.anchor.app.core.domain.usecase.circadian.CircadianCurveData? = null,
 )
 
 /**
@@ -102,6 +103,7 @@ class WellbeingViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val usageStats: UsageStatsSource,
     private val aggregateUsage: AggregateUsageUseCase,
+    private val computeCircadianCurve: com.anchor.app.core.domain.usecase.circadian.ComputeCircadianCurveUseCase,
     private val timeProvider: TimeProvider,
     private val dispatchers: DispatcherProvider,
 ) : ViewModel() {
@@ -124,10 +126,15 @@ class WellbeingViewModel @Inject constructor(
         val today = timeProvider.today()
         val todayEpoch = today.toEpochDay()
 
+        val curve = runCatching {
+            computeCircadianCurve(timeProvider.nowMillis(), timeProvider.zoneId())
+        }.getOrNull()
+
         if (!hasPermission) {
             _uiState.value = WellbeingUiState(
                 availability = WellbeingAvailability.PERMISSION_MISSING,
                 loading = false,
+                circadianCurve = curve,
             )
             return@launch
         }
@@ -152,6 +159,7 @@ class WellbeingViewModel @Inject constructor(
                 availability = WellbeingAvailability.NO_DATA,
                 week = buildWeek(weekDays, summariesByEpoch, todayEpoch, selected),
                 loading = false,
+                circadianCurve = curve,
             )
             return@launch
         }
@@ -183,7 +191,15 @@ class WellbeingViewModel @Inject constructor(
             vsWeekAverage = if (weekAverage > 0) compare(selectedTotal, weekAverage) else null,
             distractionDeltaPctPoints = distractionDelta(selectedSummary, previousSummary),
             daysWithData = daysWithData,
+            circadianCurve = curve,
         )
+    }
+
+    fun onUpdateManualWakeTime(hour: Int, minute: Int) = viewModelScope.launch(dispatchers.io) {
+        val todayEpoch = timeProvider.today().toEpochDay()
+        val minutes = hour * 60 + minute
+        settingsRepository.setManualWakeTime(todayEpoch, minutes)
+        refresh()
     }
 
     /** Signed comparison of [value] against [baseline] (delta + integer %). */

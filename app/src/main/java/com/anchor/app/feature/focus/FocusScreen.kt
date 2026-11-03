@@ -1,18 +1,23 @@
 package com.anchor.app.feature.focus
 
-import androidx.compose.animation.animateColorAsState
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -28,10 +33,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,11 +67,9 @@ import com.anchor.app.core.design.components.MascotExpression
 import com.anchor.app.core.design.components.NemoMascot
 import com.anchor.app.core.design.components.NemoScreenHeader
 import com.anchor.app.core.design.components.NemoSwitch
-import com.anchor.app.core.design.components.WheelPickerDialog
-import com.anchor.app.core.design.components.formatDurationSeconds
 import com.anchor.app.core.design.components.pressable
-import com.anchor.app.core.design.theme.FrauncesFamily
-import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.GeistFamily
+import com.anchor.app.core.design.theme.GeistMonoFamily
 import com.anchor.app.core.design.theme.Motion
 import com.anchor.app.core.design.theme.Nemo
 import com.anchor.app.core.design.theme.PillShape
@@ -98,6 +104,7 @@ fun FocusScreen(
     onManageBlockedApps: () -> Unit = {},
     onOpenAccessibilitySettings: () -> Unit = {},
     onFinished: () -> Unit = {},
+    onBack: () -> Unit = onFinished,
     viewModel: FocusViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -116,6 +123,7 @@ fun FocusScreen(
             state = state,
             viewModel = viewModel,
             onFinished = onFinished,
+            onBack = onBack,
             modifier = modifier,
         )
     } else {
@@ -142,8 +150,6 @@ private fun FocusSetupContent(
     modifier: Modifier = Modifier,
 ) {
     var showTaskPicker by remember { mutableStateOf(false) }
-    var soundscapeOn by remember { mutableStateOf(true) }
-    var durationDialogOpen by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -156,9 +162,9 @@ private fun FocusSetupContent(
     ) {
         // --- Header Block ---
         NemoScreenHeader(
-            eyebrow = "INTENTIONAL CALIBRATION",
-            title = "Focus Session",
-            subtitle = "Konfigurasi lingkungan fokus sebelum mulai",
+            eyebrow = stringResource(R.string.focus_setup_eyebrow),
+            title = stringResource(R.string.focus_setup_title_header),
+            subtitle = stringResource(R.string.focus_setup_subtitle_header),
             action = {
                 NemoMascot(
                     expression = MascotExpression.NEUTRAL,
@@ -170,8 +176,8 @@ private fun FocusSetupContent(
         // --- Task Section ---
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                text = "FOKUS PADA TUGAS",
-                fontFamily = ManropeFamily,
+                text = stringResource(R.string.focus_section_task),
+                fontFamily = GeistFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = 10.sp,
                 letterSpacing = 0.8.sp,
@@ -179,10 +185,12 @@ private fun FocusSetupContent(
             )
 
             val selectedTask = state.selectedTask
-            val taskTitle = selectedTask?.title ?: if (state.taskOptions.isNotEmpty()) state.taskOptions.first().title else "Draft Chapter 3 methodology"
-            val taskMeta = selectedTask?.let {
-                "Prioritas: ${it.priority.name.lowercase().replaceFirstChar { c -> c.uppercase() }}"
-            } ?: "Tugas pilihan utama"
+            val taskTitle = selectedTask?.title ?: if (state.taskOptions.isNotEmpty()) state.taskOptions.first().title else stringResource(R.string.focus_task_default)
+            val durationMin = selectedTask?.estimatedDurationMin?.takeIf { it > 0 } ?: (state.selectedDurationSec / 60)
+            val baseMeta = selectedTask?.let {
+                stringResource(R.string.focus_task_priority_prefix, it.priority.name.lowercase().replaceFirstChar { c -> c.uppercase() })
+            } ?: stringResource(R.string.focus_task_primary_fallback)
+            val taskMeta = "$baseMeta • ${stringResource(R.string.focus_duration_min, durationMin)}"
 
             Row(
                 modifier = Modifier
@@ -208,7 +216,7 @@ private fun FocusSetupContent(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = taskTitle,
-                            fontFamily = ManropeFamily,
+                            fontFamily = GeistFamily,
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
                             color = Nemo.colors.ink,
@@ -217,7 +225,7 @@ private fun FocusSetupContent(
                         )
                         Text(
                             text = taskMeta,
-                            fontFamily = ManropeFamily,
+                            fontFamily = GeistFamily,
                             fontWeight = FontWeight.Normal,
                             fontSize = 11.sp,
                             color = Nemo.colors.mute,
@@ -236,8 +244,8 @@ private fun FocusSetupContent(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = "Ganti",
-                        fontFamily = ManropeFamily,
+                        text = stringResource(R.string.focus_action_change),
+                        fontFamily = GeistFamily,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 12.sp,
                         color = Nemo.colors.inkSecondary,
@@ -249,8 +257,8 @@ private fun FocusSetupContent(
         // --- Mode Section (2 cards grid) ---
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                text = "TINGKAT PROTEKSI",
-                fontFamily = ManropeFamily,
+                text = stringResource(R.string.focus_section_protection),
+                fontFamily = GeistFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = 10.sp,
                 letterSpacing = 0.8.sp,
@@ -258,14 +266,16 @@ private fun FocusSetupContent(
             )
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Max),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 // Gentle Mode Card
                 val isGentle = state.selectedMode == FocusMode.GENTLE
                 ModeCardItem(
-                    title = "Gentle Awareness",
-                    desc = "Notifikasi lembut saat terdistraksi",
+                    title = stringResource(R.string.focus_mode_gentle_card_title),
+                    desc = stringResource(R.string.focus_mode_gentle_card_desc),
                     iconRes = R.drawable.ic_wellbeing,
                     isSelected = isGentle,
                     onClick = { viewModel.onSelectMode(FocusMode.GENTLE) },
@@ -275,8 +285,8 @@ private fun FocusSetupContent(
                 // Strict Mode Card
                 val isStrict = state.selectedMode == FocusMode.STRICT
                 ModeCardItem(
-                    title = "Strict Blocking",
-                    desc = "Aplikasi hiburan diblokir total",
+                    title = stringResource(R.string.focus_mode_strict_card_title),
+                    desc = stringResource(R.string.focus_mode_strict_card_desc),
                     iconRes = R.drawable.ic_focus,
                     isSelected = isStrict,
                     onClick = { viewModel.onSelectMode(FocusMode.STRICT) },
@@ -284,36 +294,88 @@ private fun FocusSetupContent(
                 )
             }
 
-            // Shield Notice
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(Nemo.colors.surface)
-                    .border(1.dp, Nemo.colors.line, RoundedCornerShape(10.dp))
-                    .padding(horizontal = 10.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_lock),
-                    contentDescription = null,
-                    tint = Nemo.colors.inkSecondary,
-                    modifier = Modifier.size(14.dp),
-                )
-                Text(
-                    text = "Pemblokiran dikelola lokal oleh Android Accessibility Service.",
-                    fontFamily = ManropeFamily,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 11.sp,
-                    color = Nemo.colors.inkSecondary,
-                )
+            if (state.selectedMode == FocusMode.STRICT) {
+                val blockedCount = state.blockedApps.size
+                val statusText = if (blockedCount == 0) {
+                    stringResource(R.string.focus_blocked_apps_empty)
+                } else {
+                    stringResource(R.string.focus_blocked_apps_count, blockedCount)
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Nemo.colors.surface)
+                        .border(1.dp, Nemo.colors.line, RoundedCornerShape(12.dp))
+                        .pressable(shape = RoundedCornerShape(12.dp)) { onManageBlockedApps() }
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Nemo.colors.fog),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_lock),
+                                contentDescription = null,
+                                tint = Nemo.colors.ink,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.focus_blocked_apps_title),
+                                fontFamily = GeistFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 13.sp,
+                                color = Nemo.colors.ink,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Text(
+                                text = statusText,
+                                fontFamily = GeistFamily,
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 11.sp,
+                                color = Nemo.colors.mute,
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(Nemo.colors.fog)
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.focus_action_manage),
+                            fontFamily = GeistFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 12.sp,
+                            color = Nemo.colors.inkSecondary,
+                        )
+                    }
+                }
             }
 
             if (state.selectedMode == FocusMode.STRICT && !state.blockingReady) {
                 Text(
-                    text = "Aktifkan Accessibility Service untuk pemblokiran ->",
-                    fontFamily = ManropeFamily,
+                    text = stringResource(R.string.focus_accessibility_enable_link),
+                    fontFamily = GeistFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 11.sp,
                     color = Nemo.colors.ink,
@@ -325,134 +387,51 @@ private fun FocusSetupContent(
             }
         }
 
-        // --- Duration Section ---
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                text = "DURASI TARGET",
-                fontFamily = ManropeFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = 10.sp,
-                letterSpacing = 0.8.sp,
-                color = Nemo.colors.mute,
-            )
-
-            val presetDurations = listOf(25 * 60, 45 * 60, 60 * 60)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                presetDurations.forEach { durSec ->
-                    val isSelected = state.selectedDurationSec == durSec
-                    val bg = if (isSelected) Nemo.colors.ink else Nemo.colors.surface
-                    val fg = if (isSelected) Nemo.colors.onInk else Nemo.colors.mute
-                    val borderModifier = if (isSelected) Modifier else Modifier.border(1.dp, Nemo.colors.line, RoundedCornerShape(10.dp))
-
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(38.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(bg)
-                            .then(borderModifier)
-                            .pressable(
-                                shape = RoundedCornerShape(10.dp),
-                                onClick = { viewModel.onSelectDuration(durSec) },
-                            ),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = "${durSec / 60}m",
-                            fontFamily = ManropeFamily,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            fontSize = 13.sp,
-                            color = fg,
-                        )
-                    }
-                }
-
-                // Custom Chip
-                val isCustom = state.selectedDurationSec !in presetDurations
-                val bg = if (isCustom) Nemo.colors.ink else Nemo.colors.surface
-                val fg = if (isCustom) Nemo.colors.onInk else Nemo.colors.mute
-                val borderModifier = if (isCustom) Modifier else Modifier.border(1.dp, Nemo.colors.line, RoundedCornerShape(10.dp))
-
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(38.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(bg)
-                        .then(borderModifier)
-                        .pressable(
-                            shape = RoundedCornerShape(10.dp),
-                            onClick = { durationDialogOpen = true },
-                        ),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = if (isCustom) "${state.selectedDurationSec / 60}m" else "Custom",
-                        fontFamily = ManropeFamily,
-                        fontWeight = if (isCustom) FontWeight.Bold else FontWeight.Medium,
-                        fontSize = 13.sp,
-                        color = fg,
-                    )
-                }
-            }
-
-            // Circadian Hint
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                modifier = Modifier.padding(top = 2.dp),
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_wellbeing),
-                    contentDescription = null,
-                    tint = Nemo.colors.mute,
-                    modifier = Modifier.size(12.dp),
-                )
-                Text(
-                    text = "Sesi 45m selaras dengan jendela fokus optimal saat ini.",
-                    fontFamily = ManropeFamily,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 11.sp,
-                    color = Nemo.colors.placeholder,
-                )
-            }
-        }
-
         // --- Soundscape Card ---
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(14.dp))
                 .background(Nemo.colors.surface)
-                .border(1.dp, Nemo.colors.line, RoundedCornerShape(12.dp))
-                .padding(horizontal = 12.dp, vertical = 6.dp),
+                .border(1.dp, Nemo.colors.line, RoundedCornerShape(14.dp))
+                .padding(horizontal = 14.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_focus),
                     contentDescription = null,
-                    tint = Nemo.colors.inkSecondary,
-                    modifier = Modifier.size(16.dp),
+                    tint = if (state.soundscapeEnabled) Nemo.colors.ink else Nemo.colors.inkSecondary,
+                    modifier = Modifier.size(18.dp),
                 )
-                Text(
-                    text = "Binaural Brown Noise (40Hz)",
-                    fontFamily = ManropeFamily,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 12.sp,
-                    color = Nemo.colors.inkSecondary,
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        text = stringResource(R.string.focus_soundscape_lofi_title),
+                        fontFamily = GeistFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 13.sp,
+                        color = Nemo.colors.ink,
+                    )
+                    Text(
+                        text = stringResource(R.string.focus_soundscape_lofi_desc),
+                        fontFamily = GeistFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 11.sp,
+                        color = Nemo.colors.mute,
+                        lineHeight = 15.sp,
+                    )
+                }
             }
             NemoSwitch(
-                checked = soundscapeOn,
-                onCheckedChange = { soundscapeOn = it },
+                checked = state.soundscapeEnabled,
+                onCheckedChange = viewModel::onToggleSoundscape,
             )
         }
 
@@ -481,8 +460,8 @@ private fun FocusSetupContent(
                     color = Nemo.colors.onInk,
                 )
                 Text(
-                    text = "Mulai Sesi Fokus",
-                    fontFamily = ManropeFamily,
+                    text = stringResource(R.string.focus_action_start),
+                    fontFamily = GeistFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
                     color = Nemo.colors.onInk,
@@ -498,8 +477,8 @@ private fun FocusSetupContent(
             containerColor = Nemo.colors.surface,
             title = {
                 Text(
-                    text = "Pilih Tugas Fokus",
-                    fontFamily = ManropeFamily,
+                    text = stringResource(R.string.focus_picker_title),
+                    fontFamily = GeistFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                     color = Nemo.colors.ink,
@@ -508,8 +487,8 @@ private fun FocusSetupContent(
             text = {
                 if (state.taskOptions.isEmpty()) {
                     Text(
-                        text = "Tidak ada tugas aktif yang tersedia.",
-                        fontFamily = ManropeFamily,
+                        text = stringResource(R.string.focus_picker_empty),
+                        fontFamily = GeistFamily,
                         fontSize = 13.sp,
                         color = Nemo.colors.mute,
                     )
@@ -536,9 +515,10 @@ private fun FocusSetupContent(
                                         .clip(CircleShape)
                                         .background(if (isSelected) Nemo.colors.ink else Nemo.colors.line),
                                 )
+                                val durationSuffix = option.estimatedDurationMin?.takeIf { it > 0 }?.let { " (${it}m)" } ?: ""
                                 Text(
-                                    text = option.title,
-                                    fontFamily = ManropeFamily,
+                                    text = "${option.title}$durationSuffix",
+                                    fontFamily = GeistFamily,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                     fontSize = 13.sp,
                                     color = Nemo.colors.ink,
@@ -551,32 +531,13 @@ private fun FocusSetupContent(
             confirmButton = {
                 TextButton(onClick = { showTaskPicker = false }) {
                     Text(
-                        text = "Tutup",
-                        fontFamily = ManropeFamily,
+                        text = stringResource(R.string.focus_picker_close),
+                        fontFamily = GeistFamily,
                         fontWeight = FontWeight.SemiBold,
                         color = Nemo.colors.ink,
                     )
                 }
             },
-        )
-    }
-
-    // Custom duration wheel dialog
-    if (durationDialogOpen) {
-        val durationIndex = FOCUS_DURATION_STEPS_SEC
-            .indexOf(state.selectedDurationSec)
-            .let { if (it >= 0) it else FOCUS_DURATION_STEPS_SEC.indexOf(FOCUS_DEFAULT_DURATION_SEC) }
-            .coerceAtLeast(0)
-        WheelPickerDialog(
-            values = FOCUS_DURATION_STEPS_SEC,
-            initialIndex = durationIndex,
-            title = stringResource(R.string.focus_duration_label),
-            onDismiss = { durationDialogOpen = false },
-            onConfirm = { index ->
-                viewModel.onSelectDuration(FOCUS_DURATION_STEPS_SEC[index])
-                durationDialogOpen = false
-            },
-            formatValue = { formatDurationSeconds(it) },
         )
     }
 }
@@ -596,47 +557,54 @@ private fun ModeCardItem(
 
     Column(
         modifier = modifier
+            .fillMaxHeight()
             .clip(RoundedCornerShape(14.dp))
             .background(bg)
             .border(strokeWidth, strokeColor, RoundedCornerShape(14.dp))
             .pressable(shape = RoundedCornerShape(14.dp), onClick = onClick)
-            .padding(10.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+            .padding(12.dp),
+        verticalArrangement = Arrangement.SpaceBetween,
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                painter = painterResource(iconRes),
-                contentDescription = null,
-                tint = if (isSelected) Nemo.colors.ink else Nemo.colors.mute,
-                modifier = Modifier.size(16.dp),
-            )
-            if (isSelected) {
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    painter = painterResource(iconRes),
+                    contentDescription = null,
+                    tint = if (isSelected) Nemo.colors.ink else Nemo.colors.mute,
+                    modifier = Modifier.size(16.dp),
+                )
                 Box(
                     modifier = Modifier
                         .size(6.dp)
                         .clip(CircleShape)
-                        .background(Nemo.colors.ink),
+                        .background(if (isSelected) Nemo.colors.ink else Color.Transparent)
+                        .border(
+                            width = 1.dp,
+                            color = if (isSelected) Nemo.colors.ink else Nemo.colors.line,
+                            shape = CircleShape,
+                        ),
                 )
             }
+            Text(
+                text = title,
+                fontFamily = GeistFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp,
+                color = if (isSelected) Nemo.colors.ink else Nemo.colors.mute,
+            )
         }
         Text(
-            text = title,
-            fontFamily = ManropeFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize = 12.sp,
-            color = if (isSelected) Nemo.colors.ink else Nemo.colors.mute,
-        )
-        Text(
             text = desc,
-            fontFamily = ManropeFamily,
+            fontFamily = GeistFamily,
             fontWeight = FontWeight.Normal,
             fontSize = 10.sp,
             lineHeight = 14.sp,
             color = if (isSelected) Nemo.colors.inkSecondary else Nemo.colors.placeholder,
+            modifier = Modifier.padding(top = 8.dp),
         )
     }
 }
@@ -650,10 +618,27 @@ private fun FocusActiveContent(
     state: FocusUiState,
     viewModel: FocusViewModel,
     onFinished: () -> Unit,
+    onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val active = state.active ?: return
     var showFinishConfirm by remember { mutableStateOf(false) }
+    var showExitConfirm by remember { mutableStateOf(false) }
+    var finishCountdown by remember { mutableIntStateOf(5) }
+
+    BackHandler(enabled = true) {
+        showExitConfirm = true
+    }
+
+    LaunchedEffect(showFinishConfirm) {
+        if (showFinishConfirm) {
+            finishCountdown = 5
+            while (finishCountdown > 0) {
+                delay(1000L)
+                finishCountdown -= 1
+            }
+        }
+    }
 
     val activeBg = Color(0xFF0A0A0A)
     val cardBg = Color(0xFF141414)
@@ -672,59 +657,92 @@ private fun FocusActiveContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Spacing.x4),
     ) {
-        // --- Session Header Row: Strict Mode Pill + Soundscape Pill ---
+        // --- Session Header Row: Back Button (Left) + Soundscape & Mode Pills (Right) ---
+        val isSoundActive = state.soundscapeEnabled && !active.paused
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(
+            Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(14.dp))
+                    .size(36.dp)
+                    .clip(CircleShape)
                     .background(cardBg)
-                    .border(1.dp, borderCol, RoundedCornerShape(14.dp))
-                    .padding(horizontal = 10.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    .border(1.dp, borderCol, CircleShape)
+                    .clickable { showExitConfirm = true },
+                contentAlignment = Alignment.Center,
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(6.dp)
-                        .clip(CircleShape)
-                        .background(Color.White),
-                )
-                Text(
-                    text = if (active.mode == FocusMode.STRICT) "STRICT FOCUS" else "GENTLE FLOW",
-                    fontFamily = ManropeFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 11.sp,
-                    letterSpacing = 0.6.sp,
-                    color = textPrimary,
+                Icon(
+                    painter = painterResource(R.drawable.ic_back),
+                    contentDescription = stringResource(R.string.detail_back),
+                    tint = textPrimary,
+                    modifier = Modifier.size(16.dp),
                 )
             }
 
             Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(cardBg)
-                    .border(1.dp, borderCol, RoundedCornerShape(14.dp))
-                    .padding(horizontal = 10.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_focus),
-                    contentDescription = null,
-                    tint = textMute,
-                    modifier = Modifier.size(12.dp),
-                )
-                Text(
-                    text = "432Hz Brown Noise",
-                    fontFamily = ManropeFamily,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 11.sp,
-                    color = textMute,
-                )
+                // Soundscape quick toggle pill in header
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(if (isSoundActive) Color(0xFF1C1C26) else cardBg)
+                        .border(
+                            1.dp,
+                            if (isSoundActive) Color(0xFF38384C) else borderCol,
+                            RoundedCornerShape(14.dp),
+                        )
+                        .clickable { viewModel.onToggleActiveSoundscape() }
+                        .padding(horizontal = 10.dp, vertical = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                ) {
+                    Text(
+                        text = if (isSoundActive) "🔊" else "🔇",
+                        fontSize = 11.sp,
+                    )
+                    Text(
+                        text = if (isSoundActive) {
+                            stringResource(R.string.focus_soundscape_playing)
+                        } else {
+                            stringResource(R.string.focus_soundscape_muted)
+                        },
+                        fontFamily = GeistMonoFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 10.sp,
+                        letterSpacing = 0.4.sp,
+                        color = if (isSoundActive) textPrimary else textMute,
+                    )
+                }
+
+                // Mode pill
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(cardBg)
+                        .border(1.dp, borderCol, RoundedCornerShape(14.dp))
+                        .padding(horizontal = 10.dp, vertical = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(Color.White),
+                    )
+                    Text(
+                        text = if (active.mode == FocusMode.STRICT) stringResource(R.string.focus_active_strict_pill) else stringResource(R.string.focus_active_mode_gentle),
+                        fontFamily = GeistFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 11.sp,
+                        letterSpacing = 0.6.sp,
+                        color = textPrimary,
+                    )
+                }
             }
         }
 
@@ -734,16 +752,16 @@ private fun FocusActiveContent(
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
-                text = "INTENTION",
-                fontFamily = ManropeFamily,
+                text = stringResource(R.string.focus_active_intention_micro),
+                fontFamily = GeistMonoFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = 11.sp,
                 letterSpacing = 1.sp,
                 color = textFaint,
             )
             Text(
-                text = active.taskTitle ?: "Draft Chapter 3 methodology",
-                fontFamily = FrauncesFamily,
+                text = active.taskTitle ?: stringResource(R.string.focus_task_default),
+                fontFamily = GeistFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = 20.sp,
                 color = textPrimary,
@@ -763,33 +781,75 @@ private fun FocusActiveContent(
             ActiveTimerRing(
                 progress = active.progressFraction,
                 time = timeString,
-                caption = "remaining",
+                caption = stringResource(R.string.focus_active_remaining_label),
                 diameter = 220.dp,
             )
 
-            // Sound Waveform Dots (6 vertical wave bars)
+            // Sound Waveform Dots & Quick Mute Controller
             Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(if (isSoundActive) Color(0xFF161622) else Color(0xFF101014))
+                    .border(
+                        1.dp,
+                        if (isSoundActive) Color(0xFF2C2C3E) else borderCol,
+                        RoundedCornerShape(20.dp),
+                    )
+                    .clickable { viewModel.onToggleActiveSoundscape() }
+                    .padding(horizontal = 14.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                val waveHeights = listOf(8.dp, 16.dp, 22.dp, 14.dp, 18.dp, 10.dp)
-                val waveColors = listOf(
-                    Color(0xFF4A4A54),
-                    Color(0xFF8A8A96),
-                    Color(0xFFFFFFFF),
-                    Color(0xFF8A8A96),
-                    Color(0xFFCFCFCF),
-                    Color(0xFF4A4A54),
-                )
-                waveHeights.forEachIndexed { idx, h ->
-                    Box(
-                        modifier = Modifier
-                            .width(3.dp)
-                            .height(h)
-                            .clip(RoundedCornerShape(2.dp))
-                            .background(waveColors[idx]),
-                    )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(3.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    val waveHeights = if (isSoundActive) {
+                        listOf(8.dp, 16.dp, 22.dp, 14.dp, 18.dp, 10.dp)
+                    } else {
+                        listOf(4.dp, 4.dp, 4.dp, 4.dp, 4.dp, 4.dp)
+                    }
+                    val waveColors = if (isSoundActive) {
+                        listOf(
+                            Color(0xFF4A4A54),
+                            Color(0xFF8A8A96),
+                            Color(0xFFFFFFFF),
+                            Color(0xFF8A8A96),
+                            Color(0xFFCFCFCF),
+                            Color(0xFF4A4A54),
+                        )
+                    } else {
+                        listOf(
+                            Color(0xFF33333A),
+                            Color(0xFF33333A),
+                            Color(0xFF444450),
+                            Color(0xFF444450),
+                            Color(0xFF33333A),
+                            Color(0xFF33333A),
+                        )
+                    }
+                    waveHeights.forEachIndexed { idx, h ->
+                        Box(
+                            modifier = Modifier
+                                .width(3.dp)
+                                .height(h)
+                                .clip(RoundedCornerShape(2.dp))
+                                .background(waveColors[idx]),
+                        )
+                    }
                 }
+
+                Text(
+                    text = if (isSoundActive) {
+                        stringResource(R.string.focus_soundscape_playing)
+                    } else {
+                        stringResource(R.string.focus_soundscape_muted)
+                    },
+                    fontFamily = GeistMonoFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 11.sp,
+                    color = if (isSoundActive) Color(0xFFE2E2EC) else textFaint,
+                )
             }
         }
 
@@ -804,8 +864,8 @@ private fun FocusActiveContent(
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Text(
-                text = "INTENTIONAL SUB-STEPS",
-                fontFamily = ManropeFamily,
+                text = stringResource(R.string.focus_active_steps_header),
+                fontFamily = GeistFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = 11.sp,
                 letterSpacing = 0.8.sp,
@@ -826,8 +886,8 @@ private fun FocusActiveContent(
                             .background(Color.White),
                     )
                     Text(
-                        text = active.taskTitle ?: "Fokus penuh pada tugas utama",
-                        fontFamily = ManropeFamily,
+                        text = active.taskTitle ?: stringResource(R.string.focus_active_single_task_placeholder),
+                        fontFamily = GeistFamily,
                         fontSize = 12.sp,
                         color = textPrimary,
                     )
@@ -879,7 +939,7 @@ private fun FocusActiveContent(
 
                         Text(
                             text = sub.title,
-                            fontFamily = ManropeFamily,
+                            fontFamily = GeistFamily,
                             fontWeight = if (isFirstIncomplete && !sub.isDone) FontWeight.SemiBold else FontWeight.Normal,
                             fontSize = if (isFirstIncomplete && !sub.isDone) 13.sp else 12.sp,
                             color = if (sub.isDone) textFaint else if (isFirstIncomplete) textPrimary else textMute,
@@ -922,8 +982,8 @@ private fun FocusActiveContent(
                         color = Color(0xFFCFCFCF),
                     )
                     Text(
-                        text = if (active.paused) "Resume" else "Pause",
-                        fontFamily = ManropeFamily,
+                        text = if (active.paused) stringResource(R.string.focus_active_resume) else stringResource(R.string.focus_active_pause),
+                        fontFamily = GeistFamily,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp,
                         color = Color(0xFFCFCFCF),
@@ -955,8 +1015,8 @@ private fun FocusActiveContent(
                         color = Color(0xFF0A0A0A),
                     )
                     Text(
-                        text = "Finish",
-                        fontFamily = ManropeFamily,
+                        text = stringResource(R.string.focus_active_finish),
+                        fontFamily = GeistFamily,
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
                         color = Color(0xFF0A0A0A),
@@ -967,8 +1027,8 @@ private fun FocusActiveContent(
 
         // --- Emergency unblock (Grace 2m) ---
         Text(
-            text = "Emergency unblock (Grace 2m)",
-            fontFamily = ManropeFamily,
+            text = stringResource(R.string.focus_active_emergency_unblock),
+            fontFamily = GeistFamily,
             fontWeight = FontWeight.Normal,
             fontSize = 11.sp,
             color = Color(0xFF555555),
@@ -982,45 +1042,95 @@ private fun FocusActiveContent(
                 .padding(vertical = 4.dp),
         )
 
-        // Post-session feedback if present
+        // Post-session feedback if present (Spec 2026-11-03)
         state.lastCompletion?.let { completion ->
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
                     .background(cardBg)
                     .padding(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                NemoMascot(
-                    expression = if (completion.verified) MascotExpression.LAUGHING else MascotExpression.SAD,
-                    size = 28.dp,
-                )
-                Text(
-                    text = if (completion.verified) {
-                        stringResource(R.string.focus_finished_verified, completion.taskTitle, completion.focusMinutes)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    NemoMascot(
+                        expression = if (completion.verified) MascotExpression.LAUGHING else MascotExpression.SAD,
+                        size = 28.dp,
+                    )
+                    Text(
+                        text = if (completion.verified) {
+                            stringResource(R.string.focus_finished_verified, completion.focusMinutes, completion.taskTitle)
+                        } else {
+                            stringResource(R.string.focus_finished_not_verified, completion.focusMinutes)
+                        },
+                        fontFamily = GeistFamily,
+                        fontSize = 12.sp,
+                        color = textPrimary,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+
+                // Rating row for sessions >= 15 minutes (Spec 2026-11-03 §4.2)
+                if (completion.focusMinutes >= 15) {
+                    if (completion.rating == null) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text(
+                                text = stringResource(R.string.focus_rating_prompt),
+                                fontFamily = GeistFamily,
+                                fontSize = 11.sp,
+                                color = textPrimary.copy(alpha = 0.65f),
+                            )
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                (1..5).forEach { r ->
+                                    Box(
+                                        modifier = Modifier
+                                            .size(28.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFF262626))
+                                            .pressable(onClick = { viewModel.onRateLastSession(r) }),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Text(
+                                            text = r.toString(),
+                                            fontFamily = GeistMonoFamily,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 11.sp,
+                                            color = Color.White,
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     } else {
-                        stringResource(R.string.focus_finished_not_verified, completion.focusMinutes)
-                    },
-                    fontFamily = ManropeFamily,
-                    fontSize = 12.sp,
-                    color = textPrimary,
-                    modifier = Modifier.weight(1f),
-                )
+                        Text(
+                            text = stringResource(R.string.focus_rating_thank_you),
+                            fontFamily = GeistMonoFamily,
+                            fontSize = 11.sp,
+                            color = Color(0xFF4CAF50),
+                        )
+                    }
+                }
             }
         }
     }
 
-    // Finish confirmation dialog
-    if (showFinishConfirm) {
+    // Exit confirmation dialog (Back button pressed)
+    if (showExitConfirm) {
         AlertDialog(
-            onDismissRequest = { showFinishConfirm = false },
+            onDismissRequest = { showExitConfirm = false },
             containerColor = Color(0xFF141414),
             title = {
                 Text(
-                    text = "Selesaikan Sesi?",
-                    fontFamily = ManropeFamily,
+                    text = stringResource(R.string.focus_exit_dialog_title),
+                    fontFamily = GeistFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                     color = Color.White,
@@ -1028,31 +1138,99 @@ private fun FocusActiveContent(
             },
             text = {
                 Text(
-                    text = "Menyelesaikan sesi akan menandai tugas ini selesai.",
-                    fontFamily = ManropeFamily,
+                    text = stringResource(R.string.focus_exit_dialog_body),
+                    fontFamily = GeistFamily,
                     fontSize = 13.sp,
                     color = Color(0xFF8A8A8A),
                 )
             },
             confirmButton = {
-                TextButton(onClick = {
-                    showFinishConfirm = false
-                    viewModel.onFinish()
-                    onFinished()
-                }) {
+                TextButton(
+                    onClick = {
+                        showExitConfirm = false
+                        viewModel.autoPauseFocus()
+                        onBack()
+                    },
+                    modifier = Modifier.heightIn(min = 48.dp),
+                ) {
                     Text(
-                        text = "Selesai",
-                        fontFamily = ManropeFamily,
+                        text = stringResource(R.string.focus_exit_dialog_confirm),
+                        fontFamily = GeistFamily,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
                     )
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showFinishConfirm = false }) {
+                TextButton(
+                    onClick = { showExitConfirm = false },
+                    modifier = Modifier.heightIn(min = 48.dp),
+                ) {
                     Text(
-                        text = "Lanjut Fokus",
-                        fontFamily = ManropeFamily,
+                        text = stringResource(R.string.focus_exit_dialog_dismiss),
+                        fontFamily = GeistFamily,
+                        fontWeight = FontWeight.Normal,
+                        color = Color(0xFF6B6B6B),
+                    )
+                }
+            },
+        )
+    }
+
+    // Finish confirmation dialog (with 5-second countdown safety lock)
+    if (showFinishConfirm) {
+        AlertDialog(
+            onDismissRequest = { showFinishConfirm = false },
+            containerColor = Color(0xFF141414),
+            title = {
+                Text(
+                    text = stringResource(R.string.focus_finish_dialog_title),
+                    fontFamily = GeistFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = Color.White,
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.focus_finish_dialog_body),
+                    fontFamily = GeistFamily,
+                    fontSize = 13.sp,
+                    color = Color(0xFF8A8A8A),
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (finishCountdown == 0) {
+                            showFinishConfirm = false
+                            viewModel.onFinish()
+                            onFinished()
+                        }
+                    },
+                    enabled = finishCountdown == 0,
+                    modifier = Modifier.heightIn(min = 48.dp),
+                ) {
+                    Text(
+                        text = if (finishCountdown > 0) {
+                            "${stringResource(R.string.focus_finish_dialog_confirm)} (${finishCountdown}s)"
+                        } else {
+                            stringResource(R.string.focus_finish_dialog_confirm)
+                        },
+                        fontFamily = GeistFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = if (finishCountdown == 0) Color.White else Color(0xFF6B6B6B),
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showFinishConfirm = false },
+                    modifier = Modifier.heightIn(min = 48.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.focus_finish_dialog_dismiss),
+                        fontFamily = GeistFamily,
                         fontWeight = FontWeight.Normal,
                         color = Color(0xFF6B6B6B),
                     )
@@ -1103,7 +1281,7 @@ private fun ActiveTimerRing(
                 drawArc(
                     color = Color.White,
                     startAngle = -90f,
-                    sweepAngle = 360f * animated,
+                    sweepAngle = (360f * animated).coerceIn(0f, 360f),
                     useCenter = false,
                     topLeft = Offset(inset, inset),
                     size = arcSize,
@@ -1118,15 +1296,15 @@ private fun ActiveTimerRing(
         ) {
             Text(
                 text = time,
-                fontFamily = FrauncesFamily,
-                fontWeight = FontWeight.Light,
+                fontFamily = GeistMonoFamily,
+                fontWeight = FontWeight.Medium,
                 fontSize = 44.sp,
                 color = Color.White,
                 textAlign = TextAlign.Center,
             )
             Text(
                 text = caption,
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 11.sp,
                 letterSpacing = 0.5.sp,

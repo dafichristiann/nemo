@@ -12,8 +12,10 @@ import com.anchor.app.testutil.FakeTaskRepository
 import com.anchor.app.testutil.FakeUsageRepository
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -74,6 +76,7 @@ class DriftAndCategoryTest {
         assertEquals(AppCategories.PRODUCTIVE, byPkg.getValue("com.android.chrome").category)
         assertEquals(false, byPkg.getValue("com.android.chrome").isDistraction)
         assertEquals(AppCategories.OTHER, byPkg.getValue("com.example.unknown").category)
+        assertEquals(false, byPkg.getValue("com.example.unknown").isDistraction)
     }
 
     @Test
@@ -89,6 +92,22 @@ class DriftAndCategoryTest {
         val stored = repo.appCategories().single { it.packageName == "com.zhiliaoapp.musically" }
         assertEquals(AppCategories.PRODUCTIVE, stored.category)
         assertEquals(AppCategory.SOURCE_USER, stored.overrideSource)
+    }
+
+    @Test
+    fun appCategories_defaultIsDistraction_onlyTrueForExplicitDistractions() {
+        // Distractions
+        assertTrue(AppCategories.defaultIsDistraction("com.zhiliaoapp.musically"))
+        assertTrue(AppCategories.defaultIsDistraction("com.instagram.android"))
+        assertTrue(AppCategories.defaultIsDistraction("com.google.android.youtube"))
+
+        // Productive defaults
+        assertFalse(AppCategories.defaultIsDistraction("com.android.chrome"))
+        assertFalse(AppCategories.defaultIsDistraction("com.notion.id"))
+
+        // Unknown / Other apps must default to false (Awareness > Control)
+        assertFalse(AppCategories.defaultIsDistraction("com.example.system.utility"))
+        assertFalse(AppCategories.defaultIsDistraction("com.example.unknown"))
     }
 
     // --- DetectDriftUseCase ---

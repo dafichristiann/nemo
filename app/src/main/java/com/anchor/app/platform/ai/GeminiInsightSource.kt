@@ -2,6 +2,7 @@ package com.anchor.app.platform.ai
 
 import com.anchor.app.BuildConfig
 import com.anchor.app.core.domain.model.InsightPayload
+import com.anchor.app.core.domain.repository.SettingsRepository
 import com.anchor.app.core.domain.usecase.insight.AiInsightSource
 import com.anchor.app.core.domain.usecase.insight.InsightDraft
 import com.anchor.app.core.domain.usecase.insight.InsightSchemaValidator
@@ -32,22 +33,34 @@ import javax.inject.Singleton
  * pulling a networking/JSON dependency (docs 02 §1 keeps the footprint small).
  */
 @Singleton
-class GeminiInsightSource @Inject constructor() : AiInsightSource {
+class GeminiInsightSource @Inject constructor(
+    private val settingsRepository: SettingsRepository,
+) : AiInsightSource {
+
+    /** 0-arg constructor for tests or standalone usage with default settings. */
+    constructor() : this(DefaultSettingsRepository)
 
     override suspend fun generate(payload: InsightPayload): InsightDraft? {
         val key = BuildConfig.GEMINI_API_KEY
         if (key.isBlank()) return null // unconfigured → rule-based, no network attempt
         if (!InsightPayload.passesPrivacyAudit(payload)) return null
 
+        val appLocale = runCatching { settingsRepository.get().locale }.getOrNull()
+        val isIndonesian = if (!appLocale.isNullOrBlank()) {
+            appLocale.startsWith("id", ignoreCase = true) || appLocale.startsWith("in", ignoreCase = true)
+        } else {
+            java.util.Locale.getDefault().language.let { it == "in" || it == "id" }
+        }
+
         return withContext(Dispatchers.IO) {
-            runCatching { requestDraft(key, payload) }
+            runCatching { requestDraft(key, payload, isIndonesian) }
                 .getOrNull()
                 ?.takeIf { InsightSchemaValidator.isValid(it) }
         }
     }
 
-    private fun requestDraft(key: String, payload: InsightPayload): InsightDraft? {
-        val requestBody = buildRequestBody(payload)
+    private fun requestDraft(key: String, payload: InsightPayload, isIndonesian: Boolean): InsightDraft? {
+        val requestBody = buildRequestBody(payload, isIndonesian)
         // Try each model in order; a retired/overloaded model must not force a fallback when the
         // next one would succeed (free-tier aliases can 404 or 503 transiently, FR-AI8).
         for (model in MODELS) {
@@ -85,11 +98,15 @@ class GeminiInsightSource @Inject constructor() : AiInsightSource {
     }
 
     /** Wraps the structured prompt + a strict JSON schema instruction in a Gemini request. */
-    private fun buildRequestBody(payload: InsightPayload): JSONObject {
+    internal fun buildRequestBody(payload: InsightPayload, isIndonesian: Boolean): JSONObject {
         val prompt = buildString {
-            appendLine("You are Anchor, a calm, supportive, non-judgmental focus assistant.")
+            appendLine("You are Nemo, a calm, supportive, non-judgmental focus assistant.")
             appendLine("Interpret ONLY the aggregate stats below. Do not invent data.")
-            appendLine("Tone: concise, encouraging, never blame. Language: English.")
+            if (isIndonesian) {
+                appendLine("Tone: concise, encouraging, never blame. Language: Indonesian (Bahasa Indonesia). Pastikan semua teks ringkasan (summary), pola (patterns), dan saran santai (suggestions) dihasilkan dalam Bahasa Indonesia yang alami, ramah, dan santai.")
+            } else {
+                appendLine("Tone: concise, encouraging, never blame. Language: English.")
+            }
             appendLine()
             appendLine("Aggregate stats for the day:")
             appendLine("- Tasks planned: ${payload.tasksPlanned}")
@@ -171,4 +188,24 @@ class GeminiInsightSource @Inject constructor() : AiInsightSource {
         )
         const val TIMEOUT_MS = 15_000
     }
+}
+
+private object DefaultSettingsRepository : SettingsRepository {
+    override fun observe(): kotlinx.coroutines.flow.Flow<com.anchor.app.core.domain.model.AppSettings> =
+        kotlinx.coroutines.flow.emptyFlow()
+    override suspend fun get(): com.anchor.app.core.domain.model.AppSettings =
+        com.anchor.app.core.domain.model.AppSettings()
+    override suspend fun update(settings: com.anchor.app.core.domain.model.AppSettings) {}
+    override suspend fun setTrackingEnabled(enabled: Boolean) {}
+    override suspend fun setAiEnabled(enabled: Boolean) {}
+    override suspend fun setOnboardingCompleted(completed: Boolean) {}
+    override suspend fun setBlockedApps(packages: Set<String>) {}
+    override suspend fun setFocusBlockingEnabled(enabled: Boolean) {}
+    override suspend fun setNickname(nickname: String) {}
+    override suspend fun setFocusArea(area: com.anchor.app.core.domain.model.FocusArea) {}
+    override suspend fun setDefaultFocusDurationMin(minutes: Int) {}
+    override suspend fun setLocale(locale: String) {}
+    override suspend fun setDoomscrollAlertEnabled(enabled: Boolean) {}
+    override suspend fun setDoomscrollThresholdMinutes(minutes: Int) {}
+    override suspend fun resetAll() {}
 }

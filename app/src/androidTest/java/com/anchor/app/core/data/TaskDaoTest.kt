@@ -23,7 +23,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class TaskDaoTest {
 
-    private lateinit var db: AnchorDatabase
+    private lateinit var db: NemoDatabase
     private lateinit var dao: TaskDao
 
     private val day = 1_000_000_000L
@@ -34,7 +34,7 @@ class TaskDaoTest {
     @Before
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        db = Room.inMemoryDatabaseBuilder(context, AnchorDatabase::class.java)
+        db = Room.inMemoryDatabaseBuilder(context, NemoDatabase::class.java)
             .allowMainThreadQueries()
             .build()
         dao = db.taskDao()

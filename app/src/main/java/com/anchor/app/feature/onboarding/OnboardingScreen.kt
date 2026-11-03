@@ -31,10 +31,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -63,11 +65,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.anchor.app.R
 import com.anchor.app.core.design.components.Banner
 import com.anchor.app.core.design.components.NemoPill
+import com.anchor.app.core.design.components.NemoSwitch
 import com.anchor.app.core.design.components.PrimaryButton
 import com.anchor.app.core.design.components.ProgressTrack
 import com.anchor.app.core.design.components.SectionHeader
 import com.anchor.app.core.design.components.SegmentedChips
-import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.GeistFamily
+import com.anchor.app.core.design.theme.GeistMonoFamily
 import com.anchor.app.core.design.theme.Nemo
 import com.anchor.app.core.design.theme.PillShape
 import com.anchor.app.core.design.theme.Radius
@@ -100,7 +104,7 @@ fun WelcomeOnboardingScreen(
         ) {
             Text(
                 text = stringResource(R.string.onboarding_welcome_skip),
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = 14.sp,
                 color = Nemo.colors.mute,
@@ -136,22 +140,23 @@ fun WelcomeOnboardingScreen(
         ) {
             Text(
                 text = stringResource(R.string.onboarding_welcome_title_1),
-                fontFamily = ManropeFamily,
-                fontWeight = FontWeight.Bold,
+                fontFamily = GeistFamily,
+                fontWeight = FontWeight.Normal,
                 fontSize = 32.sp,
+                lineHeight = 38.sp,
                 color = Nemo.colors.ink,
             )
             Text(
                 text = stringResource(R.string.onboarding_welcome_title_2),
-                fontFamily = ManropeFamily,
-                fontWeight = FontWeight.SemiBold,
+                fontFamily = GeistFamily,
+                fontWeight = FontWeight.Normal,
                 fontSize = 20.sp,
                 color = Nemo.colors.ink,
             )
             Spacer(modifier = Modifier.height(Spacing.x2))
             Text(
                 text = stringResource(R.string.onboarding_welcome_subtitle),
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontWeight = FontWeight.Normal,
                 fontSize = 14.sp,
                 lineHeight = 22.sp,
@@ -181,20 +186,28 @@ fun PermissionOnboardingScreen(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    val accessibilityStatus = remember { AccessibilityStatus() }
     var notificationsGranted by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
                 PackageManager.PERMISSION_GRANTED || Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU,
         )
     }
-    var usageGranted by remember { mutableStateOf(false) }
+    var usageGranted by remember { mutableStateOf(usageAccessGranted(context)) }
+    var accessibilityGranted by remember { mutableStateOf(accessibilityStatus.isEnabled(context)) }
+    var showBlockedDialog by remember { mutableStateOf(false) }
 
-    // Usage access granted only in OS Settings, so re-check when we return
+    // Usage access and Accessibility service granted in OS Settings, so re-check when we return
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 usageGranted = usageAccessGranted(context)
+                accessibilityGranted = accessibilityStatus.isEnabled(context)
+                notificationsGranted = ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS,
+                ) == PackageManager.PERMISSION_GRANTED || Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -208,6 +221,64 @@ fun PermissionOnboardingScreen(
         if (!granted) openNotificationSettings(context)
     }
 
+    val tryProceed = {
+        if (usageGranted && notificationsGranted && accessibilityGranted) {
+            onContinue()
+        } else {
+            showBlockedDialog = true
+        }
+    }
+
+    if (showBlockedDialog) {
+        AlertDialog(
+            onDismissRequest = { showBlockedDialog = false },
+            title = {
+                Text(
+                    text = stringResource(R.string.onboarding_perm_required_dialog_title),
+                    fontFamily = GeistFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 18.sp,
+                    color = Nemo.colors.ink,
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.onboarding_perm_required_dialog_message),
+                    fontFamily = GeistFamily,
+                    fontSize = 14.sp,
+                    lineHeight = 20.sp,
+                    color = Nemo.colors.inkSecondary,
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showBlockedDialog = false }) {
+                    Text(
+                        text = stringResource(R.string.onboarding_perm_required_dialog_dismiss),
+                        fontFamily = GeistFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Nemo.colors.ink,
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showBlockedDialog = false
+                        onContinue()
+                    },
+                ) {
+                    Text(
+                        text = stringResource(R.string.onboarding_skip_for_now),
+                        fontFamily = GeistFamily,
+                        color = Nemo.colors.mute,
+                    )
+                }
+            },
+            containerColor = Nemo.colors.surface,
+            shape = RoundedCornerShape(Radius.card),
+        )
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -219,7 +290,7 @@ fun PermissionOnboardingScreen(
     ) {
         Text(
             text = stringResource(R.string.onboarding_perm_step_indicator),
-            fontFamily = ManropeFamily,
+            fontFamily = GeistMonoFamily,
             fontWeight = FontWeight.SemiBold,
             fontSize = 12.sp,
             letterSpacing = 0.8.sp,
@@ -230,22 +301,24 @@ fun PermissionOnboardingScreen(
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 text = stringResource(R.string.onboarding_perm_headline_1),
-                fontFamily = ManropeFamily,
-                fontWeight = FontWeight.Bold,
+                fontFamily = GeistFamily,
+                fontWeight = FontWeight.Normal,
                 fontSize = 28.sp,
+                lineHeight = 34.sp,
                 color = Nemo.colors.ink,
             )
             Text(
                 text = stringResource(R.string.onboarding_perm_headline_2),
-                fontFamily = ManropeFamily,
-                fontWeight = FontWeight.Bold,
+                fontFamily = GeistFamily,
+                fontWeight = FontWeight.Normal,
                 fontSize = 28.sp,
+                lineHeight = 34.sp,
                 color = Nemo.colors.ink,
             )
         }
         Text(
             text = stringResource(R.string.onboarding_perm_sub),
-            fontFamily = ManropeFamily,
+            fontFamily = GeistFamily,
             fontSize = 14.sp,
             lineHeight = 20.sp,
             color = Nemo.colors.inkSecondary,
@@ -265,6 +338,13 @@ fun PermissionOnboardingScreen(
             iconRes = R.drawable.ic_insights,
             onEnable = { requestNotifications(notifLauncher, context) },
         )
+        PermissionCard(
+            title = stringResource(R.string.onboarding_perm_blocking_title),
+            subtitle = stringResource(R.string.onboarding_perm_blocking_sub),
+            granted = accessibilityGranted,
+            iconRes = R.drawable.ic_focus,
+            onEnable = { accessibilityStatus.open(context) },
+        )
 
         Banner {
             Row(
@@ -278,20 +358,20 @@ fun PermissionOnboardingScreen(
                 Spacer(modifier = Modifier.width(Spacing.x3))
                 Text(
                     text = stringResource(R.string.onboarding_privacy_card),
-                    fontFamily = ManropeFamily,
+                    fontFamily = GeistFamily,
                     fontSize = 13.sp,
                     color = Nemo.colors.inkSecondary,
                 )
             }
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(Spacing.x4))
 
-        PrimaryButton(label = stringResource(R.string.onboarding_continue), onClick = onContinue)
+        PrimaryButton(label = stringResource(R.string.onboarding_continue), onClick = tryProceed)
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             Text(
                 text = stringResource(R.string.onboarding_skip_for_now),
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = 14.sp,
                 color = Nemo.colors.mute,
@@ -329,7 +409,7 @@ fun ProfileSetupScreen(
     ) {
         Text(
             text = stringResource(R.string.onboarding_profile_step, 2, 3),
-            fontFamily = ManropeFamily,
+            fontFamily = GeistMonoFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 12.sp,
             color = Nemo.colors.mute,
@@ -353,14 +433,15 @@ fun ProfileSetupScreen(
 
         Text(
             text = stringResource(R.string.onboarding_profile_headline),
-            fontFamily = ManropeFamily,
-            fontWeight = FontWeight.Bold,
+            fontFamily = GeistFamily,
+            fontWeight = FontWeight.Normal,
             fontSize = 28.sp,
+            lineHeight = 34.sp,
             color = Nemo.colors.ink,
         )
         Text(
             text = stringResource(R.string.onboarding_profile_sub),
-            fontFamily = ManropeFamily,
+            fontFamily = GeistFamily,
             fontSize = 14.sp,
             lineHeight = 20.sp,
             color = Nemo.colors.inkSecondary,
@@ -397,7 +478,65 @@ fun ProfileSetupScreen(
             onSelect = { viewModel.onSelectDuration(AppSettings.FOCUS_DURATION_OPTIONS_MIN[it]) },
         )
 
-        Spacer(modifier = Modifier.weight(1f))
+        // Field 4 — continuous doomscroll alert (optional).
+        SectionHeader(title = stringResource(R.string.onboarding_profile_doomscroll_label))
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(Radius.card))
+                .border(1.dp, Nemo.colors.line, RoundedCornerShape(Radius.card))
+                .background(Nemo.colors.surface)
+                .padding(Spacing.cardHorizontal),
+            verticalArrangement = Arrangement.spacedBy(Spacing.x3),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.x1),
+                ) {
+                    Text(
+                        text = stringResource(R.string.onboarding_profile_doomscroll_toggle),
+                        fontFamily = GeistFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp,
+                        color = Nemo.colors.ink,
+                    )
+                    Text(
+                        text = stringResource(R.string.onboarding_profile_doomscroll_desc),
+                        fontFamily = GeistFamily,
+                        fontSize = 12.sp,
+                        lineHeight = 16.sp,
+                        color = Nemo.colors.inkSecondary,
+                    )
+                }
+                Spacer(modifier = Modifier.width(Spacing.x2))
+                NemoSwitch(
+                    checked = settings.doomscrollAlertEnabled,
+                    onCheckedChange = viewModel::onToggleDoomscroll,
+                )
+            }
+
+            if (settings.doomscrollAlertEnabled) {
+                SegmentedChips(
+                    options = AppSettings.DOOMSCROLL_THRESHOLD_OPTIONS_MIN
+                        .map { stringResource(R.string.onboarding_profile_duration_value, it) },
+                    selectedIndex = AppSettings.DOOMSCROLL_THRESHOLD_OPTIONS_MIN
+                        .indexOf(settings.doomscrollThresholdMinutes)
+                        .coerceAtLeast(0),
+                    onSelect = { index ->
+                        viewModel.onSelectDoomscrollThreshold(
+                            AppSettings.DOOMSCROLL_THRESHOLD_OPTIONS_MIN[index]
+                        )
+                    },
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(Spacing.x4))
 
         PrimaryButton(
             label = stringResource(R.string.onboarding_profile_continue),
@@ -406,7 +545,7 @@ fun ProfileSetupScreen(
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             Text(
                 text = stringResource(R.string.onboarding_profile_skip),
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = 14.sp,
                 color = Nemo.colors.mute,
@@ -448,13 +587,13 @@ private fun NicknameField(
         placeholder = {
             Text(
                 text = hint,
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontSize = 14.sp,
                 color = Nemo.colors.mute,
             )
         },
         textStyle = androidx.compose.ui.text.TextStyle(
-            fontFamily = ManropeFamily,
+            fontFamily = GeistFamily,
             fontSize = 14.sp,
             color = Nemo.colors.ink,
         ),
@@ -546,8 +685,8 @@ private fun PermissionCard(
             Spacer(modifier = Modifier.width(Spacing.x3))
         }
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.x1)) {
-            Text(text = title, fontFamily = ManropeFamily, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Nemo.colors.ink)
-            Text(text = subtitle, fontFamily = ManropeFamily, fontSize = 12.sp, color = Nemo.colors.mute)
+            Text(text = title, fontFamily = GeistFamily, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Nemo.colors.ink)
+            Text(text = subtitle, fontFamily = GeistFamily, fontSize = 12.sp, color = Nemo.colors.mute)
         }
         Spacer(modifier = Modifier.width(Spacing.x2))
         if (granted) {
@@ -562,7 +701,7 @@ private fun PermissionCard(
             ) {
                 Text(
                     text = stringResource(R.string.onboarding_perm_enable),
-                    fontFamily = ManropeFamily,
+                    fontFamily = GeistFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 12.sp,
                     color = Nemo.colors.onInk,

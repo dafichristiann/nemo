@@ -52,6 +52,18 @@ class FakeSettingsRepository(
         state.value = state.value.copy(defaultFocusDurationMin = minutes)
     }
 
+    override suspend fun setDoomscrollAlertEnabled(enabled: Boolean) {
+        state.value = state.value.copy(doomscrollAlertEnabled = enabled)
+    }
+
+    override suspend fun setDoomscrollThresholdMinutes(minutes: Int) {
+        state.value = state.value.copy(doomscrollThresholdMinutes = minutes)
+    }
+
+    override suspend fun setManualWakeTime(epochDay: Long?, minutes: Int?) {
+        state.value = state.value.copy(manualWakeTimeEpochDay = epochDay, manualWakeTimeMinutes = minutes)
+    }
+
     override suspend fun setLocale(locale: String) {
         state.value = state.value.copy(locale = locale)
     }

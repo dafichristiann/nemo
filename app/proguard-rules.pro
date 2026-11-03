@@ -1,4 +1,4 @@
-# Anchor — project-specific R8/ProGuard rules (release build).
+# Nemo — project-specific R8/ProGuard rules (release build).
 #
 # Most frameworks used here ship consumer rules that are applied automatically:
 #   - Room        (keeps @Entity/@Dao/@Database, generated impls)
@@ -43,7 +43,7 @@
 # ---------------------------------------------------------------------------
 # App entry points referenced from AndroidManifest.xml.
 # ---------------------------------------------------------------------------
--keep class com.anchor.app.AnchorApp { *; }
+-keep class com.anchor.app.NemoApp { *; }
 -keep class com.anchor.app.MainActivity { *; }
 -keep class com.anchor.app.platform.notification.InterventionActionReceiver { *; }
 -keep class com.anchor.app.platform.service.FocusService { *; }

@@ -1,7 +1,6 @@
 package com.anchor.app.feature.splash
 
 import android.media.MediaPlayer
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
@@ -17,7 +16,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -33,13 +31,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.anchor.app.R
+import com.anchor.app.core.design.theme.Motion
 import com.anchor.app.core.design.theme.Nemo
 import kotlinx.coroutines.delay
 
@@ -114,7 +114,7 @@ fun SplashScreen(
             initialValue = 0f,
             targetValue = -10f,
             animationSpec = infiniteRepeatable(
-                animation = tween(durationMillis = 400, easing = FastOutSlowInEasing),
+                animation = tween(durationMillis = Motion.large, easing = Motion.standardEase),
                 repeatMode = RepeatMode.Reverse,
             ),
             label = "bounce_y",
@@ -126,9 +126,11 @@ fun SplashScreen(
     // Scale effect during transition
     val mascotScale by animateDpAsState(
         targetValue = if (isHappy) 124.dp else 120.dp,
-        animationSpec = tween(durationMillis = 200),
+        animationSpec = Motion.standardSpec(),
         label = "mascot_scale",
     )
+
+    val density = LocalDensity.current
 
     Box(
         modifier = modifier
@@ -143,7 +145,7 @@ fun SplashScreen(
             // Mascot container (in dark mode, wrapped in a white circular badge so black ink hair is visible)
             Box(
                 modifier = Modifier
-                    .offset(y = bounceOffset.dp)
+                    .graphicsLayer { translationY = with(density) { bounceOffset.dp.toPx() } }
                     .size(mascotScale)
                     .then(
                         if (isDark) {
@@ -164,10 +166,10 @@ fun SplashScreen(
                     contentDescription = null,
                     modifier = Modifier
                         .fillMaxSize()
-                        .scale(
-                            scaleX = 1f,
-                            scaleY = if (isBlinking) 0.15f else 1f,
-                        ),
+                        .graphicsLayer {
+                            scaleX = 1f
+                            scaleY = if (isBlinking) 0.15f else 1f
+                        },
                 )
             }
 
@@ -182,7 +184,7 @@ fun SplashScreen(
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = "Personal Focus Assistant",
+                text = stringResource(id = R.string.splash_subtitle),
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.mute,
             )

@@ -20,8 +20,9 @@ fun FocusSessionEntity.toDomain(): FocusSession = FocusSession(
     startedAt = startedAt,
     endedAt = endedAt,
     status = status.toFocusStatus(),
-    blockedApps = decodeBlockedApps(blockedAppsJson),
+    blockedApps = decodeSessionBlockedApps(blockedAppsJson),
     fallbackReason = fallbackReason,
+    rating = rating,
 )
 
 fun FocusSession.toEntity(): FocusSessionEntity = FocusSessionEntity(
@@ -33,8 +34,9 @@ fun FocusSession.toEntity(): FocusSessionEntity = FocusSessionEntity(
     startedAt = startedAt,
     endedAt = endedAt,
     status = status.name,
-    blockedAppsJson = encodeBlockedApps(blockedApps),
+    blockedAppsJson = encodeSessionBlockedApps(blockedApps),
     fallbackReason = fallbackReason,
+    rating = rating,
 )
 
 private fun String.toFocusMode(): FocusMode =
@@ -43,14 +45,14 @@ private fun String.toFocusMode(): FocusMode =
 private fun String.toFocusStatus(): FocusStatus =
     FocusStatus.entries.firstOrNull { it.name == this } ?: FocusStatus.ABORTED
 
-private fun encodeBlockedApps(apps: List<String>): String? {
+private fun encodeSessionBlockedApps(apps: List<String>): String? {
     if (apps.isEmpty()) return null
     val array = JSONArray()
     apps.forEach { array.put(it) }
     return array.toString()
 }
 
-private fun decodeBlockedApps(json: String?): List<String> {
+private fun decodeSessionBlockedApps(json: String?): List<String> {
     if (json.isNullOrBlank()) return emptyList()
     return runCatching {
         val array = JSONArray(json)

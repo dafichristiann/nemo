@@ -1,7 +1,6 @@
 package com.anchor.app.core.design.components
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -21,13 +20,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.anchor.app.core.design.theme.FrauncesFamily
+import com.anchor.app.core.design.theme.GeistFamily
+import com.anchor.app.core.design.theme.Motion
 import com.anchor.app.core.design.theme.Nemo
 
 /**
@@ -51,10 +53,10 @@ fun BreathingRing(
         animationSpec = infiniteRepeatable(
             animation = keyframes {
                 durationMillis = 12000
-                0.65f at 0 using FastOutSlowInEasing
-                1.0f at 4000 using FastOutSlowInEasing
-                1.02f at 6000 using FastOutSlowInEasing
-                1.0f at 8000 using FastOutSlowInEasing
+                0.65f at 0 using Motion.standardEase
+                1.0f at 4000 using Motion.standardEase
+                1.02f at 6000 using Motion.standardEase
+                1.0f at 8000 using Motion.standardEase
                 0.65f at 12000
             },
             repeatMode = RepeatMode.Restart,
@@ -69,9 +71,9 @@ fun BreathingRing(
         animationSpec = infiniteRepeatable(
             animation = keyframes {
                 durationMillis = 12000
-                0.4f at 0 using FastOutSlowInEasing
-                1.0f at 4000 using FastOutSlowInEasing
-                1.0f at 8000 using FastOutSlowInEasing
+                0.4f at 0 using Motion.standardEase
+                1.0f at 4000 using Motion.standardEase
+                1.0f at 8000 using Motion.standardEase
                 0.4f at 12000
             },
             repeatMode = RepeatMode.Restart,
@@ -90,10 +92,15 @@ fun BreathingRing(
         label = "breathing_cycle_time",
     )
 
-    val phaseText = when {
-        cycleMillis < 4000f -> "Breathe in…"
-        cycleMillis < 8000f -> "Hold…"
-        else -> "Breathe out…"
+    // Derived state prevents recomposition of BreathingRing on every animation frame
+    val phaseText by remember {
+        derivedStateOf {
+            when {
+                cycleMillis < 4000f -> "Breathe in…"
+                cycleMillis < 8000f -> "Hold…"
+                else -> "Breathe out…"
+            }
+        }
     }
 
     Column(
@@ -106,11 +113,11 @@ fun BreathingRing(
         ) {
             Canvas(modifier = Modifier.size(diameter)) {
                 val center = this.center
-                val baseRadius = (size.minDimension / 2f) * scale
+                val baseRadius = (size.minDimension / 2f) * scale.coerceAtLeast(0f)
 
                 // Ring 1 (outer)
                 drawCircle(
-                    color = colors.line.copy(alpha = 0.4f * ringAlpha),
+                    color = colors.line.copy(alpha = (0.4f * ringAlpha).coerceIn(0f, 1f)),
                     radius = baseRadius,
                     center = center,
                     style = Stroke(width = 1.5.dp.toPx()),
@@ -118,7 +125,7 @@ fun BreathingRing(
 
                 // Ring 2 (mid)
                 drawCircle(
-                    color = colors.inkSecondary.copy(alpha = 0.6f * ringAlpha),
+                    color = colors.inkSecondary.copy(alpha = (0.6f * ringAlpha).coerceIn(0f, 1f)),
                     radius = baseRadius * 0.75f,
                     center = center,
                     style = Stroke(width = 2.dp.toPx()),
@@ -139,15 +146,15 @@ fun BreathingRing(
             AnimatedContent(
                 targetState = phaseText,
                 transitionSpec = {
-                    fadeIn(animationSpec = tween(300, easing = FastOutSlowInEasing)) togetherWith
-                        fadeOut(animationSpec = tween(200, easing = FastOutSlowInEasing))
+                    fadeIn(animationSpec = tween(Motion.standard, easing = Motion.standardEase)) togetherWith
+                        fadeOut(animationSpec = tween(Motion.instant, easing = Motion.standardEase))
                 },
                 label = "breathing_phase_text",
             ) { targetText ->
                 Text(
                     text = targetText,
                     style = MaterialTheme.typography.bodyMedium,
-                    fontFamily = FrauncesFamily,
+                    fontFamily = GeistFamily,
                     color = colors.ink,
                 )
             }

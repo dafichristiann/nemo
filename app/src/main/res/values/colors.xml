@@ -13,6 +13,6 @@
     <color name="nemo_ink">#111111</color>
     <color name="nemo_on_ink">#FFFFFF</color>
     <color name="nemo_danger">#8A3B3B</color>
-    <!-- Adaptive launcher icon background: white in light theme (values-night overrides to black). -->
+    <!-- Adaptive launcher icon background: white (design-spec.md §2). Themed icons use monochrome layer. -->
     <color name="ic_launcher_background">#FFFFFF</color>
 </resources>

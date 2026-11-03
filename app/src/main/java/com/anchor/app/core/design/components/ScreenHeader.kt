@@ -23,8 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.anchor.app.R
-import com.anchor.app.core.design.theme.FrauncesFamily
-import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.GeistFamily
 import com.anchor.app.core.design.theme.Nemo
 import com.anchor.app.core.design.theme.PillShape
 import com.anchor.app.core.design.theme.Spacing
@@ -73,7 +72,7 @@ fun NemoScreenHeader(
                 )
                 Text(
                     text = backContentDescription ?: stringResource(R.string.detail_back),
-                    fontFamily = ManropeFamily,
+                    fontFamily = GeistFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 13.sp,
                     color = Nemo.colors.ink,
@@ -90,7 +89,7 @@ fun NemoScreenHeader(
                 if (eyebrow != null) {
                     Text(
                         text = eyebrow.uppercase(),
-                        fontFamily = ManropeFamily,
+                        fontFamily = GeistFamily,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 11.sp,
                         letterSpacing = 1.sp,
@@ -110,7 +109,7 @@ fun NemoScreenHeader(
         ) {
             Text(
                 text = title,
-                fontFamily = FrauncesFamily,
+                fontFamily = GeistFamily,
                 fontWeight = FontWeight.Normal,
                 fontSize = 28.sp,
                 lineHeight = 34.sp,
@@ -126,7 +125,7 @@ fun NemoScreenHeader(
         if (subtitle != null) {
             Text(
                 text = subtitle,
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontWeight = FontWeight.Normal,
                 fontSize = 13.sp,
                 lineHeight = 18.sp,
@@ -139,7 +138,7 @@ fun NemoScreenHeader(
 /**
  * Standard Sheet / Dialog Header across all Nemo modal overlays.
  *
- * Headline Medium: Fraunces, Normal (400), 22sp, lineHeight 28sp.
+ * Headline Medium: Geist, Normal (400), 22sp, lineHeight 28sp.
  */
 @Composable
 fun NemoSheetHeader(
@@ -155,7 +154,7 @@ fun NemoSheetHeader(
     ) {
         Text(
             text = title,
-            fontFamily = FrauncesFamily,
+            fontFamily = GeistFamily,
             fontWeight = FontWeight.Normal,
             fontSize = 22.sp,
             lineHeight = 28.sp,

@@ -26,7 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.anchor.app.core.design.navigation.TopLevelDestination
-import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.GeistFamily
 import com.anchor.app.core.design.theme.Motion
 import com.anchor.app.core.design.theme.Nemo
 import com.anchor.app.core.design.theme.NemoTheme
@@ -86,7 +86,7 @@ fun NemoNavBar(
                     )
                     Text(
                         text = stringResource(destination.labelRes),
-                        fontFamily = ManropeFamily,
+                        fontFamily = GeistFamily,
                         fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
                         fontSize = 12.sp,
                         letterSpacing = 0.2.sp,

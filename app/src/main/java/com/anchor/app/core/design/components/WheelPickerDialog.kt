@@ -14,8 +14,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.anchor.app.R
-import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.GeistFamily
 import com.anchor.app.core.design.theme.Nemo
+import com.anchor.app.core.design.theme.Radius
 
 /**
  * Centered [AlertDialog] with a scroll [WheelPicker] to pick a single value, committed on "Set".
@@ -23,7 +24,7 @@ import com.anchor.app.core.design.theme.Nemo
  * The wheel edits a local pending index; "Set" reports it via [onConfirm], "Cancel"/dismiss
  * discards it. This is the shared "tap a field → pick on a wheel → confirm" pattern used for the
  * Add Task estimated duration and the Focus session duration. Material3 [AlertDialog] + the
- * dependency-free [WheelPicker] keep it light and consistent with the rest of Anchor.
+ * dependency-free [WheelPicker] keep it light and consistent with the rest of Nemo.
  *
  * @param values ordered options (top → bottom).
  * @param initialIndex index selected when the dialog opens.
@@ -44,13 +45,33 @@ fun <T> WheelPickerDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = { onConfirm(pendingIndex) }) {
+                Text(
+                    text = stringResource(R.string.dialog_set),
+                    fontFamily = GeistFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Nemo.colors.ink,
+                )
+            }
+        },
         modifier = modifier,
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(
+                    text = stringResource(R.string.dialog_cancel),
+                    fontFamily = GeistFamily,
+                    fontWeight = FontWeight.Medium,
+                    color = Nemo.colors.mute,
+                )
+            }
+        },
         title = {
             Text(
                 text = title,
-                fontFamily = ManropeFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
+                fontFamily = GeistFamily,
+                fontWeight = FontWeight.Normal,
+                fontSize = 20.sp,
                 color = Nemo.colors.ink,
             )
         },
@@ -63,26 +84,7 @@ fun <T> WheelPickerDialog(
                 formatValue = formatValue,
             )
         },
-        confirmButton = {
-            TextButton(onClick = { onConfirm(pendingIndex) }) {
-                Text(
-                    text = stringResource(R.string.dialog_set),
-                    fontFamily = ManropeFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Nemo.colors.ink,
-                )
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(
-                    text = stringResource(R.string.dialog_cancel),
-                    fontFamily = ManropeFamily,
-                    fontWeight = FontWeight.Medium,
-                    color = Nemo.colors.mute,
-                )
-            }
-        },
+        shape = Radius.panelShape,
         containerColor = Nemo.colors.surface,
     )
 }

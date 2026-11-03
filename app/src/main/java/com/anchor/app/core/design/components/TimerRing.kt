@@ -20,6 +20,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.anchor.app.core.design.theme.GeistMonoFamily
 import com.anchor.app.core.design.theme.Motion
 import com.anchor.app.core.design.theme.Nemo
 import com.anchor.app.core.design.theme.NemoTheme
@@ -76,7 +77,7 @@ fun TimerRing(
                 drawArc(
                     color = ringInk,
                     startAngle = -90f,
-                    sweepAngle = 360f * animated,
+                    sweepAngle = (360f * animated).coerceIn(0f, 360f),
                     useCenter = false,
                     topLeft = Offset(inset, inset),
                     size = arcSize,
@@ -91,7 +92,7 @@ fun TimerRing(
         ) {
             Text(
                 text = time,
-                style = MaterialTheme.typography.displayLarge,
+                style = MaterialTheme.typography.displayLarge.copy(fontFamily = GeistMonoFamily),
                 color = Nemo.colors.ink,
                 textAlign = TextAlign.Center,
             )

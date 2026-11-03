@@ -34,10 +34,15 @@ data class AppSettingsEntity(
     val focusArea: String = "COLLEGE",
     /** Default focus-session length in minutes (25/45/60). Prefills Focus Setup. */
     val defaultFocusDurationMin: Int = DEFAULT_FOCUS_DURATION_MIN,
+    val doomscrollAlertEnabled: Boolean = false,
+    val doomscrollThresholdMinutes: Int = DEFAULT_DOOMSCROLL_THRESHOLD_MIN,
+    val manualWakeTimeEpochDay: Long? = null,
+    val manualWakeTimeMinutes: Int? = null,
 ) {
     companion object {
         const val SINGLETON_ID = 1
         const val DEFAULT_RETENTION_DAYS = 30
         const val DEFAULT_FOCUS_DURATION_MIN = 25
+        const val DEFAULT_DOOMSCROLL_THRESHOLD_MIN = 20
     }
 }

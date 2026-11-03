@@ -35,6 +35,14 @@ data class AppSettings(
     val focusArea: FocusArea = FocusArea.COLLEGE,
     /** Default focus-session length in minutes (25/45/60). Prefills Focus Setup. */
     val defaultFocusDurationMin: Int = DEFAULT_FOCUS_DURATION_MIN,
+    /** Opt-in switch for continuous doomscroll alerts on social/entertainment apps. */
+    val doomscrollAlertEnabled: Boolean = false,
+    /** Continuous scrolling duration before intervention overlay triggers (minutes). */
+    val doomscrollThresholdMinutes: Int = DEFAULT_DOOMSCROLL_THRESHOLD_MIN,
+    /** Override for today's wake time epoch day (Sprint 8 / Adaptive Circadian). */
+    val manualWakeTimeEpochDay: Long? = null,
+    /** Override for wake time in minutes of day (e.g. 12 * 60 + 30 = 750 for 12:30). */
+    val manualWakeTimeMinutes: Int? = null,
 ) {
     companion object {
         const val MIN_RETENTION_DAYS = 14
@@ -46,5 +54,9 @@ data class AppSettings(
 
         /** Longest nickname we accept, to keep the greeting and the field tidy. */
         const val MAX_NICKNAME_LENGTH = 24
+
+        const val DEFAULT_DOOMSCROLL_THRESHOLD_MIN = 20
+        val DOOMSCROLL_DURATION_OPTIONS_MIN = listOf(10, 15, 20, 30, 45)
+        val DOOMSCROLL_THRESHOLD_OPTIONS_MIN = DOOMSCROLL_DURATION_OPTIONS_MIN
     }
 }

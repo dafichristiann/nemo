@@ -13,14 +13,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.anchor.app.core.design.theme.Motion
 
 /**
- * Shared interaction helpers, so every tappable surface in Anchor gives the same tactile
+ * Shared interaction helpers, so every tappable surface in Nemo gives the same tactile
  * response. Principles from the `better-ui` / `better-accessibility` skills:
  *
  * - A subtle press scale (0.97) for tactile feedback on custom-drawn controls that have no
@@ -41,7 +41,7 @@ private val DefaultPressableShape: Shape = RoundedCornerShape(12.dp)
  * `Modifier.clickable` on any hand-drawn button/chip/row.
  *
  * @param enabled whether the control responds at all.
- * @param pressedScale scale while pressed; keep >= 0.95 (0.97 is the Anchor default).
+ * @param pressedScale scale while pressed; keep >= 0.95 (0.97 is the Nemo default).
  * @param shape used for the ripple clip (matches the visual shape of the element).
  */
 fun Modifier.pressable(
@@ -49,6 +49,7 @@ fun Modifier.pressable(
     shape: Shape = DefaultPressableShape,
     pressedScale: Float = 0.97f,
     debounceTimeMs: Long = 400L,
+    indication: androidx.compose.foundation.Indication? = null,
     onClick: () -> Unit,
 ): Modifier = composed {
     if (!enabled) {
@@ -63,10 +64,13 @@ fun Modifier.pressable(
     )
     var lastClickTime by remember { mutableLongStateOf(0L) }
     this
-        .scale(scale)
+        .graphicsLayer {
+            scaleX = scale
+            scaleY = scale
+        }
         .clickable(
             interactionSource = interactionSource,
-            indication = null,
+            indication = indication,
             onClick = {
                 if (debounceTimeMs <= 0L) {
                     onClick()

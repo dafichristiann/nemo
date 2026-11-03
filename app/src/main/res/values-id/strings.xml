@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <!--
   Terjemahan Bahasa Indonesia Santai & Gaul Gen Z (PRD §12 "Localization").
   Gaya bahasa: ramah, anti-menghakimi, natural, asik (istilah: To-Do, Beres, Gaskeun, Deadline, Rehat bentar, Waktu layar, Santai).
@@ -30,7 +30,7 @@
     <string name="wellbeing_stats_vs_avg">vs rata-rata %1$d hari kamu</string>
     <string name="wellbeing_stats_distraction">Porsi scrolling vs %1$s</string>
     <string name="wellbeing_perm_title">Cek waktu layar kamu</string>
-    <string name="wellbeing_perm_body">Nemo butuh akses Penggunaan biar bisa nampilin insight waktu layar kamu. Aktifin di Pengaturan ya — datamu 100% aman di HP ini.</string>
+    <string name="wellbeing_perm_body">Nemo butuh akses Penggunaan biar bisa nampilin insight waktu layar kamu. Aktifin di Pengaturan ya — datamu 100%% aman di HP ini.</string>
     <string name="wellbeing_perm_cta">Buka Pengaturan</string>
     <string name="wellbeing_perm_app_settings">Pengaturan aplikasi</string>
     <string name="wellbeing_nodata_title">Belum ada data waktu layar</string>
@@ -97,6 +97,7 @@
     <string name="recurrence_weekly">Tiap minggu</string>
     <string name="add_task_save">Simpen To-Do</string>
     <string name="add_task_saving">Nyimpen…</string>
+    <string name="add_task_error_empty_title">Judul to-do tidak boleh kosong</string>
     <string name="task_toast_done">Mantap, to-do beres!</string>
     <string name="task_toast_created">To-Do berhasil ditambah!</string>
     <string name="task_toast_undo">Undo</string>
@@ -117,6 +118,7 @@
     <!-- 10 Task Detail -->
     <string name="detail_back">To-Do</string>
     <string name="detail_status_in_progress">LAGI DIKERJAIN</string>
+    <string name="detail_status_completed">SELESAI</string>
     <string name="detail_meta_estimated">Estimasi: %1$s</string>
     <string name="detail_meta_progress" tools:ignore="PluralsCandidate">Progres: %1$d%% (%2$d dari %3$d langkah beres)</string>
     <string name="detail_subtasks_title">Langkah-langkah</string>
@@ -127,6 +129,8 @@
     <string name="detail_action_todo">Jadikan To-Do</string>
     <string name="detail_action_complete_via_focus">Gaskeun Fokus Biar Beres</string>
     <string name="detail_action_delete">Hapus To-Do</string>
+    <string name="task_delete_confirm_title">Hapus to-do?</string>
+    <string name="task_delete_confirm_body">Yakin ingin menghapus to-do ini? Tindakan ini tidak dapat dibatalkan.</string>
     <string name="detail_future_callout">Cek simulasi kalau kamu nunda</string>
     <string name="detail_add_subtask">Tambah langkah</string>
     <string name="detail_edit">Edit</string>
@@ -147,7 +151,7 @@
     <string name="settings_profile_duration_value">%1$d menit</string>
     <string name="settings_profile_language_title">Pilihan Bahasa</string>
     <string name="settings_language_en">English</string>
-    <string name="settings_language_id">Indonesia (Santai)</string>
+    <string name="settings_language_id">Indonesia</string>
 
     <string name="settings_section_privacy">Privasi &amp; AI</string>
     <string name="settings_section_data">Kontrol Data</string>
@@ -157,12 +161,15 @@
     <string name="settings_tracking_subtitle">Catat pemakaian lokal biar fitur Waktu Layar berfungsi.</string>
     <string name="settings_retention_label" tools:ignore="PluralsCandidate">Simpen data maksimal %1$d hari</string>
     <string name="settings_delete_all">Hapus Semua Data</string>
+    <string name="settings_delete_confirm_title">Hapus semua data?</string>
+    <string name="settings_delete_confirm_body">Tindakan ini tidak dapat dibatalkan. Semua to-do, log fokus, dan statistik penggunaan akan dihapus secara permanen.</string>
+    <string name="settings_delete_confirm_action">Hapus</string>
     <string name="settings_assurance">Data pemakaian mentah kamu nggak bakal keluar dari HP.</string>
 
     <!-- Settings · Permissions -->
     <string name="settings_section_permissions">Izin Aplikasi</string>
     <string name="settings_perm_usage_title">Akses Penggunaan</string>
-    <string name="settings_perm_usage_desc">Biar Nemo bisa ngitung waktu layar lokal buat Wellbeing &amp; deteksi distraksi.</string>
+    <string name="settings_perm_usage_desc">Biar Nemo bisa ngitung waktu layar lokal buat kebugaran digital &amp; deteksi distraksi.</string>
     <string name="settings_perm_notif_title">Notifikasi</string>
     <string name="settings_perm_notif_desc">Pengingat santai &amp; status sesi fokus yang lagi jalan.</string>
     <string name="settings_perm_accessibility_title">Blokir Aplikasi</string>
@@ -187,7 +194,12 @@
     <string name="settings_section_focus_blocking">Blokir Pas Fokus</string>
     <string name="settings_focus_blocking_title">Jeda aplikasi pas fokus (eksperimental)</string>
     <string name="settings_focus_blocking_subtitle">Butuh akses Blokir Aplikasi di atas. Bawaannya mati; sesi bakal jalan santai (Lembut) kalo belum diaktifin.</string>
-    <string name="settings_blocked_desc">Aplikasi yang bakal dijeda pas sesi fokus Strict atau Custom.</string>
+    <string name="settings_section_doomscroll">Peringatan Doomscroll</string>
+    <string name="settings_doomscroll_title">Peringatan Waktu Medsos</string>
+    <string name="settings_doomscroll_subtitle">Ingatkan saya saat terlalu lama membuka aplikasi yang dibatasi tanpa henti.</string>
+    <string name="settings_doomscroll_duration_title">Batas Waktu Sesi</string>
+    <string name="settings_doomscroll_duration_summary">%1$d menit per sesi</string>
+    <string name="settings_blocked_desc">Aplikasi yang bakal dijeda pas sesi fokus Ketat atau Kustom.</string>
     <string name="settings_blocked_empty">Belum ada aplikasi yang dijeda.</string>
     <string name="settings_blocked_add_hint">Nama package (contoh: com.tiktok)</string>
     <string name="settings_blocked_add">Tambah</string>
@@ -204,7 +216,7 @@
     <string name="settings_p2_off">Nonaktif — tap buat aktifin</string>
     <string name="settings_assure_full">Data pemakaian mentah nggak pernah keluar dari HP kamu.\nAI cuma nerima rangkuman ringkas aja.</string>
     <string name="settings_version_title">Nemo OS · v1.0.4</string>
-    <string name="settings_mission_sub">Arsitektur Perhatian Tenang · Open Source</string>
+    <string name="settings_mission_sub">Arsitektur Fokus Tenang · Kode Terbuka</string>
     <string name="settings_theme_toggle_light">Ganti ke mode terang</string>
     <string name="settings_theme_toggle_dark">Ganti ke mode gelap</string>
 
@@ -224,6 +236,9 @@
     <string name="onboarding_privacy_card">Semua data tersimpan aman di HP kamu, nggak ke mana-mana.</string>
     <string name="onboarding_continue">Lanjut</string>
     <string name="onboarding_skip_for_now">Nanti Dulu Deh</string>
+    <string name="onboarding_perm_required_dialog_title">Izin Diperlukan</string>
+    <string name="onboarding_perm_required_dialog_message">Anda harus mengaktifkan semua izin (Akses Penggunaan, Notifikasi, dan Layanan Aksesibilitas) sebelum dapat masuk ke aplikasi.</string>
+    <string name="onboarding_perm_required_dialog_dismiss">Mengerti</string>
 
     <!-- 00a Profile setup -->
     <string name="onboarding_profile_step">Setup %1$d dari %2$d</string>
@@ -237,6 +252,9 @@
     <string name="onboarding_profile_focus_personal">Upgrade Diri</string>
     <string name="onboarding_profile_duration_label">Durasi Sesi Fokus</string>
     <string name="onboarding_profile_duration_value">%1$d menit</string>
+    <string name="onboarding_profile_doomscroll_label">Peringatan Medsos (Opsional)</string>
+    <string name="onboarding_profile_doomscroll_desc">Ingatkan saya dengan lembut setelah 20 menit terus-menerus membuka medsos.</string>
+    <string name="onboarding_profile_doomscroll_toggle">Aktifkan Peringatan 20 Menit</string>
     <string name="onboarding_profile_continue">Lanjut</string>
     <string name="onboarding_profile_skip">Nanti Dulu</string>
 
@@ -300,7 +318,8 @@
     <string name="focus_block_overlay_title">Balik fokus yuk?</string>
     <string name="focus_block_overlay_body">Kamu kan minta jeda aplikasi ini pas lagi fokus. Nemo cuma ngingetin santai — pilihan tetep di kamu kok.</string>
     <string name="focus_block_overlay_exit_hint">Kamu bisa sudahi sesi kapan aja lewat layar fokus atau notifikasinya.</string>
-    <string name="focus_block_overlay_back">Balik ke fokus</string>
+    <string name="focus_block_overlay_back">Kembali ke mode fokus</string>
+    <string name="focus_block_overlay_stay">Tetap masuk</string>
 
     <string name="focus_active_tag">LAGI FOKUS</string>
     <string name="focus_active_current_step">Langkah saat ini</string>
@@ -312,14 +331,14 @@
     <string name="focus_finish_confirm_confirm">Sudahi Sesi</string>
     <string name="focus_active_remaining_label">tersisa</string>
     <string name="focus_active_paused_label">dijeda</string>
-    <string name="focus_emergency_exit">Tombol darurat</string>
+    <string name="focus_emergency_exit">Keluar darurat</string>
     <string name="focus_finished_verified">Mantap beres! — kamu udah fokus %1$d menit ngerjain \"%2$s\".</string>
     <string name="focus_finished_not_verified">Sesi disudahi lebih awal (%1$d menit). To-do tetep jalan sampe kamu selesaiin sesi penuh ya.</string>
 
     <string name="focus_channel_name">Sesi Fokus</string>
     <string name="focus_channel_desc">Nampilin sesi fokus yang lagi jalan plus opsi keluar kapan aja.</string>
     <string name="focus_service_title">Sesi fokus lagi jalan nih</string>
-    <string name="focus_service_text">Tap buat balik. Tombol darurat selalu siap sedia.</string>
+    <string name="focus_service_text">Tap buat balik. Opsi keluar darurat selalu ada.</string>
 
     <!-- 07 Future View + Domino -->
     <string name="future_title">Bakal gimana harimu?</string>
@@ -369,18 +388,18 @@
     <string name="onboarding_perm_headline_2">siap nemenin kamu.</string>
 
     <string name="tasks_screen_title">Fokus Hari Ini</string>
-    <string name="tasks_tab_domino">Rantai Domino</string>
+    <string name="tasks_tab_domino">Chains</string>
     <string name="tasks_quick_add_hint">Mau nyelesein apa hari ini?…</string>
     <string name="tasks_shortcut_kbd">⌘K</string>
-    <string name="tasks_domino_anchor">⛓ ANCHOR DOMINO</string>
+    <string name="tasks_domino_anchor">⛓ DOMINO UTAMA</string>
     <string name="tasks_unblocks_prefix">Ngebuka: </string>
 
-    <string name="wellbeing_micro_tag">POLA &amp; RITME PERHATIAN</string>
+    <string name="wellbeing_micro_tag">POLA &amp; RITME FOKUS</string>
     <string name="wellbeing_arc_title">Stamina Mental</string>
     <string name="wellbeing_arc_subtitle">Kapasitas fokus alami kamu sepanjang 24 jam.</string>
-    <string name="wellbeing_cognitive_stamina">STAMINA MENTAL: 82%</string>
-    <string name="wellbeing_peak_window">JAM PALING PRIMA</string>
-    <string name="wellbeing_zone_tag">ZONA FOKUS SAAT INI</string>
+    <string name="wellbeing_cognitive_stamina">STAMINA FOKUS: 82%</string>
+    <string name="wellbeing_peak_window">JAM PALING GACOR</string>
+    <string name="wellbeing_zone_tag">ZONA FOKUS SEKARANG</string>
     <string name="wellbeing_zone_title">Jam Paling Prima: 08:30 - 11:30</string>
     <string name="wellbeing_zone_desc">Lagi tajem-tajemnya nih. Sisa 1j 49m di zona deep flow.</string>
     <string name="wellbeing_rec_tag">INFERENSI LOKAL NEMO</string>
@@ -392,7 +411,7 @@
     <string name="wellbeing_stat_debt_sub">Optimal (-18m vs rata-rata)</string>
     <string name="wellbeing_stat_frict_lbl">TAHAN GODAAN</string>
     <string name="wellbeing_stat_frict_val">8 dari 9</string>
-    <string name="wellbeing_stat_frict_sub">89% sukses nahan godaan buka HP</string>
+    <string name="wellbeing_stat_frict_sub">89%% sukses nahan godaan buka HP</string>
     <string name="wellbeing_sync_note">Disesuaikan sama jam biologis kamu. Tanpa analitik luar sama sekali.</string>
 
     <string name="intervention_tag_mindful">REHAT BENTAR</string>
@@ -419,7 +438,7 @@
 
     <string name="future_pill_tag">SIMULASI • BUKAN RAMALAN</string>
     <string name="future_disclaimer_formatted">Simulasi dinamis berdasarkan \'%1$s\'.</string>
-    <string name="future_domino_header">RIPPLE EFEK DOMINO</string>
+    <string name="future_domino_header">EFEK BERANTAI DOMINO</string>
     <string name="future_domino_count_label">%1$d to-do terdampak</string>
     <string name="future_scenario_chip_free">Malem Santai Bebas</string>
     <string name="future_scenario_chip_stress">+2j Begadang Panik</string>
@@ -431,6 +450,116 @@
     <string name="insights_distraction_session">Distraksi terlama</string>
     <string name="insights_tag_synthesis">REFLEKSI • TEMUAN HARIAN</string>
     <string name="insights_tag_suggestion_gentle">SARAN SANTAI</string>
-    <string name="insights_attribution">Dihasilkan lokal di HP kamu · 100% Privat</string>
+    <string name="insights_attribution">Dihasilkan lokal di HP kamu · 100%% Privat</string>
     <string name="insights_pattern_header">POLA YANG SERING MUNCUL</string>
+    <string name="insights_no_patterns">Belum ada pola berulang terdeteksi.</string>
+
+    <!-- Additional Extracted UI Strings -->
+    <string name="splash_subtitle">Asisten Fokus Pribadi</string>
+    <string name="blocked_apps_eyebrow">PERISAI DISTRAKSI</string>
+    <string name="app_categories_eyebrow">EKOSISTEM APLIKASI</string>
+    <string name="settings_eyebrow">PENGATURAN</string>
+    <string name="settings_retention_title">Masa Simpen Data</string>
+
+    <string name="tasks_header_eyebrow">RENCANA HARI INI</string>
+    <string name="tasks_summary_progress">%1$d dari %2$d beres · %3$d%%</string>
+    <string name="tasks_filter_today_count">Hari ini (%1$d)</string>
+    <string name="tasks_filter_upcoming_count">Mendatang (%1$d)</string>
+    <string name="tasks_badge_domino">DOMINO</string>
+    <string name="tasks_unblocks_sequential">Ngebuka: Langkah lanjutan berikutnya</string>
+    <string name="tasks_progress_percent_format">%1$d%% selesai</string>
+    <string name="add_task_subtasks_empty">Langkah kecil</string>
+
+    <string name="future_default_task_title">Tugas mendatang</string>
+    <string name="future_buffer_tag">buffer %1$s</string>
+
+    <string name="wellbeing_header_eyebrow">RITME FOKUS</string>
+    <string name="wellbeing_header_title">Kebugaran Ritme Tubuh</string>
+    <string name="wellbeing_header_subtitle">Siklus energi mental harian</string>
+    <string name="wellbeing_capacity_title">Kapasitas Fokus Harian</string>
+    <string name="wellbeing_status_optimal">OPTIMAL</string>
+    <string name="wellbeing_status_adaptive">ADAPTIF</string>
+    <string name="wellbeing_wake_auto">Bangun: %1$s (Otomatis)</string>
+    <string name="wellbeing_wake_manual">Bangun: %1$s (Manual)</string>
+    <string name="wellbeing_edit_wake_time">Ubah jam bangun</string>
+    <string name="wellbeing_pin_now">SEKARANG</string>
+    <string name="focus_rating_prompt">Seberapa fokus tadi?</string>
+    <string name="focus_rating_thank_you">Terima kasih atas penilaiannya!</string>
+    <string name="wellbeing_peak_window_title">JAM FOKUS PALING GACOR</string>
+    <string name="wellbeing_peak_window_desc">Waktu terbaik buat to-do berat (Penting/Urgent). Otak lagi 40%% lebih encer.</string>
+    <string name="wellbeing_insight_tag">INSIGHT NEMO</string>
+    <string name="wellbeing_on_device_pill">LOKAL DI HP</string>
+    <string name="wellbeing_rec_quote_morning">“Ritme kognisi optimal tercapai pagi ini. Alokasikan to-do high-focus sebelum energi menurun.”</string>
+    <string name="wellbeing_action_schedule_tomorrow">Jadwalkan to-do tersisa ke esok pagi →</string>
+    <string name="wellbeing_stat_screentime_lbl">WAKTU LAYAR</string>
+    <string name="wellbeing_stat_efficiency_lbl">EFISIENSI FOKUS</string>
+    <string name="wellbeing_stat_deepwork_sub">%1$.1f jam fokus mendalam</string>
+    <string name="wellbeing_stat_vs_baseline_minus">-%1$s vs rata-rata</string>
+    <string name="wellbeing_stat_vs_baseline_plus">+%1$s vs rata-rata</string>
+
+    <string name="focus_setup_eyebrow">KALIBRASI FOKUS</string>
+    <string name="focus_setup_title_header">Sesi Fokus</string>
+    <string name="focus_setup_subtitle_header">Atur suasana fokus kamu sebelum mulai</string>
+    <string name="focus_section_task">FOKUS PADA TUGAS</string>
+    <string name="focus_task_default">Sesi fokus umum</string>
+    <string name="focus_task_priority_prefix">Prioritas: %1$s</string>
+    <string name="focus_task_primary_fallback">Tanpa tugas</string>
+    <string name="focus_action_change">Ganti</string>
+    <string name="focus_section_protection">TINGKAT PROTEKSI</string>
+    <string name="focus_mode_gentle_card_title">Pengingat Lembut</string>
+    <string name="focus_mode_gentle_card_desc">Notifikasi santai saat terdistraksi</string>
+    <string name="focus_mode_strict_card_title">Blokir Ketat</string>
+    <string name="focus_mode_strict_card_desc">Aplikasi pengganggu diblokir total</string>
+    <string name="focus_accessibility_shield_notice">Pemblokiran dikelola lokal oleh Android Accessibility Service.</string>
+    <string name="focus_accessibility_enable_link">Aktifkan Aksesibilitas buat pemblokiran →</string>
+    <string name="focus_blocked_apps_title">Aplikasi yang Diblokir</string>
+    <string name="focus_blocked_apps_empty">Belum ada aplikasi yang diblokir</string>
+    <string name="focus_blocked_apps_count">%1$d aplikasi diblokir</string>
+    <string name="focus_action_manage">Atur</string>
+    <string name="focus_section_duration">DURASI TARGET</string>
+    <string name="focus_duration_custom">Kustom</string>
+    <string name="focus_circadian_hint">Sesi 45m pas banget sama jam fokus prima kamu sekarang.</string>
+    <string name="focus_soundscape_binaural">Binaural Brown Noise (40Hz)</string>
+    <string name="focus_soundscape_lofi_title">Lofi Focus Beats</string>
+    <string name="focus_soundscape_lofi_desc">Musik latar lofi yang tenang untuk meningkatkan fokus dan konsentrasi kerja mendalam.</string>
+    <string name="focus_soundscape_playing">Lofi Focus • Memutar</string>
+    <string name="focus_soundscape_muted">Lofi Dibisukan</string>
+    <string name="focus_soundscape_toggle_desc">Beralih soundscape lofi</string>
+    <string name="focus_action_start">Mulai Sesi Fokus</string>
+    <string name="focus_picker_title">Pilih To-Do Fokus</string>
+    <string name="focus_picker_empty">Belum ada to-do aktif nih.</string>
+    <string name="focus_picker_close">Tutup</string>
+
+    <string name="focus_active_mode_gentle">ALIRAN SANTAI</string>
+    <string name="focus_active_single_task_placeholder">Fokus penuh ke tugas utama</string>
+    <string name="focus_active_emergency_unblock">Buka darurat (Jeda 2m)</string>
+    <string name="focus_finish_dialog_title">Selesaikan Sesi?</string>
+    <string name="focus_finish_dialog_body">Menyelesaikan sesi bakal nandain to-do ini beres.</string>
+    <string name="focus_finish_dialog_confirm">Selesai</string>
+    <string name="focus_finish_dialog_dismiss">Lanjut Fokus</string>
+    <string name="focus_exit_dialog_title">Keluar dari Sesi Fokus?</string>
+    <string name="focus_exit_dialog_body">Sesi fokusmu otomatis dijeda (pause) dan bisa kamu lanjutkan lagi nanti.</string>
+    <string name="focus_exit_dialog_confirm">Keluar</string>
+    <string name="focus_exit_dialog_dismiss">Tetap di Sesi</string>
+
+    <!-- Additional Extracted UI Strings (Dynamic & Component Keys) -->
+    <string name="tasks_meta_low_priority">Prioritas santai</string>
+    <string name="circadian_tag_wake">BANGUN</string>
+    <string name="circadian_tag_peak">GACOR</string>
+    <string name="circadian_tag_high">TINGGI</string>
+    <string name="circadian_tag_dip">TURUN</string>
+    <string name="circadian_tag_focus">FOKUS</string>
+    <string name="circadian_tag_ease">SANTAI</string>
+    <string name="circadian_tag_wind">REHAT</string>
+    <string name="insights_header_eyebrow">REFLEKSI HARIAN</string>
+    <string name="insights_summary_fallback">Selesaikan sesi fokus dan tugasmu untuk melihat refleksi harian di sini.</string>
+    <string name="insights_suggestion_fallback">Jadwalkan tugas prioritas utamamu pada jam energi puncakmu.</string>
+    <string name="intervention_sample_app">Aplikasi</string>
+    <string name="intervention_sample_task">Sesi fokus</string>
+
+    <!-- Continuous doomscroll alert (specs 2026-11-01) -->
+    <string name="doomscroll_overlay_title">Sudah %1$d Menit Scrolling</string>
+    <string name="doomscroll_overlay_body">Istirahatkan matamu sejenak dan letakkan ponsel untuk menyegarkan pikiran.</string>
+    <string name="doomscroll_overlay_stop">Sudahi Scroll</string>
+    <string name="doomscroll_overlay_snooze">Tambah 5 Menit</string>
 </resources>

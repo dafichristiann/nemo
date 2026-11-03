@@ -44,6 +44,9 @@ class TaskRepositoryImpl @Inject constructor(
 
     override fun observeCompletedCount(): Flow<Int> = taskDao.observeCompletedCount()
 
+    override fun observeTodayCompletedCount(startOfDay: Long, endOfDay: Long): Flow<Int> =
+        taskDao.observeTodayCompletedCount(startOfDay, endOfDay)
+
     override fun observeOpenCount(): Flow<Int> = taskDao.observeOpenCount()
 
     override suspend fun getById(id: String): Task? = taskDao.getById(id)?.toDomain()
@@ -71,7 +74,31 @@ class TaskRepositoryImpl @Inject constructor(
 
     override suspend fun setStatus(id: String, status: TaskStatus) {
         val current = taskDao.getById(id) ?: return
-        taskDao.update(current.copy(status = status.name))
+        if (status == TaskStatus.DONE) {
+            taskDao.update(
+                current.copy(
+                    status = status.name,
+                    completedAt = current.completedAt ?: System.currentTimeMillis(),
+                    progressPercent = 100,
+                ),
+            )
+        } else {
+            val totalSubtasks = subtaskDao.countForTask(id)
+            val newProgress = if (totalSubtasks > 0) {
+                val doneSubtasks = subtaskDao.countDoneForTask(id)
+                ((doneSubtasks.toDouble() / totalSubtasks) * 100).toInt().coerceIn(0, 100)
+            } else {
+                0
+            }
+            taskDao.update(
+                current.copy(
+                    status = status.name,
+                    completedAt = null,
+                    completionSource = null,
+                    progressPercent = newProgress,
+                ),
+            )
+        }
     }
 
     override suspend fun setProgress(id: String, progressPercent: Int) {

@@ -10,7 +10,7 @@ import javax.inject.Singleton
  *
  * Reports blocking as available only when **all three** gates pass — build flag, the user's
  * opt-in toggle, and the OS Accessibility service being enabled (see [BlockingGate]). On engage
- * it fills [BlockingState] so the [com.anchor.app.platform.accessibility.AnchorAccessibilityService]
+ * it fills [BlockingState] so the [com.anchor.app.platform.accessibility.NemoAccessibilityService]
  * can enforce it; on release it clears it. Any failure simply reports `false`, letting
  * [com.anchor.app.core.domain.usecase.focus.StartFocusUseCase] degrade the session to Gentle.
  *
@@ -36,11 +36,14 @@ class AccessibilityBlockingStrategy @Inject constructor(
     override suspend fun isAvailable(): Boolean =
         gate.isBuildFlagOn() && gate.isToggleOnNow() && gate.isServiceEnabled()
 
-    override suspend fun engage(packages: Set<String>): Boolean {
+    override suspend fun engage(packages: Set<String>, mode: FocusMode): Boolean {
         if (!isAvailable()) return false
-        blockingState.engage(packages)
+        blockingState.engage(packages, mode)
         return true
     }
+
+    override suspend fun engage(packages: Set<String>): Boolean =
+        engage(packages, effectiveMode)
 
     override suspend fun release() {
         blockingState.release()

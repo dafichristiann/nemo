@@ -33,8 +33,8 @@ import com.anchor.app.core.design.components.NemoMascot
 import com.anchor.app.core.design.components.PrimaryButton
 import com.anchor.app.core.design.components.SectionHeader
 import com.anchor.app.core.design.components.pressable
-import com.anchor.app.core.design.theme.FrauncesFamily
-import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.GeistFamily
+import com.anchor.app.core.design.theme.GeistMonoFamily
 import com.anchor.app.core.design.theme.Nemo
 import com.anchor.app.core.design.theme.PillShape
 import com.anchor.app.core.design.theme.Radius
@@ -100,7 +100,7 @@ fun FutureViewScreen(
                 )
                 Text(
                     text = stringResource(R.string.detail_back),
-                    fontFamily = ManropeFamily,
+                    fontFamily = GeistFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp,
                     color = Nemo.colors.ink,
@@ -114,7 +114,7 @@ fun FutureViewScreen(
             ) {
                 Text(
                     text = stringResource(R.string.future_pill_tag),
-                    fontFamily = ManropeFamily,
+                    fontFamily = GeistMonoFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = 10.sp,
                     letterSpacing = 0.6.sp,
@@ -125,7 +125,7 @@ fun FutureViewScreen(
 
         Text(
             text = stringResource(R.string.future_title),
-            fontFamily = FrauncesFamily,
+            fontFamily = GeistFamily,
             fontWeight = FontWeight.Normal,
             fontSize = 28.sp,
             lineHeight = 34.sp,
@@ -135,9 +135,9 @@ fun FutureViewScreen(
         Text(
             text = stringResource(
                 R.string.future_disclaimer_formatted,
-                state.task?.title ?: "Draft Chapter 3",
+                state.task?.title ?: stringResource(R.string.future_default_task_title),
             ),
-            fontFamily = ManropeFamily,
+            fontFamily = GeistFamily,
             fontSize = 13.sp,
             color = Nemo.colors.inkSecondary,
         )
@@ -221,7 +221,7 @@ private fun ScenarioCard(
                 )
                 Text(
                     text = label,
-                    fontFamily = ManropeFamily,
+                    fontFamily = GeistMonoFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 12.sp,
                     letterSpacing = 0.6.sp,
@@ -245,7 +245,7 @@ private fun ScenarioCard(
                 ) {
                     Text(
                         text = chipText,
-                        fontFamily = ManropeFamily,
+                        fontFamily = GeistMonoFamily,
                         fontWeight = FontWeight.Bold,
                         fontSize = 11.sp,
                         color = if (emphasis) Nemo.colors.onInk else Nemo.colors.danger,
@@ -259,13 +259,13 @@ private fun ScenarioCard(
                 formatTime(scenario.startAt, zone),
                 formatTime(scenario.endAt, zone),
             ),
-            style = MaterialTheme.typography.displayMedium,
+            style = MaterialTheme.typography.displayMedium.copy(fontFamily = GeistMonoFamily),
             color = valueColor,
         )
         scenario.deadlineAt?.let {
             Text(
                 text = stringResource(R.string.future_scenario_deadline, formatTime(it, zone)),
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontSize = 12.sp,
                 color = metaColor,
             )
@@ -284,7 +284,7 @@ private fun DominoSection(domino: DominoEffect, onOpenTask: (String) -> Unit) {
         if (domino.affectedCount > 0) {
             Text(
                 text = stringResource(R.string.future_domino_count_label, domino.affectedCount),
-                fontFamily = ManropeFamily,
+                fontFamily = GeistMonoFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = 12.sp,
                 color = Nemo.colors.mute,
@@ -295,7 +295,7 @@ private fun DominoSection(domino: DominoEffect, onOpenTask: (String) -> Unit) {
     if (domino.affectedCount == 0) {
         Text(
             text = stringResource(R.string.future_domino_empty),
-            fontFamily = ManropeFamily,
+            fontFamily = GeistFamily,
             fontSize = 13.sp,
             color = Nemo.colors.placeholder,
         )
@@ -318,14 +318,14 @@ private fun DominoSection(domino: DominoEffect, onOpenTask: (String) -> Unit) {
         domino.affected.forEach { node ->
             Text(
                 text = "↓",
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontSize = 14.sp,
                 color = Nemo.colors.placeholder,
                 modifier = Modifier.padding(start = Spacing.x2),
             )
             DominoRow(
                 title = node.title,
-                tag = "-40m buffer",
+                tag = stringResource(R.string.future_buffer_tag, "-40m"),
                 onClick = { onOpenTask(node.taskId) },
             )
         }
@@ -345,7 +345,7 @@ private fun DominoRow(title: String, tag: String?, onClick: () -> Unit) {
     ) {
         Text(
             text = title,
-            fontFamily = ManropeFamily,
+            fontFamily = GeistFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 14.sp,
             color = Nemo.colors.ink,
@@ -354,7 +354,7 @@ private fun DominoRow(title: String, tag: String?, onClick: () -> Unit) {
         if (tag != null) {
             Text(
                 text = tag,
-                fontFamily = ManropeFamily,
+                fontFamily = GeistMonoFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 10.sp,
                 color = Nemo.colors.placeholder,
@@ -382,7 +382,7 @@ private fun DominoLinkSection(
     if (candidates.isEmpty()) {
         Text(
             text = stringResource(R.string.future_domino_none_available),
-            fontFamily = ManropeFamily,
+            fontFamily = GeistFamily,
             fontSize = 13.sp,
             color = Nemo.colors.placeholder,
         )
@@ -391,7 +391,7 @@ private fun DominoLinkSection(
 
     Text(
         text = stringResource(R.string.future_domino_pick_hint),
-        fontFamily = ManropeFamily,
+        fontFamily = GeistFamily,
         fontSize = 12.sp,
         color = Nemo.colors.mute,
     )
@@ -408,7 +408,7 @@ private fun DominoLinkSection(
             ) {
                 Text(
                     text = task.title,
-                    fontFamily = ManropeFamily,
+                    fontFamily = GeistFamily,
                     fontWeight = FontWeight.Medium,
                     fontSize = 14.sp,
                     color = Nemo.colors.ink,
@@ -416,7 +416,7 @@ private fun DominoLinkSection(
                 )
                 Text(
                     text = stringResource(R.string.future_domino_add_button),
-                    fontFamily = ManropeFamily,
+                    fontFamily = GeistFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 12.sp,
                     color = Nemo.colors.inkSecondary,
@@ -437,7 +437,7 @@ private fun Notice(text: String) {
     ) {
         Text(
             text = text,
-            fontFamily = ManropeFamily,
+            fontFamily = GeistFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 13.sp,
             color = Nemo.colors.inkSecondary,

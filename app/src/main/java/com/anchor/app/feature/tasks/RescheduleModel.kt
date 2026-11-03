@@ -1,6 +1,8 @@
 package com.anchor.app.feature.tasks
 
+import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 
@@ -28,3 +30,22 @@ fun resolveDeadlineMillis(day: RescheduleDay, hour: Int, today: LocalDate, zone:
         .atZone(zone)
         .toInstant()
         .toEpochMilli()
+
+/**
+ * Calculates the initial (day, hour) selection for [RescheduleSheet].
+ * If [currentDeadline] hour is already in the past today, default to [RescheduleDay.TOMORROW]
+ * so an invalid or past deadline is never selected by default.
+ */
+fun initialRescheduleSelection(
+    currentDeadline: Long?,
+    today: LocalDate,
+    zone: ZoneId,
+    now: LocalDateTime = LocalDateTime.now(zone),
+): Pair<RescheduleDay, Int> {
+    val initialHour = currentDeadline?.let {
+        LocalDateTime.ofInstant(Instant.ofEpochMilli(it), zone).hour
+    } ?: 23
+    val isPastToday = today == now.toLocalDate() && now.hour >= initialHour
+    val defaultDay = if (isPastToday) RescheduleDay.TOMORROW else RescheduleDay.TODAY
+    return defaultDay to initialHour
+}

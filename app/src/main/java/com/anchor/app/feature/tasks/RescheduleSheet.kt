@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,21 +22,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.anchor.app.R
 import com.anchor.app.core.design.components.NemoBottomSheet
+import com.anchor.app.core.design.components.NemoSheetHeader
 import com.anchor.app.core.design.components.PrimaryButton
-import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.GeistFamily
+import com.anchor.app.core.design.theme.GeistMonoFamily
 import com.anchor.app.core.design.theme.Nemo
 import com.anchor.app.core.design.theme.PillShape
 import com.anchor.app.core.design.theme.Spacing
-import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZoneId
 
 /**
@@ -62,15 +61,11 @@ fun RescheduleSheet(
     modifier: Modifier = Modifier,
     allowClear: Boolean = true,
 ) {
-    // Default selection: keep the current hour if there is one, otherwise 23:00.
-    var selectedDay by remember { mutableStateOf(RescheduleDay.TODAY) }
-    var selectedHour by remember {
-        mutableIntStateOf(
-            currentDeadline?.let {
-                LocalDateTime.ofInstant(Instant.ofEpochMilli(it), zone).hour
-            } ?: 23,
-        )
+    val (initialDay, initialHour) = remember(currentDeadline, today, zone) {
+        initialRescheduleSelection(currentDeadline, today, zone)
     }
+    var selectedDay by remember { mutableStateOf(initialDay) }
+    var selectedHour by remember { mutableIntStateOf(initialHour) }
 
     val dayOptions = listOf(
         RescheduleDay.TODAY to stringResource(R.string.reschedule_day_today),
@@ -88,25 +83,10 @@ fun RescheduleSheet(
                 .padding(bottom = Spacing.x8),
             verticalArrangement = Arrangement.spacedBy(Spacing.x5),
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(R.string.reschedule_title),
-                    fontFamily = ManropeFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
-                    color = Nemo.colors.ink,
-                )
-                Icon(
-                    painter = painterResource(R.drawable.ic_close),
-                    contentDescription = stringResource(R.string.cd_close_sheet),
-                    tint = Nemo.colors.mute,
-                    modifier = Modifier.clickable(onClick = onDismiss),
-                )
-            }
+            NemoSheetHeader(
+                title = stringResource(R.string.reschedule_title),
+                onClose = onDismiss,
+            )
 
             LabeledRow(stringResource(R.string.reschedule_day_label)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(Spacing.x2)) {
@@ -114,7 +94,15 @@ fun RescheduleSheet(
                         ChoiceChip(
                             label = label,
                             selected = selectedDay == day,
-                            onClick = { selectedDay = day },
+                            onClick = {
+                                selectedDay = day
+                                if (day == RescheduleDay.TODAY && today == LocalDate.now(zone)) {
+                                    val currentHour = LocalTime.now(zone).hour
+                                    if (selectedHour <= currentHour) {
+                                        selectedHour = RESCHEDULE_HOURS.firstOrNull { it > currentHour } ?: 23
+                                    }
+                                }
+                            },
                         )
                     }
                 }
@@ -123,9 +111,13 @@ fun RescheduleSheet(
             LabeledRow(stringResource(R.string.reschedule_time_label)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(Spacing.x2)) {
                     RESCHEDULE_HOURS.forEach { hour ->
+                        val isPastToday = selectedDay == RescheduleDay.TODAY &&
+                            today == LocalDate.now(zone) &&
+                            LocalTime.now(zone).hour >= hour
                         ChoiceChip(
                             label = "%02d:00".format(hour),
                             selected = selectedHour == hour,
+                            enabled = !isPastToday,
                             onClick = { selectedHour = hour },
                         )
                     }
@@ -151,7 +143,7 @@ fun RescheduleSheet(
                 ) {
                     Text(
                         text = stringResource(R.string.reschedule_clear),
-                        fontFamily = ManropeFamily,
+                        fontFamily = GeistFamily,
                         fontWeight = FontWeight.Medium,
                         fontSize = 13.sp,
                         color = Nemo.colors.inkSecondary,
@@ -167,7 +159,7 @@ private fun LabeledRow(label: String, content: @Composable () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
         Text(
             text = label,
-            fontFamily = ManropeFamily,
+            fontFamily = GeistFamily,
             fontWeight = FontWeight.SemiBold,
             fontSize = 12.sp,
             color = Nemo.colors.mute,
@@ -177,20 +169,31 @@ private fun LabeledRow(label: String, content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun ChoiceChip(label: String, selected: Boolean, onClick: () -> Unit) {
+private fun ChoiceChip(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+) {
     Box(
         modifier = Modifier
             .clip(PillShape)
-            .background(if (selected) Nemo.colors.ink else Nemo.colors.fog)
-            .clickable(onClick = onClick)
+            .background(
+                if (selected) Nemo.colors.ink
+                else if (!enabled) Nemo.colors.fog.copy(alpha = 0.5f)
+                else Nemo.colors.fog,
+            )
+            .clickable(enabled = enabled, onClick = onClick)
             .padding(horizontal = Spacing.x4, vertical = Spacing.x2),
     ) {
         Text(
             text = label,
-            fontFamily = ManropeFamily,
+            fontFamily = GeistMonoFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 13.sp,
-            color = if (selected) Nemo.colors.onInk else Nemo.colors.inkSecondary,
+            color = if (selected) Nemo.colors.onInk
+            else if (!enabled) Nemo.colors.mute.copy(alpha = 0.5f)
+            else Nemo.colors.inkSecondary,
         )
     }
 }

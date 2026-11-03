@@ -8,7 +8,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Reads and opens the OS Accessibility settings for [AnchorAccessibilityService] (FR-F4/F8,
+ * Reads and opens the OS Accessibility settings for [NemoAccessibilityService] (FR-F4/F8,
  * docs 08-permissions.md §4). Mirrors the defensive pattern of
  * [com.anchor.app.platform.usagestats.UsageAccessSettings]: a missing Settings activity must
  * never crash the app — we fall back through several intents.
@@ -16,9 +16,9 @@ import javax.inject.Singleton
 @Singleton
 class AccessibilityStatus @Inject constructor() {
 
-    /** True while the Anchor service is listed among the OS's enabled accessibility services. */
+    /** True while the Nemo service is listed among the OS's enabled accessibility services. */
     fun isEnabled(context: Context): Boolean {
-        val expected = ComponentName(context, AnchorAccessibilityService::class.java)
+        val expected = ComponentName(context, NemoAccessibilityService::class.java)
 
         // On API 24+ the OS also exposes a master toggle; when it is off no service can run,
         // regardless of what the enabled-services list contains. Absent key -> treat as on (the

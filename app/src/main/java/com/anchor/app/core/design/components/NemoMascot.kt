@@ -1,6 +1,5 @@
 package com.anchor.app.core.design.components
 
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -10,7 +9,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -22,13 +20,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.anchor.app.R
+import com.anchor.app.core.design.theme.Motion
 import com.anchor.app.core.design.theme.Nemo
 import kotlinx.coroutines.delay
 import kotlin.random.Random
@@ -72,7 +71,7 @@ fun NemoMascot(
                 initialValue = 0f,
                 targetValue = -6f,
                 animationSpec = infiniteRepeatable(
-                    animation = tween(durationMillis = 500, easing = FastOutSlowInEasing),
+                    animation = tween(durationMillis = 500, easing = Motion.standardEase),
                     repeatMode = RepeatMode.Reverse,
                 ),
                 label = "bounce_offset",
@@ -87,7 +86,7 @@ fun NemoMascot(
                 initialValue = -3f,
                 targetValue = 3f,
                 animationSpec = infiniteRepeatable(
-                    animation = tween(durationMillis = 1200, easing = FastOutSlowInEasing),
+                    animation = tween(durationMillis = 1200, easing = Motion.standardEase),
                     repeatMode = RepeatMode.Reverse,
                 ),
                 label = "tilt_angle",
@@ -98,7 +97,7 @@ fun NemoMascot(
                 initialValue = 0f,
                 targetValue = 4f,
                 animationSpec = infiniteRepeatable(
-                    animation = tween(durationMillis = 1500, easing = FastOutSlowInEasing),
+                    animation = tween(durationMillis = 1500, easing = Motion.standardEase),
                     repeatMode = RepeatMode.Reverse,
                 ),
                 label = "tilt_angle",
@@ -122,11 +121,14 @@ fun NemoMascot(
         MascotExpression.NEUTRAL -> R.drawable.nemo_mascot
     }
 
+    val density = LocalDensity.current
     Box(
         modifier = modifier
             .size(size)
-            .offset(y = bounceOffset.dp)
-            .rotate(tiltAngle)
+            .graphicsLayer {
+                translationY = with(density) { bounceOffset.dp.toPx() }
+                rotationZ = tiltAngle
+            }
             .then(
                 if (isDark) {
                     Modifier
@@ -144,10 +146,10 @@ fun NemoMascot(
             contentDescription = contentDescription,
             modifier = Modifier
                 .fillMaxSize()
-                .scale(
-                    scaleX = 1f,
-                    scaleY = if (isBlinking) 0.18f else 1f,
-                ),
+                .graphicsLayer {
+                    scaleX = 1f
+                    scaleY = if (isBlinking) 0.18f else 1f
+                },
         )
     }
 }

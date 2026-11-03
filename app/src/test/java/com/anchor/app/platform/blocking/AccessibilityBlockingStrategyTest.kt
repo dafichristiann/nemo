@@ -65,6 +65,20 @@ class AccessibilityBlockingStrategyTest {
         assertTrue(engaged)
         assertTrue(state.snapshot().sessionActive)
         assertEquals(setOf("com.tiktok"), state.snapshot().blockedApps)
+        assertEquals(FocusMode.STRICT, state.snapshot().mode)
+    }
+
+    @Test
+    fun engage_withMode_storesSpecifiedMode() = runTest {
+        val state = BlockingState()
+        val s = strategy(FakeGate(), state)
+
+        val engaged = s.engage(setOf("com.tiktok"), FocusMode.GENTLE)
+
+        assertTrue(engaged)
+        assertTrue(state.snapshot().sessionActive)
+        assertEquals(setOf("com.tiktok"), state.snapshot().blockedApps)
+        assertEquals(FocusMode.GENTLE, state.snapshot().mode)
     }
 
     @Test

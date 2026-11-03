@@ -1,13 +1,13 @@
 package com.anchor.app.core.data.repository
 
 import com.anchor.app.core.data.dao.AppSettingsDao
-import com.anchor.app.core.data.entity.AppSettingsEntity
+import com.anchor.app.core.data.mapper.toDomain
+import com.anchor.app.core.data.mapper.toEntity
 import com.anchor.app.core.domain.model.AppSettings
 import com.anchor.app.core.domain.model.FocusArea
 import com.anchor.app.core.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import org.json.JSONArray
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -64,6 +64,21 @@ class SettingsRepositoryImpl @Inject constructor(
         dao.upsert(current.copy(defaultFocusDurationMin = minutes).toEntity())
     }
 
+    override suspend fun setDoomscrollAlertEnabled(enabled: Boolean) {
+        val current = dao.get()?.toDomain() ?: AppSettings()
+        dao.upsert(current.copy(doomscrollAlertEnabled = enabled).toEntity())
+    }
+
+    override suspend fun setDoomscrollThresholdMinutes(minutes: Int) {
+        val current = dao.get()?.toDomain() ?: AppSettings()
+        dao.upsert(current.copy(doomscrollThresholdMinutes = minutes).toEntity())
+    }
+
+    override suspend fun setManualWakeTime(epochDay: Long?, minutes: Int?) {
+        val current = dao.get()?.toDomain() ?: AppSettings()
+        dao.upsert(current.copy(manualWakeTimeEpochDay = epochDay, manualWakeTimeMinutes = minutes).toEntity())
+    }
+
     override suspend fun setLocale(locale: String) {
         val current = get()
         if (current.locale == locale) return
@@ -73,51 +88,4 @@ class SettingsRepositoryImpl @Inject constructor(
     override suspend fun resetAll() {
         dao.clear()
     }
-}
-
-private fun AppSettingsEntity.toDomain(): AppSettings = AppSettings(
-    trackingEnabled = trackingEnabled,
-    aiEnabled = aiEnabled,
-    notificationsEnabled = notificationsEnabled,
-    usageRetentionDays = usageRetentionDays,
-    onboardingCompleted = onboardingCompleted,
-    locale = locale,
-    blockedApps = decodeBlockedApps(blockedAppsJson),
-    focusBlockingEnabled = focusBlockingEnabled,
-    nickname = nickname.orEmpty(),
-    focusArea = decodeFocusArea(focusArea),
-    defaultFocusDurationMin = defaultFocusDurationMin,
-)
-
-private fun AppSettings.toEntity(): AppSettingsEntity = AppSettingsEntity(
-    trackingEnabled = trackingEnabled,
-    aiEnabled = aiEnabled,
-    notificationsEnabled = notificationsEnabled,
-    usageRetentionDays = usageRetentionDays,
-    onboardingCompleted = onboardingCompleted,
-    locale = locale,
-    blockedAppsJson = encodeBlockedApps(blockedApps),
-    focusBlockingEnabled = focusBlockingEnabled,
-    nickname = nickname.ifBlank { null },
-    focusArea = focusArea.name,
-    defaultFocusDurationMin = defaultFocusDurationMin,
-)
-
-/** Parses the stored [FocusArea] name, falling back to the default for unknown values. */
-private fun decodeFocusArea(raw: String): FocusArea =
-    FocusArea.entries.firstOrNull { it.name == raw } ?: FocusArea.COLLEGE
-
-private fun encodeBlockedApps(apps: Set<String>): String? {
-    if (apps.isEmpty()) return null
-    val array = JSONArray()
-    apps.forEach { array.put(it) }
-    return array.toString()
-}
-
-private fun decodeBlockedApps(json: String?): Set<String> {
-    if (json.isNullOrBlank()) return emptySet()
-    return runCatching {
-        val array = JSONArray(json)
-        (0 until array.length()).map { array.getString(it) }.toSet()
-    }.getOrDefault(emptySet())
 }

@@ -95,6 +95,7 @@
     <string name="recurrence_weekly">Weekly</string>
     <string name="add_task_save">Save Task</string>
     <string name="add_task_saving">Saving…</string>
+    <string name="add_task_error_empty_title">Task title cannot be empty</string>
     <string name="task_toast_done">Task completed</string>
     <string name="task_toast_created">Task created</string>
     <string name="task_toast_undo">Undo</string>
@@ -115,6 +116,7 @@
     <!-- 10 Task Detail (07-screens.md §2.14) -->
     <string name="detail_back">Tasks</string>
     <string name="detail_status_in_progress">IN PROGRESS</string>
+    <string name="detail_status_completed">COMPLETED</string>
     <string name="detail_meta_estimated">Estimated: %1$s</string>
     <string name="detail_meta_progress" tools:ignore="PluralsCandidate">Progress: %1$d%% (%2$d of %3$d steps)</string>
     <string name="detail_subtasks_title">Steps</string>
@@ -125,6 +127,8 @@
     <string name="detail_action_todo">Mark as Todo</string>
     <string name="detail_action_complete_via_focus">Start Focus to Complete</string>
     <string name="detail_action_delete">Delete Task</string>
+    <string name="task_delete_confirm_title">Delete task?</string>
+    <string name="task_delete_confirm_body">Are you sure you want to delete this task? This action cannot be undone.</string>
     <string name="detail_future_callout">See what happens if you delay</string>
     <string name="detail_add_subtask">Add step</string>
 
@@ -142,7 +146,7 @@
     <string name="settings_profile_duration_value">%1$d min</string>
     <string name="settings_profile_language_title">Language</string>
     <string name="settings_language_en">English</string>
-    <string name="settings_language_id">Indonesia (Santai)</string>
+    <string name="settings_language_id">Indonesia</string>
 
     <string name="settings_section_privacy">Privacy &amp; AI</string>
     <string name="settings_section_data">Data controls</string>
@@ -151,6 +155,9 @@
     <string name="settings_tracking_subtitle">Collect local screen-time to power Wellbeing.</string>
     <string name="settings_retention_label" tools:ignore="PluralsCandidate">Data retention — keep at most %1$d days</string>
     <string name="settings_delete_all">Delete all data</string>
+    <string name="settings_delete_confirm_title">Delete all data?</string>
+    <string name="settings_delete_confirm_body">This action cannot be undone. All tasks, focus logs, and statistics will be permanently removed.</string>
+    <string name="settings_delete_confirm_action">Delete</string>
     <string name="settings_assurance">Raw usage data never leaves your phone.</string>
 
     <!-- Settings · Permissions (FR-S1, PRD §14) -->
@@ -181,6 +188,11 @@
     <string name="settings_section_focus_blocking">Focus blocking</string>
     <string name="settings_focus_blocking_title">Pause blocked apps (experimental)</string>
     <string name="settings_focus_blocking_subtitle">Requires App blocking access above. Off by default; sessions fall back to Gentle when unavailable.</string>
+    <string name="settings_section_doomscroll">Doomscroll Alert</string>
+    <string name="settings_doomscroll_title">Social Media Time Alert</string>
+    <string name="settings_doomscroll_subtitle">Remind me when browsing limited apps continuously for too long.</string>
+    <string name="settings_doomscroll_duration_title">Session Time Limit</string>
+    <string name="settings_doomscroll_duration_summary" tools:ignore="PluralsCandidate">%1$d minutes per session</string>
     <string name="settings_blocked_desc">Apps to pause during Strict or Custom focus sessions.</string>
     <string name="settings_blocked_empty">No apps blocked yet.</string>
     <string name="settings_blocked_add_hint">Package name (e.g. com.tiktok)</string>
@@ -211,6 +223,9 @@
     <string name="onboarding_privacy_card">All data is stored locally on your phone.</string>
     <string name="onboarding_continue">Continue</string>
     <string name="onboarding_skip_for_now">Skip for now</string>
+    <string name="onboarding_perm_required_dialog_title">Permissions Required</string>
+    <string name="onboarding_perm_required_dialog_message">You must enable all permissions (Usage Access, Notifications, and Accessibility Service) before you can enter and use the app.</string>
+    <string name="onboarding_perm_required_dialog_dismiss">Got it</string>
 
     <!-- 00a Profile setup (new-user fields: nickname · focus area · focus duration) -->
     <string name="onboarding_profile_step">Setup %1$d of %2$d</string>
@@ -224,6 +239,9 @@
     <string name="onboarding_profile_focus_personal">Personal Growth</string>
     <string name="onboarding_profile_duration_label">Focus session length</string>
     <string name="onboarding_profile_duration_value">%1$d min</string>
+    <string name="onboarding_profile_doomscroll_label">Social Media Alert (Optional)</string>
+    <string name="onboarding_profile_doomscroll_desc">Gently remind me after 20 minutes of continuous social browsing.</string>
+    <string name="onboarding_profile_doomscroll_toggle">Enable 20-Min Alert</string>
     <string name="onboarding_profile_continue">Continue</string>
     <string name="onboarding_profile_skip">Skip for now</string>
 
@@ -287,7 +305,8 @@
     <string name="focus_block_overlay_title">Back to focus?</string>
     <string name="focus_block_overlay_body">You asked to pause this app during a focus session. Nemo is just reminding you — the choice is yours.</string>
     <string name="focus_block_overlay_exit_hint">You can always end the session from the focus screen or its notification.</string>
-    <string name="focus_block_overlay_back">Back to focus</string>
+    <string name="focus_block_overlay_back">Back to focus mode</string>
+    <string name="focus_block_overlay_stay">Stay in app</string>
 
     <string name="focus_active_tag">FOCUS</string>
     <string name="focus_active_current_step">Current step</string>
@@ -330,7 +349,7 @@
     <!-- Canvas gamabaran.pen exact tokens -->
     <string name="onboarding_welcome_title_1">Nemo</string>
     <string name="onboarding_welcome_title_2">Focus on what matters.</string>
-    <string name="onboarding_welcome_subtitle">Nemo menyadari saat kamu menjauh dari tugas yang penting — dan membantu kamu kembali secara tenang, tanpa paksaan.</string>
+    <string name="onboarding_welcome_subtitle">Nemo notices when you drift from what matters — and nudges you back calmly, never forcefully.</string>
     <string name="onboarding_welcome_cta">Get Started</string>
     <string name="onboarding_welcome_skip">Skip</string>
     <string name="onboarding_perm_step_indicator">SETUP 2 OF 2</string>
@@ -338,10 +357,10 @@
     <string name="onboarding_perm_headline_2">right away.</string>
 
     <string name="tasks_screen_title">Today\'s Focus</string>
-    <string name="tasks_tab_domino">Domino Chains</string>
+    <string name="tasks_tab_domino">Chains</string>
     <string name="tasks_quick_add_hint">Add a new intention…</string>
     <string name="tasks_shortcut_kbd">⌘K</string>
-    <string name="tasks_domino_anchor">⛓ DOMINO ANCHOR</string>
+    <string name="tasks_domino_anchor">⛓ DOMINO UTAMA</string>
     <string name="tasks_unblocks_prefix">Unblocks: </string>
 
     <string name="wellbeing_micro_tag">ATTENTION ARC &amp; RHYTHM</string>
@@ -361,7 +380,7 @@
     <string name="wellbeing_stat_debt_sub">Optimal (-18m vs avg)</string>
     <string name="wellbeing_stat_frict_lbl">FRICTION DEFLECTIONS</string>
     <string name="wellbeing_stat_frict_val">8 of 9</string>
-    <string name="wellbeing_stat_frict_sub">89% resisted impulse</string>
+    <string name="wellbeing_stat_frict_sub">89%% resisted impulse</string>
     <string name="wellbeing_sync_note">Calibrated to your local chronotype. Zero external analytics.</string>
 
     <string name="intervention_tag_mindful">MINDFUL INTERVENTION</string>
@@ -402,6 +421,7 @@
     <string name="insights_tag_suggestion_gentle">GENTLE SUGGESTION</string>
     <string name="insights_attribution">Generated locally on-device · Private</string>
     <string name="insights_pattern_header">RECURRING PATTERNS</string>
+    <string name="insights_no_patterns">No recurring patterns detected yet.</string>
 
     <string name="settings_p1_granted">Granted</string>
     <string name="settings_p2_off">Off — tap to enable</string>
@@ -432,4 +452,113 @@
     <string name="insights_refresh">Refresh</string>
     <string name="insights_empty_title">Nothing to reflect on yet</string>
     <string name="insights_empty_body">Once you plan or complete a task, your daily reflection will appear here.</string>
+
+    <!-- Additional Extracted UI Strings -->
+    <string name="splash_subtitle">Personal Focus Assistant</string>
+    <string name="blocked_apps_eyebrow">DISTRACTION SHIELD</string>
+    <string name="app_categories_eyebrow">APP ECOSYSTEM</string>
+    <string name="settings_eyebrow">PREFERENCES</string>
+    <string name="settings_retention_title">Data Retention</string>
+
+    <string name="tasks_header_eyebrow">DAILY INTENTION</string>
+    <string name="tasks_summary_progress">%1$d of %2$d completed · %3$d%%</string>
+    <string name="tasks_filter_today_count">Today (%1$d)</string>
+    <string name="tasks_filter_upcoming_count">Upcoming (%1$d)</string>
+    <string name="tasks_badge_domino">DOMINO</string>
+    <string name="tasks_unblocks_sequential">Unblocks: Next sequential action</string>
+    <string name="tasks_progress_percent_format">%1$d%% complete</string>
+    <string name="add_task_subtasks_empty">Subtasks</string>
+
+    <string name="future_default_task_title">Upcoming task</string>
+    <string name="future_buffer_tag">%1$s buffer</string>
+
+    <string name="wellbeing_header_eyebrow">ATTENTION RHYTHM</string>
+    <string name="wellbeing_header_title">Circadian Wellbeing</string>
+    <string name="wellbeing_header_subtitle">Daily mental energy rhythm</string>
+    <string name="wellbeing_capacity_title">Daily Focus Capacity</string>
+    <string name="wellbeing_status_optimal">OPTIMAL</string>
+    <string name="wellbeing_status_adaptive">ADAPTIVE</string>
+    <string name="wellbeing_wake_auto">Wake: %1$s (Auto)</string>
+    <string name="wellbeing_wake_manual">Wake: %1$s (Manual)</string>
+    <string name="wellbeing_edit_wake_time">Edit wake time</string>
+    <string name="wellbeing_pin_now">NOW</string>
+    <string name="focus_rating_prompt">How focused were you?</string>
+    <string name="focus_rating_thank_you">Thanks for your feedback!</string>
+    <string name="wellbeing_peak_window_title">PEAK FOCUS WINDOW</string>
+    <string name="wellbeing_peak_window_desc">Best window for high-focus tasks. Cognition up to 40%% sharper.</string>
+    <string name="wellbeing_insight_tag">NEMO INSIGHT</string>
+    <string name="wellbeing_on_device_pill">ON-DEVICE</string>
+    <string name="wellbeing_rec_quote_morning">“Optimal focus rhythm achieved this morning. Allocate high-focus tasks before energy dips.”</string>
+    <string name="wellbeing_action_schedule_tomorrow">Schedule remaining tasks for tomorrow morning →</string>
+    <string name="wellbeing_stat_screentime_lbl">SCREEN TIME</string>
+    <string name="wellbeing_stat_efficiency_lbl">FOCUS EFFICIENCY</string>
+    <string name="wellbeing_stat_deepwork_sub">%1$.1f hrs deep work</string>
+    <string name="wellbeing_stat_vs_baseline_minus">-%1$s vs baseline</string>
+    <string name="wellbeing_stat_vs_baseline_plus">+%1$s vs baseline</string>
+
+    <string name="focus_setup_eyebrow">INTENTIONAL CALIBRATION</string>
+    <string name="focus_setup_title_header">Focus Session</string>
+    <string name="focus_setup_subtitle_header">Configure your focus environment before starting</string>
+    <string name="focus_section_task">FOCUS ON TASK</string>
+    <string name="focus_task_default">General focus session</string>
+    <string name="focus_task_priority_prefix">Priority: %1$s</string>
+    <string name="focus_task_primary_fallback">Freeform</string>
+    <string name="focus_action_change">Change</string>
+    <string name="focus_section_protection">PROTECTION LEVEL</string>
+    <string name="focus_mode_gentle_card_title">Gentle Awareness</string>
+    <string name="focus_mode_gentle_card_desc">Gentle nudge when you get distracted</string>
+    <string name="focus_mode_strict_card_title">Strict Blocking</string>
+    <string name="focus_mode_strict_card_desc">Distraction apps blocked completely</string>
+    <string name="focus_accessibility_shield_notice">App blocking is handled locally by Android Accessibility Service.</string>
+    <string name="focus_accessibility_enable_link">Enable Accessibility Service for app blocking →</string>
+    <string name="focus_blocked_apps_title">Blocked Apps</string>
+    <string name="focus_blocked_apps_empty">No apps blocked</string>
+    <string name="focus_blocked_apps_count">%1$d apps blocked</string>
+    <string name="focus_action_manage">Manage</string>
+    <string name="focus_section_duration">TARGET DURATION</string>
+    <string name="focus_duration_custom">Custom</string>
+    <string name="focus_circadian_hint">A 45m session aligns with your current optimal focus window.</string>
+    <string name="focus_soundscape_binaural">Binaural Brown Noise (40Hz)</string>
+    <string name="focus_soundscape_lofi_title">Lofi Focus Beats</string>
+    <string name="focus_soundscape_lofi_desc">Calm lofi background beats to deepen deep work concentration.</string>
+    <string name="focus_soundscape_playing">Lofi Focus • Playing</string>
+    <string name="focus_soundscape_muted">Lofi Muted</string>
+    <string name="focus_soundscape_toggle_desc">Toggle lofi soundscape</string>
+    <string name="focus_action_start">Start Focus Session</string>
+    <string name="focus_picker_title">Select Focus Task</string>
+    <string name="focus_picker_empty">No active tasks available.</string>
+    <string name="focus_picker_close">Close</string>
+
+    <string name="focus_active_mode_gentle">GENTLE FLOW</string>
+    <string name="focus_active_single_task_placeholder">Full focus on the main task</string>
+    <string name="focus_active_emergency_unblock">Emergency unblock (Grace 2m)</string>
+    <string name="focus_finish_dialog_title">Finish Session?</string>
+    <string name="focus_finish_dialog_body">Finishing the session will mark this task as completed.</string>
+    <string name="focus_finish_dialog_confirm">Finish</string>
+    <string name="focus_finish_dialog_dismiss">Keep Focusing</string>
+    <string name="focus_exit_dialog_title">Leave Focus Session?</string>
+    <string name="focus_exit_dialog_body">Your session will be paused automatically and can be resumed anytime.</string>
+    <string name="focus_exit_dialog_confirm">Leave</string>
+    <string name="focus_exit_dialog_dismiss">Stay in Session</string>
+
+    <!-- Additional Extracted UI Strings (Dynamic & Component Keys) -->
+    <string name="tasks_meta_low_priority">Low priority</string>
+    <string name="circadian_tag_wake">WAKE</string>
+    <string name="circadian_tag_peak">PEAK</string>
+    <string name="circadian_tag_high">HIGH</string>
+    <string name="circadian_tag_dip">DIP</string>
+    <string name="circadian_tag_focus">FOCUS</string>
+    <string name="circadian_tag_ease">EASE</string>
+    <string name="circadian_tag_wind">WIND</string>
+    <string name="insights_header_eyebrow">DAILY REFLECTION</string>
+    <string name="insights_summary_fallback">Complete focus sessions and tasks to see your daily reflection here.</string>
+    <string name="insights_suggestion_fallback">Plan your highest priority task during your peak energy hours.</string>
+    <string name="intervention_sample_app">App</string>
+    <string name="intervention_sample_task">Focus</string>
+
+    <!-- Continuous doomscroll alert (specs 2026-11-01) -->
+    <string name="doomscroll_overlay_title">Scrolling for %1$d Minutes</string>
+    <string name="doomscroll_overlay_body">Rest your eyes and set down your phone for a moment to clear your mind.</string>
+    <string name="doomscroll_overlay_stop">Stop Scrolling</string>
+    <string name="doomscroll_overlay_snooze">+5 Minutes</string>
 </resources>

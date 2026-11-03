@@ -68,4 +68,38 @@ class RescheduleModelTest {
     fun hoursSet_isSortedAndDistinct() {
         assertEquals(listOf(9, 12, 18, 23), RESCHEDULE_HOURS.sorted())
     }
+
+    @Test
+    fun initialSelection_whenHourIsPastToday_defaultsToTomorrow() {
+        val now = java.time.LocalDateTime.of(2026, 10, 7, 15, 0)
+        val pastDeadline = expected(0, 9)
+        val (day, hour) = initialRescheduleSelection(pastDeadline, today, utc, now)
+        assertEquals(RescheduleDay.TOMORROW, day)
+        assertEquals(9, hour)
+    }
+
+    @Test
+    fun initialSelection_whenHourIsInFutureToday_defaultsToToday() {
+        val now = java.time.LocalDateTime.of(2026, 10, 7, 15, 0)
+        val futureDeadline = expected(0, 18)
+        val (day, hour) = initialRescheduleSelection(futureDeadline, today, utc, now)
+        assertEquals(RescheduleDay.TODAY, day)
+        assertEquals(18, hour)
+    }
+
+    @Test
+    fun initialSelection_whenNullDeadline_defaultsToToday23() {
+        val now = java.time.LocalDateTime.of(2026, 10, 7, 15, 0)
+        val (day, hour) = initialRescheduleSelection(null, today, utc, now)
+        assertEquals(RescheduleDay.TODAY, day)
+        assertEquals(23, hour)
+    }
+
+    @Test
+    fun initialSelection_whenNullDeadlineAndPast23_defaultsToTomorrow23() {
+        val now = java.time.LocalDateTime.of(2026, 10, 7, 23, 30)
+        val (day, hour) = initialRescheduleSelection(null, today, utc, now)
+        assertEquals(RescheduleDay.TOMORROW, day)
+        assertEquals(23, hour)
+    }
 }

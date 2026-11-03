@@ -32,7 +32,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.anchor.app.R
-import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.GeistFamily
 import com.anchor.app.core.design.theme.Motion
 import com.anchor.app.core.design.theme.Nemo
 import com.anchor.app.core.design.theme.NemoTheme
@@ -120,7 +120,7 @@ private fun ListPickerRow(label: String, selected: Boolean, onClick: () -> Unit)
     ) {
         Text(
             text = label,
-            fontFamily = ManropeFamily,
+            fontFamily = GeistFamily,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
             fontSize = 14.sp,
             color = foreground,

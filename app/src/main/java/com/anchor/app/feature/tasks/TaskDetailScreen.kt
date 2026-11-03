@@ -18,9 +18,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -48,8 +52,8 @@ import com.anchor.app.core.design.components.NemoSkeletonRow
 import com.anchor.app.core.design.components.SectionHeader
 import com.anchor.app.core.design.components.nemoShimmer
 import com.anchor.app.core.design.components.pressable
-import com.anchor.app.core.design.theme.FrauncesFamily
-import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.GeistFamily
+import com.anchor.app.core.design.theme.GeistMonoFamily
 import com.anchor.app.core.design.theme.Nemo
 import com.anchor.app.core.design.theme.PillShape
 import com.anchor.app.core.design.theme.Radius
@@ -68,11 +72,17 @@ fun TaskDetailScreen(
     modifier: Modifier = Modifier,
     onStartFocusToComplete: (String) -> Unit = {},
     onOpenFutureView: (String) -> Unit = {},
+    onEditTask: ((String) -> Unit)? = null,
     viewModel: TaskDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val focusManager = LocalFocusManager.current
+    LaunchedEffect(Unit) {
+        focusManager.clearFocus()
+    }
     var newSubtask by remember { mutableStateOf("") }
     var showReschedule by remember { mutableStateOf(false) }
+    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
     val task = state.task
 
     Column(
@@ -103,13 +113,15 @@ fun TaskDetailScreen(
                         )
                         .nemoShimmer(),
                 )
-                Box(
-                    modifier = Modifier
-                        .width(40.dp)
-                        .height(24.dp)
-                        .clip(PillShape)
-                        .nemoShimmer(),
-                )
+                if (onEditTask != null) {
+                    Box(
+                        modifier = Modifier
+                            .width(40.dp)
+                            .height(24.dp)
+                            .clip(PillShape)
+                            .nemoShimmer(),
+                    )
+                }
             }
 
             // Priority bar skeleton
@@ -172,29 +184,31 @@ fun TaskDetailScreen(
                 )
                 Text(
                     text = stringResource(R.string.detail_back),
-                    fontFamily = ManropeFamily,
+                    fontFamily = GeistFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp,
                     color = Nemo.colors.ink,
                 )
             }
-            Text(
-                text = stringResource(R.string.detail_edit),
-                fontFamily = ManropeFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp,
-                color = Nemo.colors.ink,
-                modifier = Modifier
-                    .clip(PillShape)
-                    .pressable(shape = PillShape, onClick = {})
-                    .padding(horizontal = Spacing.x2, vertical = Spacing.x1),
-            )
+            if (onEditTask != null && task != null) {
+                Text(
+                    text = stringResource(R.string.detail_edit),
+                    fontFamily = GeistFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                    color = Nemo.colors.ink,
+                    modifier = Modifier
+                        .clip(PillShape)
+                        .pressable(shape = PillShape, onClick = { onEditTask(task.id) })
+                        .padding(horizontal = Spacing.x2, vertical = Spacing.x1),
+                )
+            }
         }
 
         if (task == null) {
             Text(
                 text = stringResource(R.string.home_empty_title),
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontSize = 14.sp,
                 color = Nemo.colors.mute,
             )
@@ -212,7 +226,7 @@ fun TaskDetailScreen(
 
         Text(
             text = task.title,
-            fontFamily = FrauncesFamily,
+            fontFamily = GeistFamily,
             fontWeight = FontWeight.Normal,
             fontSize = 28.sp,
             lineHeight = 34.sp,
@@ -222,17 +236,21 @@ fun TaskDetailScreen(
 
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.x2)) {
             NemoPill(text = priorityLabel(task.priority), filled = task.priority == TaskPriority.HIGH)
-            NemoPill(text = stringResource(R.string.detail_status_in_progress))
+            NemoPill(
+                text = stringResource(
+                    if (task.isDone) R.string.detail_status_completed else R.string.detail_status_in_progress
+                )
+            )
         }
 
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.x1)) {
             state.deadlineLabel?.let {
-                Text(it, fontFamily = ManropeFamily, fontSize = 13.sp, color = Nemo.colors.mute)
+                Text(it, fontFamily = GeistMonoFamily, fontSize = 13.sp, color = Nemo.colors.mute)
             }
             state.estimatedLabel?.let {
                 Text(
                     text = stringResource(R.string.detail_meta_estimated, it),
-                    fontFamily = ManropeFamily,
+                    fontFamily = GeistMonoFamily,
                     fontSize = 13.sp,
                     color = Nemo.colors.mute,
                 )
@@ -245,7 +263,7 @@ fun TaskDetailScreen(
                         state.doneSubtaskCount,
                         state.subtasks.size,
                     ),
-                    fontFamily = ManropeFamily,
+                    fontFamily = GeistMonoFamily,
                     fontSize = 13.sp,
                     color = Nemo.colors.mute,
                 )
@@ -261,7 +279,7 @@ fun TaskDetailScreen(
         if (state.subtasks.isEmpty()) {
             Text(
                 text = stringResource(R.string.detail_no_subtasks),
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontSize = 13.sp,
                 color = Nemo.colors.placeholder,
             )
@@ -287,7 +305,7 @@ fun TaskDetailScreen(
                         Spacer(modifier = Modifier.width(Spacing.x3))
                         Text(
                             text = if (isActive) "${sub.title} ${stringResource(R.string.detail_active_step_tag)}" else sub.title,
-                            fontFamily = ManropeFamily,
+                            fontFamily = GeistFamily,
                             fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
                             fontSize = 14.sp,
                             color = if (sub.isDone) Nemo.colors.mute else Nemo.colors.ink,
@@ -313,7 +331,7 @@ fun TaskDetailScreen(
                 if (newSubtask.isEmpty()) {
                     Text(
                         text = stringResource(R.string.add_task_subtask_hint),
-                        fontFamily = ManropeFamily,
+                        fontFamily = GeistFamily,
                         fontSize = 13.sp,
                         color = Nemo.colors.placeholder,
                     )
@@ -322,7 +340,7 @@ fun TaskDetailScreen(
                     value = newSubtask,
                     onValueChange = { newSubtask = it },
                     singleLine = true,
-                    textStyle = TextStyle(fontFamily = ManropeFamily, fontSize = 13.sp, color = Nemo.colors.ink),
+                    textStyle = TextStyle(fontFamily = GeistFamily, fontSize = 13.sp, color = Nemo.colors.ink),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -339,7 +357,7 @@ fun TaskDetailScreen(
             ) {
                 Text(
                     text = stringResource(R.string.detail_add_subtask),
-                    fontFamily = ManropeFamily,
+                    fontFamily = GeistFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 12.sp,
                     color = Nemo.colors.onInk,
@@ -364,7 +382,7 @@ fun TaskDetailScreen(
             )
             Text(
                 text = stringResource(R.string.detail_future_callout),
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = 13.sp,
                 color = Nemo.colors.inkSecondary,
@@ -401,10 +419,59 @@ fun TaskDetailScreen(
                 showReschedule = true
             }
             SecondaryAction(stringResource(R.string.detail_action_delete), danger = true) {
-                viewModel.onDelete()
-                onBack()
+                showDeleteConfirmDialog = true
             }
         }
+    }
+
+    if (showDeleteConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmDialog = false },
+            containerColor = Nemo.colors.surface,
+            title = {
+                Text(
+                    text = stringResource(R.string.task_delete_confirm_title),
+                    fontFamily = GeistFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = Nemo.colors.ink,
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.task_delete_confirm_body),
+                    fontFamily = GeistFamily,
+                    fontSize = 13.sp,
+                    color = Nemo.colors.mute,
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteConfirmDialog = false
+                        viewModel.onDelete()
+                        onBack()
+                    },
+                ) {
+                    Text(
+                        text = stringResource(R.string.settings_delete_confirm_action),
+                        fontFamily = GeistFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = Nemo.colors.danger,
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmDialog = false }) {
+                    Text(
+                        text = stringResource(R.string.dialog_cancel),
+                        fontFamily = GeistFamily,
+                        fontWeight = FontWeight.Medium,
+                        color = Nemo.colors.mute,
+                    )
+                }
+            },
+        )
     }
 
     if (showReschedule) {
@@ -438,7 +505,7 @@ private fun SecondaryAction(label: String, danger: Boolean = false, onClick: () 
     ) {
         Text(
             text = label,
-            fontFamily = ManropeFamily,
+            fontFamily = GeistFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 14.sp,
             color = if (danger) Nemo.colors.danger else Nemo.colors.inkSecondary,

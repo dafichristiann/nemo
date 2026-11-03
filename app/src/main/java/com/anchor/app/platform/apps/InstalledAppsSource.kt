@@ -29,7 +29,7 @@ class InstalledAppsSource @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {
 
-    /** Launchable apps, sorted by label, excluding Anchor itself. */
+    /** Launchable apps, sorted by label, excluding Nemo itself. */
     fun launchableApps(): List<InstalledApp> {
         val pm = context.packageManager
         val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)

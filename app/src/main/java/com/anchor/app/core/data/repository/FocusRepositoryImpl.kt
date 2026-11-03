@@ -38,5 +38,10 @@ class FocusRepositoryImpl @Inject constructor(
         fallbackReason: String?,
     ) = dao.updateState(id, status.name, actualDurationMs, endedAt, fallbackReason)
 
+    override suspend fun updateRating(id: String, rating: Int) = dao.updateRating(id, rating)
+
+    override suspend fun getRatedSessionsSince(since: Long): List<FocusSession> =
+        dao.getRatedSessionsSince(since).map { it.toDomain() }
+
     override suspend fun clear() = dao.clear()
 }

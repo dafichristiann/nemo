@@ -10,14 +10,14 @@ import javax.inject.Inject
  * Application entry point.
  *
  * Hilt generates the [dagger.hilt.android.HiltAndroidApp] component from here, which
- * wires the [com.anchor.app.core.di] modules. Anchor is local-first with no backend —
+ * wires the [com.anchor.app.core.di] modules. Nemo is local-first with no backend —
  * nothing is initialised here that requires network access.
  *
  * Implements [Configuration.Provider] so WorkManager can construct `@HiltWorker`s with
  * injected dependencies (docs 02-architecture.md §5).
  */
 @HiltAndroidApp
-class AnchorApp : Application(), Configuration.Provider {
+class NemoApp : Application(), Configuration.Provider {
 
     @Inject
     lateinit var workerFactory: HiltWorkerFactory

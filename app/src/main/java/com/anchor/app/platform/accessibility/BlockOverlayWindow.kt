@@ -44,7 +44,7 @@ internal class BlockOverlayWindow(private val context: Context) {
      * than leaving a blocked app entered with no overlay.
      */
     @SuppressLint("SetTextI18n", "InflateParams")
-    fun show(onBackToFocus: () -> Unit): Boolean {
+    fun show(isGentle: Boolean = false, onBackToFocus: () -> Unit): Boolean {
         if (view != null) return true
 
         val density = context.resources.displayMetrics.density
@@ -92,6 +92,21 @@ internal class BlockOverlayWindow(private val context: Context) {
         }
         val back = Button(context).apply {
             text = context.getString(R.string.focus_block_overlay_back)
+            setTextColor(color(R.color.nemo_on_ink))
+            textSize = 15f
+            typeface = Typeface.DEFAULT_BOLD
+            isAllCaps = false
+            stateListAnimator = null
+            background = GradientDrawable().apply {
+                cornerRadius = dp(24).toFloat()
+                setColor(color(R.color.nemo_ink))
+            }
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(48),
+            ).apply {
+                topMargin = dp(20)
+            }
             setOnClickListener {
                 hide()
                 openFocusScreen()
@@ -99,21 +114,52 @@ internal class BlockOverlayWindow(private val context: Context) {
             }
         }
 
+        val stay = if (isGentle) {
+            Button(context).apply {
+                text = context.getString(R.string.focus_block_overlay_stay)
+                setTextColor(color(R.color.nemo_ink))
+                textSize = 15f
+                typeface = Typeface.DEFAULT_BOLD
+                isAllCaps = false
+                stateListAnimator = null
+                background = GradientDrawable().apply {
+                    cornerRadius = dp(24).toFloat()
+                    setColor(color(R.color.nemo_fog))
+                }
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(48),
+                ).apply {
+                    topMargin = dp(10)
+                }
+                setOnClickListener {
+                    hide()
+                }
+            }
+        } else {
+            null
+        }
+
         card.addView(mascot)
         card.addView(title)
         card.addView(body)
         card.addView(hint)
         card.addView(back)
+        if (stay != null) {
+            card.addView(stay)
+        }
 
         val root = object : LinearLayout(context) {
             override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
                 if (event.keyCode == android.view.KeyEvent.KEYCODE_BACK && event.action == android.view.KeyEvent.ACTION_UP) {
                     hide()
-                    val homeIntent = Intent(Intent.ACTION_MAIN).apply {
-                        addCategory(Intent.CATEGORY_HOME)
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    if (!isGentle) {
+                        val homeIntent = Intent(Intent.ACTION_MAIN).apply {
+                            addCategory(Intent.CATEGORY_HOME)
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        runCatching { context.startActivity(homeIntent) }
                     }
-                    runCatching { context.startActivity(homeIntent) }
                     return true
                 }
                 return super.dispatchKeyEvent(event)
@@ -126,11 +172,13 @@ internal class BlockOverlayWindow(private val context: Context) {
             filterTouchesWhenObscured = true
             setOnClickListener {
                 hide()
-                val homeIntent = Intent(Intent.ACTION_MAIN).apply {
-                    addCategory(Intent.CATEGORY_HOME)
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                if (!isGentle) {
+                    val homeIntent = Intent(Intent.ACTION_MAIN).apply {
+                        addCategory(Intent.CATEGORY_HOME)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    runCatching { context.startActivity(homeIntent) }
                 }
-                runCatching { context.startActivity(homeIntent) }
             }
             card.setOnClickListener { /* consume click so touching card does not dismiss */ }
             addView(
@@ -167,7 +215,7 @@ internal class BlockOverlayWindow(private val context: Context) {
         view = null
     }
 
-    /** Brings Anchor to the foreground on its Focus tab (the active session lives there). */
+    /** Brings Nemo to the foreground on its Focus tab (the active session lives there). */
     private fun openFocusScreen() {
         runCatching {
             val intent = Intent(context, MainActivity::class.java).apply {

@@ -41,4 +41,11 @@ object Motion {
     fun <T> enterSpec() = tween<T>(durationMillis = standard, easing = standardEase)
     fun <T> instantSpec() = tween<T>(durationMillis = instant, easing = standardEase)
     fun <T> progressSpec() = tween<T>(durationMillis = progress, easing = standardEase)
+    fun <T> largeSpec() = tween<T>(durationMillis = large, easing = standardEase)
+
+    /** Calm, non-bouncing spring specification aligned with "no bounce, no shake". */
+    fun <T> calmSpringSpec() = androidx.compose.animation.core.spring<T>(
+        dampingRatio = androidx.compose.animation.core.Spring.DampingRatioNoBouncy,
+        stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow,
+    )
 }

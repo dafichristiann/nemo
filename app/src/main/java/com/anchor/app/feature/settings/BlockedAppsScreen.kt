@@ -22,7 +22,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,7 +41,8 @@ import com.anchor.app.core.design.components.AppIcon
 import com.anchor.app.core.design.components.NemoScreenHeader
 import com.anchor.app.core.design.components.NemoSwitch
 import com.anchor.app.core.design.components.pressable
-import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.GeistFamily
+import com.anchor.app.core.design.theme.GeistMonoFamily
 import com.anchor.app.core.design.theme.Nemo
 import com.anchor.app.core.design.theme.PillShape
 import com.anchor.app.core.design.theme.Radius
@@ -60,12 +63,18 @@ fun BlockedAppsScreen(
     val query by viewModel.appQuery.collectAsStateWithLifecycle()
     val blocked = settings.blockedApps
 
-    // Blocked apps first (so they are easy to find/remove), then the rest alphabetically.
-    // Remembered: sorting the whole installed-app list is O(n log n) and would otherwise re-run on
-    // every recomposition (including each keystroke in the search field).
-    val ordered = remember(apps, blocked) {
+    // Stabilize list order based on initial snapshot so toggling an app does not cause it to jump immediately.
+    var initialBlockedSnapshot by remember { mutableStateOf<Set<String>?>(null) }
+    if (initialBlockedSnapshot == null && apps.isNotEmpty()) {
+        initialBlockedSnapshot = blocked
+    }
+    val sortingBlocked = initialBlockedSnapshot ?: blocked
+
+    // Blocked apps first (based on initial snapshot), then the rest alphabetically.
+    // Stable order prevents jarring list jumps while the user flips switches.
+    val ordered = remember(apps, sortingBlocked) {
         apps.sortedWith(
-            compareByDescending<com.anchor.app.platform.apps.InstalledApp> { it.packageName in blocked }
+            compareByDescending<com.anchor.app.platform.apps.InstalledApp> { it.packageName in sortingBlocked }
                 .thenBy { it.label.lowercase() },
         )
     }
@@ -79,7 +88,7 @@ fun BlockedAppsScreen(
         verticalArrangement = Arrangement.spacedBy(Spacing.x4),
     ) {
         BackHeader(
-            eyebrow = "DISTRACTION SHIELD",
+            eyebrow = stringResource(R.string.blocked_apps_eyebrow),
             title = stringResource(R.string.blocked_title),
             onBack = onBack,
         )
@@ -94,7 +103,7 @@ fun BlockedAppsScreen(
         if (ordered.isEmpty()) {
             Text(
                 text = stringResource(R.string.settings_blocked_no_apps),
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontSize = 13.sp,
                 color = Nemo.colors.mute,
             )
@@ -144,14 +153,14 @@ internal fun AppToggleRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = label,
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = 14.sp,
                 color = Nemo.colors.ink,
             )
             Text(
                 text = packageName,
-                fontFamily = ManropeFamily,
+                fontFamily = GeistMonoFamily,
                 fontSize = 11.sp,
                 color = Nemo.colors.mute,
             )
@@ -190,7 +199,7 @@ internal fun SearchField(query: String, hint: String, onQueryChange: (String) ->
         if (query.isEmpty()) {
             Text(
                 text = hint,
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontSize = 13.sp,
                 color = Nemo.colors.mute,
             )
@@ -199,7 +208,7 @@ internal fun SearchField(query: String, hint: String, onQueryChange: (String) ->
             value = query,
             onValueChange = onQueryChange,
             singleLine = true,
-            textStyle = TextStyle(fontFamily = ManropeFamily, fontSize = 13.sp, color = Nemo.colors.ink),
+            textStyle = TextStyle(fontFamily = GeistFamily, fontSize = 13.sp, color = Nemo.colors.ink),
             modifier = Modifier.fillMaxWidth(),
         )
     }

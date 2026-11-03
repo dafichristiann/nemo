@@ -58,6 +58,15 @@ class FakeFocusRepository : FocusRepository {
         }
     }
 
+    override suspend fun updateRating(id: String, rating: Int) {
+        sessions.value = sessions.value.map {
+            if (it.id == id) it.copy(rating = rating) else it
+        }
+    }
+
+    override suspend fun getRatedSessionsSince(since: Long): List<FocusSession> =
+        sessions.value.filter { it.rating != null && it.startedAt >= since }.sortedBy { it.startedAt }
+
     override suspend fun clear() {
         sessions.value = emptyList()
     }
@@ -68,6 +77,7 @@ class FakeBlockingStrategy(
     private var available: Boolean = false,
 ) : com.anchor.app.core.domain.blocking.BlockingStrategy {
     var engaged: Set<String>? = null
+    var engagedMode: com.anchor.app.core.domain.model.FocusMode? = null
     var released = false
 
     override val effectiveMode: com.anchor.app.core.domain.model.FocusMode
@@ -77,8 +87,15 @@ class FakeBlockingStrategy(
 
     override suspend fun isAvailable(): Boolean = available
 
-    override suspend fun engage(packages: Set<String>): Boolean {
+    override suspend fun engage(packages: Set<String>): Boolean =
+        engage(packages, effectiveMode)
+
+    override suspend fun engage(
+        packages: Set<String>,
+        mode: com.anchor.app.core.domain.model.FocusMode,
+    ): Boolean {
         engaged = packages
+        engagedMode = mode
         return available
     }
 

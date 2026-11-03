@@ -32,7 +32,7 @@ import com.anchor.app.core.data.entity.UsageSessionEntity
 import com.anchor.app.core.data.entity.WeeklyUsageSummaryEntity
 
 /**
- * Anchor's Room database — the single source of truth (docs 02-architecture.md §0).
+ * Nemo's Room database — the single source of truth (docs 02-architecture.md §0).
  *
  * Schema versioning (docs 03-database-schema.md §9):
  *  - v1: `app_settings` (Sprint 0)
@@ -48,6 +48,8 @@ import com.anchor.app.core.data.entity.WeeklyUsageSummaryEntity
  *  - v11: `focus_session.plannedDurationMin` → `plannedDurationSec` (second-precise focus durations)
  *  - v12: + `app_settings.nickname`, `focusArea`, `defaultFocusDurationMin` (onboarding profile)
  *  - v13: unique index on `task_instance(definitionId, definitionOccurrenceDate)` (FR-T7 no double instance)
+ *  - v14: + `app_settings.doomscrollAlertEnabled`, `doomscrollThresholdMinutes` (continuous doomscroll alert)
+ *  - v15: + `focus_session.rating`, `app_settings.manualWakeTimeEpochDay`, `manualWakeTimeMinutes` (Adaptive Circadian)
  *
  * `exportSchema = true` writes JSON schema files to `app/schemas` (KSP `room.schemaLocation`).
  * Migrations are explicit; there is no destructive fallback.
@@ -68,10 +70,10 @@ import com.anchor.app.core.data.entity.WeeklyUsageSummaryEntity
         TaskDependencyEntity::class,
         InsightEntity::class,
     ],
-    version = 13,
+    version = 15,
     exportSchema = true,
 )
-abstract class AnchorDatabase : RoomDatabase() {
+abstract class NemoDatabase : RoomDatabase() {
     abstract fun appSettingsDao(): AppSettingsDao
     abstract fun taskDefinitionDao(): TaskDefinitionDao
     abstract fun taskDao(): TaskDao
@@ -87,14 +89,14 @@ abstract class AnchorDatabase : RoomDatabase() {
     abstract fun insightDao(): InsightDao
 
     companion object {
-        const val NAME = "anchor.db"
+        const val NAME = "nemo.db"
 
         /** Current schema version (mirrors the `@Database(version = ...)` above). */
-        const val VERSION = 13
+        const val VERSION = 15
 
         /** All migration steps, in order — used by tests and by [DatabaseModule]. */
         val ALL_MIGRATIONS: Array<Migration>
-            get() = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
+            get() = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15)
 
         /** v1 → v2: add the Phase-1 task tables (docs 03 §2). */
         val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -455,6 +457,27 @@ abstract class AnchorDatabase : RoomDatabase() {
                     "CREATE UNIQUE INDEX IF NOT EXISTS `index_task_instance_definitionId_definitionOccurrenceDate` " +
                         "ON `task_instance`(`definitionId`, `definitionOccurrenceDate`)",
                 )
+            }
+        }
+
+        /**
+         * v13 → v14: continuous doomscroll alert toggle and threshold minutes.
+         */
+        val MIGRATION_13_14 = object : Migration(13, 14) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `app_settings` ADD COLUMN `doomscrollAlertEnabled` INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE `app_settings` ADD COLUMN `doomscrollThresholdMinutes` INTEGER NOT NULL DEFAULT 20")
+            }
+        }
+
+        /**
+         * v14 → v15: + focus_session.rating, app_settings.manualWakeTimeEpochDay & manualWakeTimeMinutes (Adaptive Circadian).
+         */
+        val MIGRATION_14_15 = object : Migration(14, 15) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `focus_session` ADD COLUMN `rating` INTEGER DEFAULT NULL")
+                db.execSQL("ALTER TABLE `app_settings` ADD COLUMN `manualWakeTimeEpochDay` INTEGER DEFAULT NULL")
+                db.execSQL("ALTER TABLE `app_settings` ADD COLUMN `manualWakeTimeMinutes` INTEGER DEFAULT NULL")
             }
         }
     }

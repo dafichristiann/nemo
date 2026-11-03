@@ -41,14 +41,14 @@ class InterventionEngine @Inject constructor(
      * the chosen level+channel, or a [Suppress] with the reason (no quota consumed).
      *
      * [notificationPermissionGranted] selects the channel (FR-I3): Notification when allowed,
-     * else In-app. [userInsideAnchor] suppresses notifications while the user is already in-app
-     * for the *same* context (PRD edge case "User sedang di dalam Anchor").
+     * else In-app. [userInsideNemo] suppresses notifications while the user is already in-app
+     * for the *same* context (PRD edge case "User sedang di dalam Nemo").
      */
     suspend fun evaluate(
         signal: DriftSignal?,
         now: Long = timeProvider.nowMillis(),
         notificationPermissionGranted: Boolean = true,
-        userInsideAnchor: Boolean = false,
+        userInsideNemo: Boolean = false,
     ): InterventionDecision {
         if (signal == null) return InterventionDecision.Suppress(SuppressReason.NO_DRIFT)
 
@@ -68,8 +68,8 @@ class InterventionEngine @Inject constructor(
             return InterventionDecision.Suppress(SuppressReason.COOLDOWN)
         }
 
-        // Don't interrupt the user with a notification for the same context while they're in Anchor.
-        if (userInsideAnchor) {
+        // Don't interrupt the user with a notification for the same context while they're in Nemo.
+        if (userInsideNemo) {
             return InterventionDecision.Suppress(SuppressReason.USER_IN_APP)
         }
 

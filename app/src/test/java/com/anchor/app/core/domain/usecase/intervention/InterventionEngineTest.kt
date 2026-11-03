@@ -104,10 +104,10 @@ class InterventionEngineTest {
     }
 
     @Test
-    fun userInsideAnchor_isSuppressed() = runTest {
+    fun userInsideNemo_isSuppressed() = runTest {
         val tasks = FakeTaskRepository().apply { insert(task()) }
         val decision = engine(FakeInterventionRepository(), tasks)
-            .evaluate(signal(), userInsideAnchor = true)
+            .evaluate(signal(), userInsideNemo = true)
         assertEquals(InterventionDecision.Suppress(SuppressReason.USER_IN_APP), decision)
     }
 

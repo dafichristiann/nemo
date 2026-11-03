@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -59,6 +60,7 @@ data class TasksUiState(
     val overdueCount: Int = 0,
     val todayCount: Int = 0,
     val upcomingCount: Int = 0,
+    val todayCompletedCount: Int = 0,
     val today: java.time.LocalDate = java.time.LocalDate.now(),
     val zone: java.time.ZoneId = java.time.ZoneId.systemDefault(),
     /** User's preferred name for the personalized greeting; blank = plain greeting. */
@@ -90,24 +92,33 @@ class TasksViewModel @Inject constructor(
     private val inFlightTaskToggles = mutableSetOf<String>()
 
     val uiState: StateFlow<TasksUiState> = combine(
-        filter.flatMapLatest { observeTasks(it) },
+        filter.flatMapLatest { f ->
+            observeTasks(f).map { tasks -> f to tasks }
+        },
         observeOverdue(),
-        filter,
         settingsRepository.observe(),
         combine(
             observeTasks(TaskFilter.TODAY),
             observeTasks(TaskFilter.UPCOMING),
-        ) { today, upcoming -> today to upcoming },
-    ) { tasks, overdue, currentFilter, settings, (todayTasks, upcomingTasks) ->
+            taskRepository.observeCompleted().map { completed ->
+                val now = timeProvider.nowMillis()
+                val start = timeProvider.startOfDayMillis(now)
+                val end = timeProvider.endOfDayMillis(now)
+                completed.count {
+                    val completedAt = it.completedAt
+                    completedAt != null && completedAt >= start && completedAt < end
+                }
+            },
+        ) { today, upcoming, todayCompleted -> Triple(today, upcoming, todayCompleted) },
+    ) { (currentFilter, tasks), overdue, settings, (todayTasks, upcomingTasks, todayCompleted) ->
         val now = timeProvider.nowMillis()
         val zone = timeProvider.zoneId()
         // Overdue tasks get their own section, so they must NOT also appear in the normal list.
         // (Overdue = deadline already passed, per user rule.) The Completed view keeps everything.
         val overdueIds = overdue.map { it.id }.toSet()
-        val visibleTasks = if (currentFilter == TaskFilter.COMPLETED) {
-            tasks
-        } else {
-            tasks.filterNot { it.id in overdueIds }
+        val visibleTasks = when (currentFilter) {
+            TaskFilter.COMPLETED, TaskFilter.OVERDUE -> tasks
+            else -> tasks.filterNot { it.id in overdueIds }
         }
         val visibleTodayTasks = todayTasks.filterNot { it.id in overdueIds }
         TasksUiState(
@@ -118,6 +129,7 @@ class TasksViewModel @Inject constructor(
             overdueCount = overdue.size,
             todayCount = visibleTodayTasks.size,
             upcomingCount = upcomingTasks.size,
+            todayCompletedCount = todayCompleted,
             today = timeProvider.today(),
             zone = zone,
             nickname = settings.nickname,
@@ -166,6 +178,7 @@ class TasksViewModel @Inject constructor(
         category: String?,
         subtaskTitles: List<String>,
         recurrenceRule: RecurrenceRule,
+        createdMessage: String = "Task created",
         onResult: (CreateTaskResult) -> Unit,
     ) {
         viewModelScope.launch(dispatchers.io) {
@@ -183,7 +196,7 @@ class TasksViewModel @Inject constructor(
             )
             if (result is CreateTaskResult.Success) {
                 _toast.value = TaskToast(
-                    message = "Task created",
+                    message = createdMessage,
                     actionLabel = null,
                     taskId = result.taskId,
                 )

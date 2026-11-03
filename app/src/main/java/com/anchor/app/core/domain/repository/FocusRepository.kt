@@ -33,5 +33,9 @@ interface FocusRepository {
         fallbackReason: String?,
     )
 
+    suspend fun updateRating(id: String, rating: Int)
+
+    suspend fun getRatedSessionsSince(since: Long): List<FocusSession>
+
     suspend fun clear()
 }

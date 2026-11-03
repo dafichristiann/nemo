@@ -35,6 +35,8 @@ interface TaskRepository {
 
     fun observeCompletedCount(): Flow<Int>
 
+    fun observeTodayCompletedCount(startOfDay: Long, endOfDay: Long): Flow<Int>
+
     fun observeOpenCount(): Flow<Int>
 
     suspend fun getById(id: String): Task?

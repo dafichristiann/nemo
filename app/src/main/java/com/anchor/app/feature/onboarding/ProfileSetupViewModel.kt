@@ -43,4 +43,12 @@ class ProfileSetupViewModel @Inject constructor(
     fun onSelectDuration(minutes: Int) = viewModelScope.launch(dispatchers.io) {
         settingsRepository.setDefaultFocusDurationMin(minutes)
     }
+
+    fun onToggleDoomscroll(enabled: Boolean) = viewModelScope.launch(dispatchers.io) {
+        settingsRepository.setDoomscrollAlertEnabled(enabled)
+    }
+
+    fun onSelectDoomscrollThreshold(minutes: Int) = viewModelScope.launch(dispatchers.io) {
+        settingsRepository.setDoomscrollThresholdMinutes(minutes)
+    }
 }

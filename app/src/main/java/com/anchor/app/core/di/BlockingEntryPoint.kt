@@ -7,7 +7,7 @@ import dagger.hilt.components.SingletonComponent
 
 /**
  * Hilt entry point for components that are **not** Hilt-injectable base classes — notably
- * [com.anchor.app.platform.accessibility.AnchorAccessibilityService], which extends
+ * [com.anchor.app.platform.accessibility.NemoAccessibilityService], which extends
  * `AccessibilityService` (unsupported by `@AndroidEntryPoint`). The service reaches
  * [BlockingState] through this seam instead.
  */

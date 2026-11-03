@@ -129,6 +129,17 @@ interface TaskDao {
     @Query(
         """
         SELECT COUNT(*) FROM task_instance
+        WHERE status = 'DONE'
+          AND completedAt IS NOT NULL
+          AND completedAt >= :startOfDay
+          AND completedAt < :endOfDay
+        """
+    )
+    fun observeTodayCompletedCount(startOfDay: Long, endOfDay: Long): Flow<Int>
+
+    @Query(
+        """
+        SELECT COUNT(*) FROM task_instance
         WHERE status IN ('TODO','IN_PROGRESS')
         """,
     )

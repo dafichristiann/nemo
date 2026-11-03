@@ -2,7 +2,7 @@ package com.anchor.app.core.di
 
 import android.content.Context
 import androidx.room.Room
-import com.anchor.app.core.data.AnchorDatabase
+import com.anchor.app.core.data.NemoDatabase
 import com.anchor.app.core.data.dao.AppCategoryDao
 import com.anchor.app.core.data.dao.AppSettingsDao
 import com.anchor.app.core.data.dao.DailyUsageSummaryDao
@@ -35,62 +35,62 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideAnchorDatabase(
+    fun provideNemoDatabase(
         @ApplicationContext context: Context,
-    ): AnchorDatabase = Room.databaseBuilder(
+    ): NemoDatabase = Room.databaseBuilder(
         context,
-        AnchorDatabase::class.java,
-        AnchorDatabase.NAME,
+        NemoDatabase::class.java,
+        NemoDatabase.NAME,
     )
-        .addMigrations(*AnchorDatabase.ALL_MIGRATIONS)
+        .addMigrations(*NemoDatabase.ALL_MIGRATIONS)
         .build()
 
     @Provides
-    fun provideAppSettingsDao(database: AnchorDatabase): AppSettingsDao =
+    fun provideAppSettingsDao(database: NemoDatabase): AppSettingsDao =
         database.appSettingsDao()
 
     @Provides
-    fun provideTaskDao(database: AnchorDatabase): TaskDao = database.taskDao()
+    fun provideTaskDao(database: NemoDatabase): TaskDao = database.taskDao()
 
     @Provides
-    fun provideTaskDefinitionDao(database: AnchorDatabase): TaskDefinitionDao =
+    fun provideTaskDefinitionDao(database: NemoDatabase): TaskDefinitionDao =
         database.taskDefinitionDao()
 
     @Provides
-    fun provideSubtaskDao(database: AnchorDatabase): SubtaskDao = database.subtaskDao()
+    fun provideSubtaskDao(database: NemoDatabase): SubtaskDao = database.subtaskDao()
 
     @Provides
-    fun provideRescheduleEventDao(database: AnchorDatabase): RescheduleEventDao =
+    fun provideRescheduleEventDao(database: NemoDatabase): RescheduleEventDao =
         database.rescheduleEventDao()
 
     @Provides
-    fun provideUsageSessionDao(database: AnchorDatabase): UsageSessionDao =
+    fun provideUsageSessionDao(database: NemoDatabase): UsageSessionDao =
         database.usageSessionDao()
 
     @Provides
-    fun provideDailyUsageSummaryDao(database: AnchorDatabase): DailyUsageSummaryDao =
+    fun provideDailyUsageSummaryDao(database: NemoDatabase): DailyUsageSummaryDao =
         database.dailyUsageSummaryDao()
 
     @Provides
-    fun provideWeeklyUsageSummaryDao(database: AnchorDatabase): WeeklyUsageSummaryDao =
+    fun provideWeeklyUsageSummaryDao(database: NemoDatabase): WeeklyUsageSummaryDao =
         database.weeklyUsageSummaryDao()
 
     @Provides
-    fun provideAppCategoryDao(database: AnchorDatabase): AppCategoryDao =
+    fun provideAppCategoryDao(database: NemoDatabase): AppCategoryDao =
         database.appCategoryDao()
 
     @Provides
-    fun provideInterventionLogDao(database: AnchorDatabase): InterventionLogDao =
+    fun provideInterventionLogDao(database: NemoDatabase): InterventionLogDao =
         database.interventionLogDao()
 
     @Provides
-    fun provideFocusSessionDao(database: AnchorDatabase): FocusSessionDao =
+    fun provideFocusSessionDao(database: NemoDatabase): FocusSessionDao =
         database.focusSessionDao()
 
     @Provides
-    fun provideTaskDependencyDao(database: AnchorDatabase): TaskDependencyDao =
+    fun provideTaskDependencyDao(database: NemoDatabase): TaskDependencyDao =
         database.taskDependencyDao()
 
     @Provides
-    fun provideInsightDao(database: AnchorDatabase): InsightDao = database.insightDao()
+    fun provideInsightDao(database: NemoDatabase): InsightDao = database.insightDao()
 }

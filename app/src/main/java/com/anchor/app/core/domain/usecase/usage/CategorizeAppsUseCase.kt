@@ -46,8 +46,12 @@ object AppCategories {
         else -> DISTRACTION_DEFAULTS[packageName] ?: OTHER
     }
 
-    /** Whether a package is a distraction by default (false for productive/unknown). */
-    fun defaultIsDistraction(packageName: String): Boolean = packageName in DISTRACTION_DEFAULTS
+    /** Whether a package is a distraction by default (only true for explicit distraction packages). */
+    fun defaultIsDistraction(packageName: String): Boolean = when {
+        packageName in PRODUCTIVE_DEFAULTS || defaultCategory(packageName) == PRODUCTIVE -> false
+        packageName in DISTRACTION_DEFAULTS || defaultCategory(packageName) in setOf(SOCIAL, ENTERTAINMENT) -> true
+        else -> false
+    }
 }
 
 /**

@@ -24,6 +24,6 @@ interface BlockingGate {
      */
     suspend fun isToggleOnNow(): Boolean = isToggleOn()
 
-    /** True while the Anchor AccessibilityService is enabled in the OS. */
+    /** True while the Nemo AccessibilityService is enabled in the OS. */
     fun isServiceEnabled(): Boolean
 }

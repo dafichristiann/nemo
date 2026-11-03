@@ -1,5 +1,6 @@
 package com.anchor.app.platform.blocking
 
+import com.anchor.app.core.domain.model.FocusMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -21,6 +22,18 @@ class BlockingStateTest {
         val snap = state.snapshot()
         assertTrue(snap.sessionActive)
         assertEquals(setOf("com.tiktok", "com.instagram"), snap.blockedApps)
+        assertEquals(FocusMode.STRICT, snap.mode)
+    }
+
+    @Test
+    fun engage_withGentleMode_storesGentleMode() {
+        val state = BlockingState()
+        state.engage(setOf("com.tiktok"), FocusMode.GENTLE)
+
+        val snap = state.snapshot()
+        assertTrue(snap.sessionActive)
+        assertEquals(setOf("com.tiktok"), snap.blockedApps)
+        assertEquals(FocusMode.GENTLE, snap.mode)
     }
 
     @Test

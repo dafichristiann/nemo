@@ -32,7 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -41,13 +41,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.anchor.app.R
 import com.anchor.app.core.design.components.NemoBottomSheet
+import com.anchor.app.core.design.components.NemoSheetHeader
 import com.anchor.app.core.design.components.NemoSwitch
 import com.anchor.app.core.design.components.PrimaryButton
 import com.anchor.app.core.design.components.SegmentedChips
 import com.anchor.app.core.design.components.WheelPickerDialog
 import com.anchor.app.core.design.components.minTouchTarget
 import com.anchor.app.core.design.components.pressable
-import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.GeistFamily
+import com.anchor.app.core.design.theme.GeistMonoFamily
 import com.anchor.app.core.design.theme.Motion
 import com.anchor.app.core.design.theme.Nemo
 import com.anchor.app.core.design.theme.PillShape
@@ -114,38 +116,16 @@ fun AddTaskSheet(
             verticalArrangement = Arrangement.spacedBy(Spacing.x4),
         ) {
             // Header: title + close
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(R.string.add_task_title),
-                    fontFamily = ManropeFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
-                    color = Nemo.colors.ink,
-                )
-                Icon(
-                    painter = painterResource(R.drawable.ic_close),
-                    contentDescription = stringResource(R.string.cd_close_sheet),
-                    tint = Nemo.colors.mute,
-                    modifier = Modifier
-                        .minTouchTarget()
-                        .clip(CircleShape)
-                        .pressable(
-                            shape = CircleShape,
-                            enabled = !isSubmitting,
-                            onClick = { if (!isSubmitting) onDismiss() },
-                        )
-                        .padding(Spacing.x2),
-                )
-            }
+            NemoSheetHeader(
+                title = stringResource(R.string.add_task_title),
+                onClose = onDismiss,
+                isClosingEnabled = !isSubmitting,
+            )
 
             Field(
                 value = title,
                 onValueChange = { title = it },
-                hint = "Task title…",
+                hint = stringResource(R.string.add_task_field_title_hint),
                 enabled = !isSubmitting,
             )
             Field(
@@ -181,7 +161,7 @@ fun AddTaskSheet(
                 ) {
                     Text(
                         text = stringResource(R.string.add_task_deadline_label),
-                        fontFamily = ManropeFamily,
+                        fontFamily = GeistFamily,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 13.sp,
                         color = Nemo.colors.inkSecondary,
@@ -208,7 +188,7 @@ fun AddTaskSheet(
                     ) {
                         Text(
                             text = displayText,
-                            fontFamily = ManropeFamily,
+                            fontFamily = if (deadlineHours != null) GeistMonoFamily else GeistFamily,
                             fontSize = 13.sp,
                             color = if (deadlineHours == null) Nemo.colors.placeholder else Nemo.colors.ink,
                             maxLines = 1,
@@ -238,8 +218,8 @@ fun AddTaskSheet(
                     verticalArrangement = Arrangement.spacedBy(Spacing.x2),
                 ) {
                     Text(
-                        text = "Est. Duration",
-                        fontFamily = ManropeFamily,
+                        text = stringResource(R.string.add_task_duration_label),
+                        fontFamily = GeistFamily,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 13.sp,
                         color = Nemo.colors.inkSecondary,
@@ -272,7 +252,7 @@ fun AddTaskSheet(
                     ) {
                         Text(
                             text = displayText,
-                            fontFamily = ManropeFamily,
+                            fontFamily = if (durationMinutes != null) GeistMonoFamily else GeistFamily,
                             fontSize = 13.sp,
                             color = if (durationMinutes == null) Nemo.colors.placeholder else Nemo.colors.ink,
                             maxLines = 1,
@@ -300,7 +280,7 @@ fun AddTaskSheet(
 
             // Direct Subtasks list matching canvas vrE9D
             LabeledSection(
-                if (subtasks.isEmpty()) "Subtasks" else "Subtasks (${subtasks.size})"
+                if (subtasks.isEmpty()) stringResource(R.string.add_task_subtasks_empty) else stringResource(R.string.add_task_subtasks_label, subtasks.size)
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
                     subtasks.forEachIndexed { index, sub ->
@@ -314,7 +294,7 @@ fun AddTaskSheet(
                         ) {
                             Text(
                                 text = sub,
-                                fontFamily = ManropeFamily,
+                                fontFamily = GeistFamily,
                                 fontSize = 13.sp,
                                 color = Nemo.colors.ink,
                                 modifier = Modifier.weight(1f),
@@ -352,7 +332,7 @@ fun AddTaskSheet(
                         ) {
                             Text(
                                 text = stringResource(R.string.add_task_subtask_add),
-                                fontFamily = ManropeFamily,
+                                fontFamily = GeistFamily,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 13.sp,
                                 color = Nemo.colors.ink,
@@ -391,8 +371,8 @@ fun AddTaskSheet(
 
             if (error is CreateTaskResult.EmptyTitle) {
                 Text(
-                    text = stringResource(R.string.home_empty_title),
-                    fontFamily = ManropeFamily,
+                    text = stringResource(R.string.add_task_error_empty_title),
+                    fontFamily = GeistFamily,
                     fontSize = 12.sp,
                     color = Nemo.colors.danger,
                 )
@@ -409,8 +389,13 @@ fun AddTaskSheet(
                     val draft = TaskDraft(
                         title = title.trim(),
                         description = description.trim().ifEmpty { null },
-                        deadline = deadlineHours?.let {
-                            java.time.LocalDateTime.of(today, java.time.LocalTime.of(it, 0))
+                        deadline = deadlineHours?.let { hour ->
+                            val targetDate = if (today == java.time.LocalDate.now(zone) && java.time.LocalTime.now(zone).hour >= hour) {
+                                today.plusDays(1)
+                            } else {
+                                today
+                            }
+                            java.time.LocalDateTime.of(targetDate, java.time.LocalTime.of(hour, 0))
                                 .atZone(zone)
                                 .toInstant().toEpochMilli()
                         },
@@ -451,7 +436,7 @@ private fun MoreToggle(expanded: Boolean, onToggle: () -> Unit) {
     ) {
         Text(
             text = stringResource(R.string.add_task_more),
-            fontFamily = ManropeFamily,
+            fontFamily = GeistFamily,
             fontWeight = FontWeight.SemiBold,
             fontSize = 14.sp,
             color = Nemo.colors.inkSecondary,
@@ -467,7 +452,7 @@ private fun MoreToggle(expanded: Boolean, onToggle: () -> Unit) {
             tint = Nemo.colors.mute,
             modifier = Modifier
                 .size(16.dp)
-                .rotate(rotation + 270f),
+                .graphicsLayer { rotationZ = rotation + 270f },
         )
     }
 }
@@ -477,7 +462,7 @@ private fun LabeledSection(label: String, content: @Composable () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
         Text(
             text = label,
-            fontFamily = ManropeFamily,
+            fontFamily = GeistFamily,
             fontWeight = FontWeight.SemiBold,
             fontSize = 12.sp,
             color = Nemo.colors.mute,
@@ -506,7 +491,7 @@ private fun Field(
         if (value.isEmpty()) {
             Text(
                 text = hint,
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontSize = 14.sp,
                 color = Nemo.colors.placeholder,
             )
@@ -517,7 +502,7 @@ private fun Field(
             enabled = enabled,
             singleLine = true,
             textStyle = TextStyle(
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontSize = 14.sp,
                 color = if (enabled) Nemo.colors.ink else Nemo.colors.mute,
             ),
@@ -534,7 +519,7 @@ fun ToggleRow(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Uni
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(text = label, fontFamily = ManropeFamily, fontSize = 14.sp, color = Nemo.colors.ink)
+        Text(text = label, fontFamily = GeistFamily, fontSize = 14.sp, color = Nemo.colors.ink)
         NemoSwitch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }

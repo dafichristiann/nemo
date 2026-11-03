@@ -18,7 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.GeistFamily
 import com.anchor.app.core.design.theme.Nemo
 import com.anchor.app.core.design.theme.NemoTheme
 import com.anchor.app.core.design.theme.PillShape
@@ -56,7 +56,7 @@ fun NemoFloatingToast(
     ) {
         Text(
             text = message,
-            style = MaterialTheme.typography.bodyMedium.copy(fontFamily = ManropeFamily),
+            style = MaterialTheme.typography.bodyMedium.copy(fontFamily = GeistFamily),
             color = Nemo.colors.onInk,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
@@ -66,7 +66,7 @@ fun NemoFloatingToast(
             Spacer(modifier = Modifier.width(Spacing.x3))
             Text(
                 text = actionLabel,
-                style = MaterialTheme.typography.labelLarge.copy(fontFamily = ManropeFamily),
+                style = MaterialTheme.typography.labelLarge.copy(fontFamily = GeistFamily),
                 color = Nemo.colors.fog,
                 modifier = Modifier
                     .pressable(

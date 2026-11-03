@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Nemo adaptive launcher icon. The background colour is theme-aware (white in light, near-black
-  in dark via values-night). The foreground is the Nemo mark (mipmap density buckets), plus a
+  Nemo adaptive launcher icon. The background colour is white. Themed icons are handled via the
+  monochrome layer. The foreground is the Nemo mark (mipmap density buckets), plus a
   monochrome layer for Android 13+ themed icons (design-spec.md §2).
 -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">

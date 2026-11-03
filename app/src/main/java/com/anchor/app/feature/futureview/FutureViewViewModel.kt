@@ -16,7 +16,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import java.time.ZoneId
 import javax.inject.Inject
@@ -58,31 +59,25 @@ class FutureViewViewModel @Inject constructor(
     val cycleMessage: StateFlow<Boolean> = _cycleMessage.asStateFlow()
 
     init {
-        viewModelScope.launch(dispatchers.io) { load() }
-    }
-
-    private suspend fun load() {
-        val task = taskRepository.getById(taskId)
-        val domino = computeDomino(taskId)
-        _uiState.value = FutureViewUiState(
-            task = task,
-            futureView = task?.let { futureViewCalculator(it) },
-            domino = domino,
-            zone = timeProvider.zoneId(),
-            loading = false,
-            linkCandidates = linkCandidatesFor(taskId, domino),
-        )
-    }
-
-    /**
-     * Open tasks the user may link this task to (PRD §10.7): every non-done task except this
-     * one and any already on the dependency chain. Keeps the picker short and prevents the
-     * most obvious cycles before they are attempted.
-     */
-    private suspend fun linkCandidatesFor(taskId: String, domino: DominoEffect?): List<Task> {
-        val onChain = domino?.let { listOf(it.root.taskId) + it.affected.map { n -> n.taskId } }.orEmpty().toSet()
-        return taskRepository.observeAll().first()
-            .filter { it.id != taskId && it.id !in onChain }
+        viewModelScope.launch(dispatchers.io) {
+            combine(
+                taskRepository.observeById(taskId).distinctUntilChanged(),
+                dependencyRepository.observeAll().distinctUntilChanged(),
+                taskRepository.observeAll().distinctUntilChanged(),
+            ) { task, _, allTasks ->
+                val domino = computeDomino(taskId)
+                val onChain = domino?.let { listOf(it.root.taskId) + it.affected.map { n -> n.taskId } }.orEmpty().toSet()
+                val linkCandidates = allTasks.filter { it.id != taskId && it.id !in onChain }
+                FutureViewUiState(
+                    task = task,
+                    futureView = task?.let { futureViewCalculator(it) },
+                    domino = domino,
+                    zone = timeProvider.zoneId(),
+                    loading = false,
+                    linkCandidates = linkCandidates,
+                )
+            }.collect { _uiState.value = it }
+        }
     }
 
     /** Adds `taskId → otherId`, surfacing a cycle rejection message (PRD §10.7 AC). */
@@ -90,8 +85,6 @@ class FutureViewViewModel @Inject constructor(
         val result = dependencyRepository.add(fromTaskId = taskId, toTaskId = otherTaskId)
         if (result is TaskDependencyRepository.AddDependencyResult.Cycle) {
             _cycleMessage.value = true
-        } else {
-            load()
         }
     }
 

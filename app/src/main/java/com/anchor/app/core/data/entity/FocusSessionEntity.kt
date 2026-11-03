@@ -27,4 +27,5 @@ data class FocusSessionEntity(
     val status: String,
     val blockedAppsJson: String?,
     val fallbackReason: String?,
+    val rating: Int? = null,
 )

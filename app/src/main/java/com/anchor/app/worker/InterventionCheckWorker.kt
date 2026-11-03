@@ -32,12 +32,12 @@ class InterventionCheckWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result = runCatching {
         val signal = detectDrift()
-        // The worker runs in the background, so the user is not inside Anchor; the channel is
+        // The worker runs in the background, so the user is not inside Nemo; the channel is
         // picked from notification availability (falls back to in-app when denied).
         val decision = engine.evaluate(
             signal,
             notificationPermissionGranted = notificationPermissions.canPostNotifications(),
-            userInsideAnchor = false,
+            userInsideNemo = false,
         )
         dispatcher.dispatch(decision)
         Result.success()

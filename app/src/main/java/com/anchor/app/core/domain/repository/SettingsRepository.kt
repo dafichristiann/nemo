@@ -22,6 +22,12 @@ interface SettingsRepository {
     suspend fun setFocusArea(area: FocusArea)
     /** Persists the default focus-session length in minutes (25/45/60). */
     suspend fun setDefaultFocusDurationMin(minutes: Int)
+    /** Toggle the continuous doomscroll alert feature. */
+    suspend fun setDoomscrollAlertEnabled(enabled: Boolean) {}
+    /** Update continuous scrolling alert threshold in minutes (10/15/20/30/45). */
+    suspend fun setDoomscrollThresholdMinutes(minutes: Int) {}
+    /** Set manual wake time override for a given date. */
+    suspend fun setManualWakeTime(epochDay: Long?, minutes: Int?) {}
     suspend fun setLocale(locale: String)
     /** Erase all user data (PRD §10.10 "delete all data"). */
     suspend fun resetAll()

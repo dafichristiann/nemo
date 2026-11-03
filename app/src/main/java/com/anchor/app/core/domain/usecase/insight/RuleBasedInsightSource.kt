@@ -18,22 +18,42 @@ class RuleBasedInsightSource @Inject constructor() : InsightSource {
     override suspend fun generate(payload: InsightPayload): InsightDraft {
         val patterns = mutableListOf<String>()
         val suggestions = mutableListOf<String>()
+        val isIndonesian = java.util.Locale.getDefault().language.let { it == "in" || it == "id" }
 
         // --- Tasks (always available) ---
-        val taskSummary = when {
-            payload.tasksPlanned == 0 -> "No tasks were planned today."
-            payload.tasksCompleted == 0 -> "You planned ${payload.tasksPlanned} task(s) but haven't completed any yet — that's okay."
-            payload.tasksCompleted >= payload.tasksPlanned ->
-                "You completed all ${payload.tasksPlanned} of today's tasks."
-            else -> "You completed ${payload.tasksCompleted} of ${payload.tasksPlanned} tasks today."
+        val taskSummary = if (isIndonesian) {
+            when {
+                payload.tasksPlanned == 0 -> "Belum ada rencana tugas untuk hari ini."
+                payload.tasksCompleted == 0 -> "Ada ${payload.tasksPlanned} tugas yang direncanakan dan siap kamu mulai."
+                payload.tasksCompleted >= payload.tasksPlanned ->
+                    "Luar biasa, kamu telah menyelesaikan semua ${payload.tasksPlanned} tugas hari ini."
+                else -> "Kamu telah menuntaskan ${payload.tasksCompleted} dari ${payload.tasksPlanned} tugas hari ini."
+            }
+        } else {
+            when {
+                payload.tasksPlanned == 0 -> "No tasks were planned today."
+                payload.tasksCompleted == 0 -> "You planned ${payload.tasksPlanned} task(s) but haven't completed any yet — that's okay."
+                payload.tasksCompleted >= payload.tasksPlanned ->
+                    "You completed all ${payload.tasksPlanned} of today's tasks."
+                else -> "You completed ${payload.tasksCompleted} of ${payload.tasksPlanned} tasks today."
+            }
         }
+
         if (payload.tasksPlanned > 0 && payload.tasksCompleted < payload.tasksPlanned) {
-            suggestions += "Tomorrow, start your hardest task within your first productive window."
+            suggestions += if (isIndonesian) {
+                "Besok, coba mulai tugas tersulitmu pada jendela waktu paling fokus."
+            } else {
+                "Tomorrow, start your hardest task within your first productive window."
+            }
         }
 
         // --- Focus time ---
         if (payload.focusTimeMs > 0) {
-            patterns += "You logged ${formatMinutes(payload.focusTimeMs)} of focused time today."
+            patterns += if (isIndonesian) {
+                "Kamu mencatat ${formatMinutes(payload.focusTimeMs, isIndonesian)} waktu fokus hari ini."
+            } else {
+                "You logged ${formatMinutes(payload.focusTimeMs)} of focused time today."
+            }
         }
 
         // --- Screen time (only when we actually have usage data; never a misleading zero) ---
@@ -41,18 +61,34 @@ class RuleBasedInsightSource @Inject constructor() : InsightSource {
         if (hasUsage) {
             val distraction = payload.longestDistractionMs
             if (distraction != null && distraction >= NOTABLE_DISTRACTION_MS) {
-                val label = payload.topDistractionCategory ?: "a distraction app"
-                patterns += "Your longest distraction session was ${formatMinutes(distraction)} on $label."
-                suggestions += "Consider a short focus session before opening $label next time."
+                val label = payload.topDistractionCategory ?: if (isIndonesian) "aplikasi distraksi" else "a distraction app"
+                patterns += if (isIndonesian) {
+                    "Distraksi terpanjangmu berlangsung ${formatMinutes(distraction, isIndonesian)} pada $label."
+                } else {
+                    "Your longest distraction session was ${formatMinutes(distraction)} on $label."
+                }
+                suggestions += if (isIndonesian) {
+                    "Coba mulai sesi fokus singkat sebelum membuka $label lain kali."
+                } else {
+                    "Consider a short focus session before opening $label next time."
+                }
             }
             if (payload.screenTimeMs!! > payload.focusTimeMs * SCREEN_TO_FOCUS_ALERT) {
-                patterns += "Screen time was much higher than focus time today."
+                patterns += if (isIndonesian) {
+                    "Waktu layar tampak jauh lebih tinggi daripada waktu fokus hari ini."
+                } else {
+                    "Screen time was much higher than focus time today."
+                }
             }
         }
 
         if (payload.productiveHours.isNotEmpty()) {
             val hours = payload.productiveHours.sorted().joinToString(", ") { "%02d:00".format(it) }
-            patterns += "You were most productive around $hours."
+            patterns += if (isIndonesian) {
+                "Kamu paling produktif di sekitar jam $hours."
+            } else {
+                "You were most productive around $hours."
+            }
         }
 
         // --- Risk level: low by default; never alarmist (PRD: awareness, not fear) ---
@@ -65,7 +101,11 @@ class RuleBasedInsightSource @Inject constructor() : InsightSource {
         // --- Recommended action: offer focus only when there is something to focus on. ---
         val recommendedAction = if (payload.tasksCompleted < payload.tasksPlanned) "start_focus" else null
         if (payload.tasksCompleted < payload.tasksPlanned) {
-            suggestions += "A 25-minute session is a gentle way to make progress."
+            suggestions += if (isIndonesian) {
+                "Sesi 25 menit adalah langkah santai untuk mulai mencicil kemajuan."
+            } else {
+                "A 25-minute session is a gentle way to make progress."
+            }
         }
 
         return InsightDraft(
@@ -77,14 +117,22 @@ class RuleBasedInsightSource @Inject constructor() : InsightSource {
         )
     }
 
-    private fun formatMinutes(ms: Long): String {
+    private fun formatMinutes(ms: Long, isIndonesian: Boolean = false): String {
         val total = ms / 60_000L
         val h = total / 60
         val m = total % 60
-        return when {
-            h > 0 && m > 0 -> "${h}h ${m}m"
-            h > 0 -> "${h}h"
-            else -> "${m}m"
+        return if (isIndonesian) {
+            when {
+                h > 0 && m > 0 -> "${h}j ${m}m"
+                h > 0 -> "${h}j"
+                else -> "${m}m"
+            }
+        } else {
+            when {
+                h > 0 && m > 0 -> "${h}h ${m}m"
+                h > 0 -> "${h}h"
+                else -> "${m}m"
+            }
         }
     }
 

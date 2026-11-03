@@ -34,6 +34,7 @@ class FinishFocusUseCase @Inject constructor(
         sessionId: String,
         elapsedMs: Long,
         aborted: Boolean = false,
+        forceCompleteTask: Boolean = false,
     ): FinishFocusResult {
         val session = focusRepository.getById(sessionId)
         val status = if (aborted) FocusStatus.ABORTED else FocusStatus.FINISHED
@@ -49,12 +50,11 @@ class FinishFocusUseCase @Inject constructor(
         )
         runCatching { blockingStrategy.release() }
 
-        // PRD §10.1 "Effort-based Completion [LOCKED v0.5]":
-        // A task is only marked DONE when the focus session is completed in full (verified).
-        // Early finishes or emergency exits (aborted) record the session duration but do not mark the task done.
+        // A task is marked DONE if completed in full (verified) OR explicitly finished by the user (forceCompleteTask).
+        // Emergency exits (aborted) never complete the task.
         val taskId = session?.taskId
         val verified = !aborted && isFocusVerified(duration, session?.plannedDurationSec)
-        val completed = taskId != null && verified
+        val completed = taskId != null && (!aborted && (verified || forceCompleteTask))
         if (completed) {
             taskRepository.markDone(taskId!!, now, CompletionSource.VERIFIED)
         }

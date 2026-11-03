@@ -25,7 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.GeistMonoFamily
 import com.anchor.app.core.design.theme.Nemo
 import com.anchor.app.core.design.theme.NemoTheme
 import com.anchor.app.core.design.theme.Radius
@@ -44,7 +44,7 @@ private const val VisibleRows = 5
  *
  * Values scroll vertically; the row resting under the fixed center highlight is the selection.
  * There is deliberately **no keyboard / text field** — the only input is the scroll gesture,
- * matching the calm, deterministic feel of the rest of Anchor. When the scroll settles, the row
+ * matching the calm, deterministic feel of the rest of Nemo. When the scroll settles, the row
  * nearest the center is reported via [onSelect].
  *
  * @param values ordered options (top → bottom).
@@ -120,7 +120,7 @@ fun <T> WheelPicker(
                 ) {
                     Text(
                         text = formatValue(value),
-                        fontFamily = ManropeFamily,
+                        fontFamily = GeistMonoFamily,
                         fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                         fontSize = if (selected) 20.sp else 15.sp,
                         textAlign = TextAlign.Center,

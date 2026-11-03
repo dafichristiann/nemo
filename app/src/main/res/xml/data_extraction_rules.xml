@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   Cloud backup / device-transfer of app data stays OFF (09-privacy §5).
-  Anchor is local-first; user data must never leave the device via backup.
+  Nemo is local-first; user data must never leave the device via backup.
 -->
 <data-extraction-rules>
     <cloud-backup>

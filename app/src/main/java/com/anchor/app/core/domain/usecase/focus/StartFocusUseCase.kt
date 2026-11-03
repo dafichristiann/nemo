@@ -38,10 +38,14 @@ class StartFocusUseCase @Inject constructor(
         var fallbackReason: String? = null
 
         if (mode == FocusMode.STRICT || mode == FocusMode.CUSTOM) {
-            val engaged = blockingStrategy.isAvailable() && blockingStrategy.engage(blockedApps)
+            val engaged = blockingStrategy.isAvailable() && blockingStrategy.engage(blockedApps, mode)
             if (!engaged) {
                 effectiveMode = FocusMode.GENTLE
                 fallbackReason = REASON_BLOCKING_UNAVAILABLE
+            }
+        } else if (mode == FocusMode.GENTLE) {
+            if (blockingStrategy.isAvailable()) {
+                blockingStrategy.engage(blockedApps, FocusMode.GENTLE)
             }
         }
 
@@ -55,7 +59,7 @@ class StartFocusUseCase @Inject constructor(
                 startedAt = now,
                 endedAt = null,
                 status = FocusStatus.ACTIVE,
-                blockedApps = if (effectiveMode == FocusMode.GENTLE) emptyList() else blockedApps.toList(),
+                blockedApps = blockedApps.toList(),
                 fallbackReason = fallbackReason,
             ),
         )

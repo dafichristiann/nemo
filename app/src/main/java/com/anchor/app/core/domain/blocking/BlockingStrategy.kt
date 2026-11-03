@@ -30,7 +30,12 @@ interface BlockingStrategy {
      * Requests that [packages] be blocked for the session. Returns true when blocking is active;
      * false when the caller must fall back to [FocusMode.GENTLE] (record the reason).
      */
-    suspend fun engage(packages: Set<String>): Boolean
+    suspend fun engage(packages: Set<String>): Boolean = engage(packages, effectiveMode)
+
+    /**
+     * Overload accepting an explicit [mode] to enforce on the session.
+     */
+    suspend fun engage(packages: Set<String>, mode: FocusMode): Boolean = engage(packages)
 
     /** Releases any blocking engaged for the current session. Must be safe to call twice. */
     suspend fun release()

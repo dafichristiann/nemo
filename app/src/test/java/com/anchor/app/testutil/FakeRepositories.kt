@@ -52,6 +52,16 @@ class FakeTaskRepository : TaskRepository {
     override fun observeCompletedCount(): Flow<Int> =
         tasks.map { list -> list.count { it.status == TaskStatus.DONE } }
 
+    override fun observeTodayCompletedCount(startOfDay: Long, endOfDay: Long): Flow<Int> =
+        tasks.map { list ->
+            list.count {
+                it.status == TaskStatus.DONE &&
+                    it.completedAt != null &&
+                    it.completedAt!! >= startOfDay &&
+                    it.completedAt!! < endOfDay
+            }
+        }
+
     override fun observeOpenCount(): Flow<Int> =
         tasks.map { list -> list.count { it.status in OPEN } }
 

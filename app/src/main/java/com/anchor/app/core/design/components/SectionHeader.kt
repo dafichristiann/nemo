@@ -11,7 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.GeistFamily
 import com.anchor.app.core.design.theme.Nemo
 import com.anchor.app.core.design.theme.Spacing
 
@@ -34,7 +34,7 @@ fun SectionHeader(
     ) {
         Text(
             text = title,
-            fontFamily = ManropeFamily,
+            fontFamily = GeistFamily,
             fontWeight = FontWeight.SemiBold,
             fontSize = 12.sp,
             letterSpacing = 1.sp,

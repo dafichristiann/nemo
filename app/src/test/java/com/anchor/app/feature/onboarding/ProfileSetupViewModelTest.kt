@@ -72,10 +72,34 @@ class ProfileSetupViewModelTest {
     }
 
     @Test
+    fun onToggleDoomscroll_persistsEnabled() = runTest(dispatcher) {
+        val vm = viewModel()
+        assertEquals(false, settings.state.value.doomscrollAlertEnabled)
+        vm.onToggleDoomscroll(true)
+        advanceUntilIdle()
+        assertEquals(true, settings.state.value.doomscrollAlertEnabled)
+        vm.onToggleDoomscroll(false)
+        advanceUntilIdle()
+        assertEquals(false, settings.state.value.doomscrollAlertEnabled)
+    }
+
+    @Test
+    fun onSelectDoomscrollThreshold_persistsMinutes() = runTest(dispatcher) {
+        val vm = viewModel()
+        assertEquals(20, settings.state.value.doomscrollThresholdMinutes)
+        vm.onSelectDoomscrollThreshold(30)
+        advanceUntilIdle()
+        assertEquals(30, settings.state.value.doomscrollThresholdMinutes)
+    }
+
+    @Test
     fun defaults_areCollegeAnd25Minutes() {
         // New users start on the safe defaults the onboarding chips preselect.
         assertEquals(FocusArea.COLLEGE, AppSettings().focusArea)
         assertEquals(25, AppSettings().defaultFocusDurationMin)
         assertEquals(listOf(25, 45, 60), AppSettings.FOCUS_DURATION_OPTIONS_MIN)
+        assertEquals(false, AppSettings().doomscrollAlertEnabled)
+        assertEquals(20, AppSettings().doomscrollThresholdMinutes)
+        assertEquals(listOf(10, 15, 20, 30, 45), AppSettings.DOOMSCROLL_THRESHOLD_OPTIONS_MIN)
     }
 }

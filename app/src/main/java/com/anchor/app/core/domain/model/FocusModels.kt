@@ -26,4 +26,5 @@ data class FocusSession(
     val status: FocusStatus,
     val blockedApps: List<String>,
     val fallbackReason: String?,
+    val rating: Int? = null,
 )

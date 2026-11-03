@@ -10,8 +10,8 @@ import org.junit.Test
  */
 class AccessibilityStatusListTest {
 
-    private val full = "com.anchor.app/com.anchor.app.platform.accessibility.AnchorAccessibilityService"
-    private val short = "com.anchor.app/.platform.accessibility.AnchorAccessibilityService"
+    private val full = "com.anchor.app/com.anchor.app.platform.accessibility.NemoAccessibilityService"
+    private val short = "com.anchor.app/.platform.accessibility.NemoAccessibilityService"
 
     @Test
     fun fullForm_present_isListed() {

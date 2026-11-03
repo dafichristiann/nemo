@@ -17,7 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
-import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.GeistFamily
 import com.anchor.app.core.design.theme.Nemo
 
 /**
@@ -59,7 +59,7 @@ fun AppIcon(
         ) {
             Text(
                 text = fallbackLabel.take(1).uppercase(),
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
                 color = Nemo.colors.inkSecondary,

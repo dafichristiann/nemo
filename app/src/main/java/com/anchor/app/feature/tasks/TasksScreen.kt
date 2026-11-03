@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -13,10 +12,11 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -68,9 +69,10 @@ import com.anchor.app.core.design.components.NemoPill
 import com.anchor.app.core.design.components.NemoScreenHeader
 import com.anchor.app.core.design.components.NemoSkeletonRow
 import com.anchor.app.core.design.components.NemoTaskRow
-import com.anchor.app.core.design.components.minTouchTarget
+import com.anchor.app.core.design.components.ProgressTrack
 import com.anchor.app.core.design.components.pressable
-import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.GeistFamily
+import com.anchor.app.core.design.theme.GeistMonoFamily
 import com.anchor.app.core.design.theme.Motion
 import com.anchor.app.core.design.theme.Nemo
 import com.anchor.app.core.design.theme.NemoTheme
@@ -159,20 +161,20 @@ fun TasksScreen(
             }
 
             item {
-                // Derive the summary once per relevant change instead of scanning the list
-                // inside the `item {}` lambda on every recomposition.
-                val completedCount = remember(state.rows) { state.rows.count { it.task.isDone } }
+                val totalTasks = if (state.filter == TaskFilter.TODAY) {
+                    state.todayCompletedCount + state.todayCount
+                } else {
+                    state.rows.size + state.overdueRows.size
+                }
                 SummaryCard(
-                    completed = completedCount,
-                    total = state.rows.size + state.overdueRows.size,
+                    completed = state.todayCompletedCount,
+                    total = totalTasks,
                 )
             }
 
             item {
                 FilterSegmented(
                     selected = state.filter,
-                    todayCount = state.todayCount,
-                    upcomingCount = state.upcomingCount,
                     onSelect = viewModel::setFilter,
                 )
             }
@@ -281,9 +283,9 @@ fun TasksScreen(
                     category = draft.category,
                     subtaskTitles = draft.subtasks,
                     recurrenceRule = draft.recurrence,
+                    createdMessage = taskCreatedMessage,
                 ) { result ->
                     if (result is com.anchor.app.core.domain.usecase.task.CreateTaskResult.Success) {
-                        viewModel.showToast(taskCreatedMessage)
                         showAddSheet = false
                     }
                     onDone(result)
@@ -344,11 +346,6 @@ private fun HomeHeader(onOpenSettings: () -> Unit) {
 private fun SummaryCard(completed: Int, total: Int) {
     val fraction = if (total == 0) 0f else completed.toFloat() / total
     val percent = Math.round(fraction * 100f)
-    val animatedFraction by animateFloatAsState(
-        targetValue = fraction,
-        animationSpec = Motion.standardSpec(),
-        label = "summary-progress",
-    )
 
     Column(
         modifier = Modifier
@@ -357,29 +354,16 @@ private fun SummaryCard(completed: Int, total: Int) {
         verticalArrangement = Arrangement.spacedBy(Spacing.x2),
     ) {
         Text(
-            text = "$completed of $total completed · $percent%",
-            fontFamily = ManropeFamily,
+            text = stringResource(R.string.tasks_summary_progress, completed, total, percent),
+            fontFamily = GeistMonoFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 12.sp,
             color = Nemo.colors.mute,
         )
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(3.dp)
-                .clip(RoundedCornerShape(1.5.dp))
-                .background(Nemo.colors.fog),
-        ) {
-            if (animatedFraction > 0f) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(animatedFraction)
-                        .height(3.dp)
-                        .clip(RoundedCornerShape(1.5.dp))
-                        .background(Nemo.colors.ink),
-                )
-            }
-        }
+        ProgressTrack(
+            progress = fraction,
+            trackHeight = 3.dp,
+        )
     }
 }
 
@@ -390,56 +374,82 @@ private fun SummaryCard(completed: Int, total: Int) {
 @Composable
 private fun FilterSegmented(
     selected: TaskFilter,
-    todayCount: Int = 0,
-    upcomingCount: Int = 0,
     onSelect: (TaskFilter) -> Unit,
 ) {
     val tabs = listOf(
-        TaskFilter.TODAY to "Today ($todayCount)",
-        TaskFilter.UPCOMING to "Upcoming ($upcomingCount)",
+        TaskFilter.TODAY to stringResource(R.string.task_filter_today),
+        TaskFilter.UPCOMING to stringResource(R.string.task_filter_upcoming),
         TaskFilter.OVERDUE to stringResource(R.string.tasks_tab_domino),
         TaskFilter.COMPLETED to stringResource(R.string.task_filter_completed),
     )
-    Row(
+    val selectedIndex = tabs.indexOfFirst { it.first == selected }.coerceAtLeast(0)
+
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
+            .clip(RoundedCornerShape(12.dp))
             .background(Nemo.colors.surface)
-            .border(1.dp, Nemo.colors.line, RoundedCornerShape(10.dp))
-            .padding(3.dp)
-            .horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .border(1.dp, Nemo.colors.line, RoundedCornerShape(12.dp))
+            .padding(4.dp),
     ) {
-        tabs.forEach { (filter, labelText) ->
-            val isSelected = filter == selected
-            val bg by animateColorAsState(
-                targetValue = if (isSelected) Nemo.colors.fog else Color.Transparent,
-                animationSpec = Motion.standardSpec(),
-                label = "tab-bg",
-            )
-            val fg by animateColorAsState(
-                targetValue = if (isSelected) Nemo.colors.ink else Nemo.colors.mute,
-                animationSpec = Motion.standardSpec(),
-                label = "tab-fg",
-            )
-            Box(
-                modifier = Modifier
-                    .height(28.dp)
-                    .clip(RoundedCornerShape(7.dp))
-                    .background(bg)
-                    .pressable(onClick = { onSelect(filter) })
-                    .padding(horizontal = Spacing.x3),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = labelText,
-                    fontFamily = ManropeFamily,
-                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                    fontSize = 12.sp,
-                    color = fg,
-                    maxLines = 1,
+        val spacing = 4.dp
+        val tabWidth = (maxWidth - spacing * (tabs.size - 1)) / tabs.size
+        val indicatorOffset by animateDpAsState(
+            targetValue = (tabWidth + spacing) * selectedIndex,
+            animationSpec = Motion.standardSpec(),
+            label = "tab-indicator-offset",
+        )
+
+        // Single animated sliding indicator
+        Box(
+            modifier = Modifier
+                .offset(x = indicatorOffset)
+                .width(tabWidth)
+                .height(36.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(Nemo.colors.fog),
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(spacing),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            tabs.forEach { (filter, labelText) ->
+                val isSelected = filter == selected
+                val fg by animateColorAsState(
+                    targetValue = if (isSelected) Nemo.colors.ink else Nemo.colors.mute,
+                    animationSpec = Motion.standardSpec(),
+                    label = "tab-fg",
                 )
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(36.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = {
+                                if (!isSelected) {
+                                    onSelect(filter)
+                                }
+                            },
+                        )
+                        .padding(horizontal = 4.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = labelText,
+                        fontFamily = GeistFamily,
+                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                        fontSize = 13.sp,
+                        color = fg,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
         }
     }
@@ -465,8 +475,8 @@ private fun TaskCardRow(
         null
     }
 
-    val meta = if (!isDone && row.task.priority == TaskPriority.LOW) {
-        "Low priority · 15m · Optional"
+    val meta = if (!isDone && row.deadlineLabel != null) {
+        row.metaLabel
     } else {
         null
     }
@@ -483,9 +493,9 @@ private fun TaskCardRow(
         trailing = {
             if (!isDone) {
                 if (row.task.priority == TaskPriority.HIGH) {
-                    NemoPill(text = "HIGH", filled = true)
+                    NemoPill(text = stringResource(R.string.task_priority_high), filled = true)
                 } else if (isDomino) {
-                    NemoPill(text = "DOMINO", filled = true)
+                    NemoPill(text = stringResource(R.string.tasks_badge_domino), filled = true)
                 }
             }
         },
@@ -506,7 +516,7 @@ private fun TaskCardRow(
                         ) {
                             Text(
                                 text = timeLabel,
-                                fontFamily = ManropeFamily,
+                                fontFamily = GeistMonoFamily,
                                 fontWeight = FontWeight.Normal,
                                 fontSize = 11.sp,
                                 color = Nemo.colors.mute,
@@ -533,8 +543,8 @@ private fun TaskCardRow(
                             modifier = Modifier.size(14.dp),
                         )
                         Text(
-                            text = "Unblocks: Next sequential action",
-                            fontFamily = ManropeFamily,
+                            text = stringResource(R.string.tasks_unblocks_sequential),
+                            fontFamily = GeistFamily,
                             fontSize = 11.sp,
                             color = Nemo.colors.inkSecondary,
                             maxLines = 1,
@@ -551,8 +561,8 @@ private fun TaskCardRow(
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Text(
-                            text = "${row.task.progressPercent}% complete",
-                            fontFamily = ManropeFamily,
+                            text = stringResource(R.string.tasks_progress_percent_format, row.task.progressPercent),
+                            fontFamily = GeistMonoFamily,
                             fontSize = 11.sp,
                             color = Nemo.colors.mute,
                         )
@@ -608,7 +618,7 @@ private fun QuickAddBar(onClick: () -> Unit, modifier: Modifier = Modifier) {
             )
             Text(
                 text = stringResource(R.string.tasks_quick_add_hint),
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontWeight = FontWeight.Normal,
                 fontSize = 13.sp,
                 color = Nemo.colors.mute,
@@ -622,7 +632,7 @@ private fun QuickAddBar(onClick: () -> Unit, modifier: Modifier = Modifier) {
         ) {
             Text(
                 text = stringResource(R.string.tasks_shortcut_kbd),
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 11.sp,
                 color = Nemo.colors.mute,
@@ -670,7 +680,7 @@ private fun OverdueBanner(count: Int, onReview: () -> Unit, onDismiss: () -> Uni
     Banner {
         Text(
             text = title,
-            fontFamily = ManropeFamily,
+            fontFamily = GeistFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 14.sp,
             color = Nemo.colors.inkSecondary,
@@ -686,7 +696,7 @@ private fun OverdueBanner(count: Int, onReview: () -> Unit, onDismiss: () -> Uni
             ) {
                 Text(
                     text = stringResource(R.string.overdue_banner_review),
-                    fontFamily = ManropeFamily,
+                    fontFamily = GeistFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 13.sp,
                     color = Nemo.colors.ink,
@@ -737,7 +747,7 @@ private fun SmallAction(label: String, onClick: () -> Unit) {
     ) {
         Text(
             text = label,
-            fontFamily = ManropeFamily,
+            fontFamily = GeistFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 12.sp,
             color = Nemo.colors.inkSecondary,
@@ -761,7 +771,7 @@ private fun EmptyState() {
         )
         Text(
             text = stringResource(R.string.home_empty_title),
-            fontFamily = ManropeFamily,
+            fontFamily = GeistFamily,
             fontWeight = FontWeight.SemiBold,
             fontSize = 16.sp,
             color = Nemo.colors.ink,
@@ -769,7 +779,7 @@ private fun EmptyState() {
         )
         Text(
             text = stringResource(R.string.home_empty_body),
-            fontFamily = ManropeFamily,
+            fontFamily = GeistFamily,
             fontWeight = FontWeight.Normal,
             fontSize = 13.sp,
             color = Nemo.colors.mute,

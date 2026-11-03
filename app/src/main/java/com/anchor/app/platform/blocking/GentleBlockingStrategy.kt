@@ -26,6 +26,8 @@ class GentleBlockingStrategy @Inject constructor() : BlockingStrategy {
 
     override suspend fun engage(packages: Set<String>): Boolean = false
 
+    override suspend fun engage(packages: Set<String>, mode: FocusMode): Boolean = false
+
     override suspend fun release() {
         // Nothing is ever blocked in Gentle mode — safe no-op (idempotent by contract).
     }

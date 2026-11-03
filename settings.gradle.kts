@@ -20,5 +20,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Anchor"
+rootProject.name = "Nemo"
 include(":app")

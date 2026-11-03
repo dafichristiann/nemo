@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -40,8 +41,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.anchor.app.R
 import com.anchor.app.core.design.components.PrimaryButton
 import com.anchor.app.core.design.components.pressable
-import com.anchor.app.core.design.theme.FrauncesFamily
-import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.GeistFamily
+import com.anchor.app.core.design.theme.GeistMonoFamily
 import com.anchor.app.core.design.theme.Motion
 import com.anchor.app.core.design.theme.Nemo
 import com.anchor.app.core.design.theme.PillShape
@@ -54,12 +55,15 @@ import com.anchor.app.core.domain.model.InterventionLevel
  * (docs/superpowers/design/07-screens.md §2.8, 04-intervention-engine.md §6).
  *
  * Shown when the engine delivered through the in-app channel (e.g. notification permission
- * denied) or the user is inside Anchor. Offers [Start Focus] / [Later] and a plain dismiss —
+ * denied) or the user is inside Nemo. Offers [Start Focus] / [Later] and a plain dismiss —
  * awareness, never a command. Tapping the scrim dismisses without a cooldown.
  */
 @Composable
 fun InterventionOverlay(
     modifier: Modifier = Modifier,
+    targetAppPackage: String? = null,
+    activeTaskTitle: String? = null,
+    remainingMinutes: Int? = null,
     onNavigateToFocus: (taskId: String?) -> Unit = {},
     viewModel: InterventionViewModel = hiltViewModel(),
 ) {
@@ -70,8 +74,8 @@ fun InterventionOverlay(
     // AnimatedVisibility so dismissal animates out too.
     AnimatedVisibility(
         visible = visible != null,
-        enter = fadeIn(tween(Motion.standard, easing = Motion.standardEase)),
-        exit = fadeOut(tween(Motion.fast)),
+        enter = fadeIn(Motion.standardSpec()),
+        exit = fadeOut(Motion.instantSpec()),
     ) {
         Box(
             modifier = modifier
@@ -86,13 +90,13 @@ fun InterventionOverlay(
             AnimatedVisibility(
                 visible = visible != null,
                 enter = slideInVertically(
-                    animationSpec = tween(Motion.large, easing = Motion.enterEase),
+                    animationSpec = Motion.largeSpec(),
                     initialOffsetY = { it / 4 },
-                ) + fadeIn(tween(Motion.standard)),
+                ) + fadeIn(Motion.standardSpec()),
                 exit = slideOutVertically(
-                    animationSpec = tween(Motion.fast),
+                    animationSpec = Motion.standardSpec(),
                     targetOffsetY = { it / 4 },
-                ) + fadeOut(tween(Motion.fast)),
+                ) + fadeOut(Motion.instantSpec()),
             ) {
                 val v = visible ?: return@AnimatedVisibility
                 Column(
@@ -126,7 +130,7 @@ fun InterventionOverlay(
                         )
                         Text(
                             text = stringResource(R.string.intervention_tag_mindful),
-                            fontFamily = ManropeFamily,
+                            fontFamily = GeistMonoFamily,
                             fontWeight = FontWeight.Bold,
                             fontSize = 10.sp,
                             letterSpacing = 0.8.sp,
@@ -170,14 +174,14 @@ fun InterventionOverlay(
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
                                     text = stringResource(R.string.intervention_breath_seconds),
-                                    fontFamily = FrauncesFamily,
+                                    fontFamily = GeistMonoFamily,
                                     fontWeight = FontWeight.Light,
                                     fontSize = 18.sp,
                                     color = Nemo.colors.ink,
                                 )
                                 Text(
                                     text = stringResource(R.string.intervention_breath_cue),
-                                    fontFamily = ManropeFamily,
+                                    fontFamily = GeistFamily,
                                     fontSize = 8.sp,
                                     color = Nemo.colors.mute,
                                 )
@@ -188,20 +192,39 @@ fun InterventionOverlay(
                     // Main Headline & Subheadline
                     Text(
                         text = stringResource(R.string.intervention_headline),
-                        fontFamily = FrauncesFamily,
+                        fontFamily = GeistFamily,
                         fontWeight = FontWeight.Normal,
                         fontSize = 22.sp,
                         color = Nemo.colors.ink,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     )
+                    val context = LocalContext.current
+                    val rawAppName = targetAppPackage
+                        ?: v.targetAppPackage?.takeIf { it.isNotBlank() }
+                    val appName = rawAppName?.let { pkg ->
+                        runCatching {
+                            val pm = context.packageManager
+                            val appInfo = pm.getApplicationInfo(pkg, 0)
+                            pm.getApplicationLabel(appInfo).toString()
+                        }.getOrDefault(pkg)
+                    } ?: stringResource(R.string.intervention_sample_app)
+
+                    val taskTitle = activeTaskTitle
+                        ?: v.activeTaskTitle?.takeIf { it.isNotBlank() }
+                        ?: stringResource(R.string.intervention_sample_task)
+
+                    val remaining = remainingMinutes
+                        ?: v.remainingMinutes.takeIf { it > 0 }
+                        ?: 25
+
                     Text(
                         text = stringResource(
                             R.string.intervention_subheadline,
-                            "Instagram",
-                            "Thesis Deep Work",
-                            28,
+                            appName,
+                            taskTitle,
+                            remaining,
                         ),
-                        fontFamily = ManropeFamily,
+                        fontFamily = GeistFamily,
                         fontSize = 13.sp,
                         color = Nemo.colors.inkSecondary,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
@@ -227,7 +250,7 @@ fun InterventionOverlay(
                             )
                             Text(
                                 text = stringResource(R.string.intervention_coach_tag),
-                                fontFamily = ManropeFamily,
+                                fontFamily = GeistMonoFamily,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 10.sp,
                                 letterSpacing = 0.6.sp,
@@ -236,7 +259,7 @@ fun InterventionOverlay(
                         }
                         Text(
                             text = stringResource(R.string.intervention_coach_quote),
-                            fontFamily = FrauncesFamily,
+                            fontFamily = GeistFamily,
                             fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                             fontSize = 13.sp,
                             color = Nemo.colors.ink,
@@ -264,7 +287,7 @@ fun InterventionOverlay(
                     ) {
                         Text(
                             text = stringResource(R.string.intervention_action_continue_5m),
-                            fontFamily = ManropeFamily,
+                            fontFamily = GeistFamily,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 13.sp,
                             color = Nemo.colors.ink,
@@ -274,7 +297,7 @@ fun InterventionOverlay(
                     // Emergency exit
                     Text(
                         text = stringResource(R.string.intervention_action_emergency_exit),
-                        fontFamily = ManropeFamily,
+                        fontFamily = GeistFamily,
                         fontSize = 11.sp,
                         color = Nemo.colors.mute,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
@@ -309,7 +332,7 @@ private fun OverlayTextAction(
     ) {
         Text(
             text = label,
-            fontFamily = ManropeFamily,
+            fontFamily = GeistFamily,
             fontWeight = FontWeight.SemiBold,
             fontSize = 15.sp,
             color = color,

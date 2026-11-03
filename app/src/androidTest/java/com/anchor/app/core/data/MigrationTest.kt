@@ -27,7 +27,7 @@ class MigrationTest {
     @get:Rule
     val helper = MigrationTestHelper(
         InstrumentationRegistry.getInstrumentation(),
-        AnchorDatabase::class.java,
+        NemoDatabase::class.java,
         emptyList(),
         FrameworkSQLiteOpenHelperFactory(),
     )
@@ -35,9 +35,9 @@ class MigrationTest {
     private fun tableNames(dbName: String): Set<String> {
         val db = helper.runMigrationsAndValidate(
             dbName,
-            AnchorDatabase.VERSION,
+            NemoDatabase.VERSION,
             true,
-            *AnchorDatabase.ALL_MIGRATIONS,
+            *NemoDatabase.ALL_MIGRATIONS,
         )
         val names = mutableSetOf<String>()
         db.query("SELECT name FROM sqlite_master WHERE type='table'").use { cursor ->
@@ -79,9 +79,9 @@ class MigrationTest {
         }
         val db = helper.runMigrationsAndValidate(
             testDb,
-            AnchorDatabase.VERSION,
+            NemoDatabase.VERSION,
             true,
-            *AnchorDatabase.ALL_MIGRATIONS,
+            *NemoDatabase.ALL_MIGRATIONS,
         )
         db.query("SELECT title FROM task_instance WHERE id='t1'").use { c ->
             assertTrue(c.moveToFirst())
@@ -118,9 +118,9 @@ class MigrationTest {
         }
         val db = helper.runMigrationsAndValidate(
             testDb,
-            AnchorDatabase.VERSION,
+            NemoDatabase.VERSION,
             true,
-            *AnchorDatabase.ALL_MIGRATIONS,
+            *NemoDatabase.ALL_MIGRATIONS,
         )
         db.query("SELECT onboardingCompleted, blockedAppsJson FROM app_settings WHERE id=1").use { c ->
             assertTrue(c.moveToFirst())
@@ -142,9 +142,9 @@ class MigrationTest {
         }
         val db = helper.runMigrationsAndValidate(
             testDb,
-            AnchorDatabase.VERSION,
+            NemoDatabase.VERSION,
             true,
-            *AnchorDatabase.ALL_MIGRATIONS,
+            *NemoDatabase.ALL_MIGRATIONS,
         )
         db.query("SELECT blockedAppsJson, focusBlockingEnabled FROM app_settings WHERE id=1").use { c ->
             assertTrue(c.moveToFirst())
@@ -164,9 +164,9 @@ class MigrationTest {
         }
         val db = helper.runMigrationsAndValidate(
             testDb,
-            AnchorDatabase.VERSION,
+            NemoDatabase.VERSION,
             true,
-            *AnchorDatabase.ALL_MIGRATIONS,
+            *NemoDatabase.ALL_MIGRATIONS,
         )
         db.query("SELECT title, completionSource FROM task_instance WHERE id='t1'").use { c ->
             assertTrue(c.moveToFirst())
@@ -187,9 +187,9 @@ class MigrationTest {
         }
         val db = helper.runMigrationsAndValidate(
             testDb,
-            AnchorDatabase.VERSION,
+            NemoDatabase.VERSION,
             true,
-            *AnchorDatabase.ALL_MIGRATIONS,
+            *NemoDatabase.ALL_MIGRATIONS,
         )
         db.query("SELECT plannedDurationSec FROM focus_session WHERE id='f1'").use { c ->
             assertTrue(c.moveToFirst())
@@ -211,9 +211,9 @@ class MigrationTest {
         }
         val db = helper.runMigrationsAndValidate(
             testDb,
-            AnchorDatabase.VERSION,
+            NemoDatabase.VERSION,
             true,
-            *AnchorDatabase.ALL_MIGRATIONS,
+            *NemoDatabase.ALL_MIGRATIONS,
         )
         db.query(
             "SELECT onboardingCompleted, nickname, focusArea, defaultFocusDurationMin " +
@@ -251,9 +251,9 @@ class MigrationTest {
         }
         val db = helper.runMigrationsAndValidate(
             testDb,
-            AnchorDatabase.VERSION,
+            NemoDatabase.VERSION,
             true,
-            *AnchorDatabase.ALL_MIGRATIONS,
+            *NemoDatabase.ALL_MIGRATIONS,
         )
         db.query(
             "SELECT COUNT(*) FROM task_instance WHERE definitionId='def' AND definitionOccurrenceDate=42",
@@ -264,6 +264,72 @@ class MigrationTest {
         db.query("SELECT id FROM task_instance WHERE definitionId='def'").use { c ->
             assertTrue(c.moveToFirst())
             assertEquals("oldest row is kept", "old", c.getString(0))
+        }
+    }
+
+    @Test
+    fun migrate13ToLatest_addsDoomscrollAlertColumns_withDefaults() {
+        // v13 settings row should survive and gain doomscrollAlertEnabled (0/false)
+        // and doomscrollThresholdMinutes (20).
+        helper.createDatabase(testDb, 13).use { db ->
+            db.execSQL(
+                "INSERT INTO app_settings (id, trackingEnabled, aiEnabled, notificationsEnabled, " +
+                    "usageRetentionDays, defaultFocusMode, dailyInterventionQuota, cooldownHours, " +
+                    "onboardingCompleted, locale, blockedAppsJson, focusBlockingEnabled, nickname, " +
+                    "focusArea, defaultFocusDurationMin) " +
+                    "VALUES (1, 0, 0, 1, 30, 'GENTLE', 3, 2, 1, 'en', NULL, 0, 'Alice', 'COLLEGE', 25)",
+            )
+        }
+        val db = helper.runMigrationsAndValidate(
+            testDb,
+            NemoDatabase.VERSION,
+            true,
+            *NemoDatabase.ALL_MIGRATIONS,
+        )
+        db.query(
+            "SELECT doomscrollAlertEnabled, doomscrollThresholdMinutes " +
+                "FROM app_settings WHERE id=1",
+        ).use { c ->
+            assertTrue(c.moveToFirst())
+            assertEquals("doomscrollAlertEnabled should default to 0", 0, c.getInt(0))
+            assertEquals("doomscrollThresholdMinutes should default to 20", 20, c.getInt(1))
+        }
+    }
+
+    @Test
+    fun migrate14ToLatest_addsAdaptiveCircadianColumns() {
+        helper.createDatabase(testDb, 14).use { db ->
+            db.execSQL(
+                "INSERT INTO app_settings (id, trackingEnabled, aiEnabled, notificationsEnabled, " +
+                    "usageRetentionDays, defaultFocusMode, dailyInterventionQuota, cooldownHours, " +
+                    "onboardingCompleted, locale, blockedAppsJson, focusBlockingEnabled, nickname, " +
+                    "focusArea, defaultFocusDurationMin, doomscrollAlertEnabled, doomscrollThresholdMinutes) " +
+                    "VALUES (1, 0, 0, 1, 30, 'GENTLE', 3, 2, 1, 'en', NULL, 0, 'Alice', 'COLLEGE', 25, 0, 20)",
+            )
+            db.execSQL(
+                "INSERT INTO focus_session (id, taskId, mode, plannedDurationSec, actualDurationMs, " +
+                    "startedAt, endedAt, status, blockedAppsJson, fallbackReason) " +
+                    "VALUES ('fs1', NULL, 'GENTLE', 1500, 1500000, 1000, 2500, 'FINISHED', NULL, NULL)",
+            )
+        }
+        val db = helper.runMigrationsAndValidate(
+            testDb,
+            NemoDatabase.VERSION,
+            true,
+            *NemoDatabase.ALL_MIGRATIONS,
+        )
+        db.query(
+            "SELECT manualWakeTimeEpochDay, manualWakeTimeMinutes FROM app_settings WHERE id=1",
+        ).use { c ->
+            assertTrue(c.moveToFirst())
+            assertTrue(c.isNull(0))
+            assertTrue(c.isNull(1))
+        }
+        db.query(
+            "SELECT rating FROM focus_session WHERE id='fs1'",
+        ).use { c ->
+            assertTrue(c.moveToFirst())
+            assertTrue(c.isNull(0))
         }
     }
 }

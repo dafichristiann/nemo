@@ -13,7 +13,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Central place that enqueues Anchor's background work (docs 02-architecture.md §5).
+ * Central place that enqueues Nemo's background work (docs 02-architecture.md §5).
  *
  * Rules applied here:
  *  - `KEEP` for periodic work → never duplicate an already-scheduled chain.

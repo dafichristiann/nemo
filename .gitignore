@@ -25,3 +25,10 @@ keystore.properties
 
 # Logs
 *.log
+
+# Local testing and IDE artifacts
+.cursor/
+qa-live-evidence/
+qa-screenshots/
+qa-parser.js
+

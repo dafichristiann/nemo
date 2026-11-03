@@ -339,4 +339,64 @@ class TasksViewModelTest {
         assertEquals(1, markDoneCalls)
         assertEquals(TaskStatus.DONE, baseTasks.tasks.value.single { it.id == "task1" }.status)
     }
+
+    @Test
+    fun todayCompletedCount_reflectsCompletedTasksToday() = runTest(dispatcher) {
+        val startOfDay = time.startOfDayMillis(fixedNow)
+        tasks.tasks.value = listOf(
+            task("doneToday", null, TaskStatus.DONE).copy(completedAt = startOfDay + 1_000L),
+            task("doneYesterday", null, TaskStatus.DONE).copy(completedAt = startOfDay - 1_000L),
+            task("openToday", startOfDay + 10_000L, TaskStatus.TODO),
+        )
+        val vm = viewModel()
+        keepCollecting(vm)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value
+        assertEquals(1, state.todayCompletedCount)
+    }
+
+    @Test
+    fun todayCompletedCount_updatesDynamicallyAfterMidnightBoundary() = runTest(dispatcher) {
+        val startOfDay = time.startOfDayMillis(fixedNow)
+        val doneTask = task("doneToday", null, TaskStatus.DONE).copy(completedAt = startOfDay + 1_000L)
+        tasks.tasks.value = listOf(doneTask)
+        val vm = viewModel()
+        keepCollecting(vm)
+        advanceUntilIdle()
+
+        assertEquals(1, vm.uiState.value.todayCompletedCount)
+
+        // Advance clock past midnight into tomorrow
+        time.advanceBy(86_400_000L)
+        // Trigger repository update on new day
+        tasks.tasks.value = listOf(doneTask, task("newTaskTomorrow", null, TaskStatus.TODO))
+        advanceUntilIdle()
+
+        // Yesterday's completed task is no longer counted in today's completed count
+        assertEquals(0, vm.uiState.value.todayCompletedCount)
+    }
+
+    @Test
+    fun onCreateTask_withCustomCreatedMessage_showsCustomToast() = runTest(dispatcher) {
+        val vm = viewModel()
+        keepCollecting(vm)
+        advanceUntilIdle()
+
+        vm.onCreateTask(
+            title = "Task Baru",
+            description = null,
+            deadline = null,
+            priority = TaskPriority.MEDIUM,
+            estimatedDurationMin = null,
+            category = null,
+            subtaskTitles = emptyList(),
+            recurrenceRule = com.anchor.app.core.domain.model.RecurrenceRule.NONE,
+            createdMessage = "Tugas berhasil dibuat",
+            onResult = {},
+        )
+        advanceUntilIdle()
+
+        assertEquals("Tugas berhasil dibuat", vm.toast.value?.message)
+    }
 }

@@ -1,9 +1,14 @@
 package com.anchor.app.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -17,6 +22,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.anchor.app.core.design.components.NemoNavBar
 import com.anchor.app.core.design.navigation.TopLevelDestination
+import com.anchor.app.core.design.theme.Motion
 import com.anchor.app.feature.focus.FocusScreen
 import com.anchor.app.feature.futureview.FutureViewScreen
 import com.anchor.app.feature.futureview.FutureViewViewModel
@@ -73,16 +79,21 @@ fun NemoNavHost(
 ) {
     val onboardingCompleted by appViewModel.onboardingCompleted.collectAsStateWithLifecycle()
 
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination?.route
+    val currentRouteBase = currentRoute?.substringBefore('?')
+    val isTopLevel = TopLevelDestination.entries.any { it.route == currentRouteBase }
+
     // Wait until we know whether onboarding is done (avoids a wrong-jump flash). When onboarding
-    // is complete and a deep-linked [initialRoute] is a valid top-level tab, land there.
-    val deepLink = initialRoute?.takeIf { r -> TopLevelDestination.entries.any { it.route == r } }
-    val startDestination = when (onboardingCompleted) {
-        null -> null
-        false -> Routes.WELCOME_ONBOARDING
-        true -> deepLink ?: TopLevelDestination.TASKS.route
+    // is complete, land on deepLink or Tasks.
+    val deepLink = initialRoute?.takeIf { r -> TopLevelDestination.entries.any { it.route == r.substringBefore('?') } }
+    val startDestination = when {
+        onboardingCompleted == null -> null
+        onboardingCompleted == false -> Routes.WELCOME_ONBOARDING
+        else -> deepLink ?: TopLevelDestination.TASKS.route
     }
 
-    androidx.compose.runtime.LaunchedEffect(initialRoute, onboardingCompleted) {
+    LaunchedEffect(initialRoute, onboardingCompleted) {
         if (initialRoute != null && onboardingCompleted == true) {
             navController.navigate(initialRoute) {
                 popUpTo(TopLevelDestination.TASKS.route) { saveState = true }
@@ -91,14 +102,6 @@ fun NemoNavHost(
             }
         }
     }
-
-    val backStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = backStackEntry?.destination?.route
-    // Focus is reachable both as the bare tab ("focus") and with a preselected task
-    // ("focus?taskId={taskId}"), so match on the route *base* (before any query) — otherwise the
-    // bottom bar would disappear when Focus is opened for a specific task from Detail/FutureView.
-    val currentRouteBase = currentRoute?.substringBefore('?')
-    val isTopLevel = TopLevelDestination.entries.any { it.route == currentRouteBase }
 
     Scaffold(
         modifier = modifier,
@@ -120,18 +123,80 @@ fun NemoNavHost(
     ) { innerPadding ->
         if (startDestination == null) return@Scaffold
 
+        val isTopLevelRoute: (String?) -> Boolean = { route ->
+            val base = route?.substringBefore('?')
+            TopLevelDestination.entries.any { it.route == base }
+        }
+
         NavHost(
             navController = navController,
             startDestination = startDestination,
             modifier = Modifier.padding(innerPadding),
-        ) {
-            composable(Routes.WELCOME_ONBOARDING) {
-                val finishOnboarding = {
-                    appViewModel.completeOnboarding()
-                    navController.navigate(TopLevelDestination.TASKS.route) {
-                        popUpTo(Routes.WELCOME_ONBOARDING) { inclusive = true }
-                    }
+            enterTransition = {
+                val initialRoute = initialState.destination.route
+                val targetRoute = targetState.destination.route
+                if (isTopLevelRoute(initialRoute) && isTopLevelRoute(targetRoute)) {
+                    fadeIn(animationSpec = Motion.standardSpec())
+                } else {
+                    fadeIn(animationSpec = Motion.standardSpec()) +
+                        slideIntoContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.Start,
+                            animationSpec = Motion.standardSpec(),
+                            initialOffset = { (it * 0.08f).toInt() },
+                        )
                 }
+            },
+            exitTransition = {
+                val initialRoute = initialState.destination.route
+                val targetRoute = targetState.destination.route
+                if (isTopLevelRoute(initialRoute) && isTopLevelRoute(targetRoute)) {
+                    fadeOut(animationSpec = Motion.instantSpec())
+                } else {
+                    fadeOut(animationSpec = Motion.instantSpec()) +
+                        slideOutOfContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.Start,
+                            animationSpec = Motion.standardSpec(),
+                            targetOffset = { -(it * 0.08f).toInt() },
+                        )
+                }
+            },
+            popEnterTransition = {
+                val initialRoute = initialState.destination.route
+                val targetRoute = targetState.destination.route
+                if (isTopLevelRoute(initialRoute) && isTopLevelRoute(targetRoute)) {
+                    fadeIn(animationSpec = Motion.standardSpec())
+                } else {
+                    fadeIn(animationSpec = Motion.standardSpec()) +
+                        slideIntoContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.End,
+                            animationSpec = Motion.standardSpec(),
+                            initialOffset = { -(it * 0.08f).toInt() },
+                        )
+                }
+            },
+            popExitTransition = {
+                val initialRoute = initialState.destination.route
+                val targetRoute = targetState.destination.route
+                if (isTopLevelRoute(initialRoute) && isTopLevelRoute(targetRoute)) {
+                    fadeOut(animationSpec = Motion.instantSpec())
+                } else {
+                    fadeOut(animationSpec = Motion.instantSpec()) +
+                        slideOutOfContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.End,
+                            animationSpec = Motion.standardSpec(),
+                            targetOffset = { (it * 0.08f).toInt() },
+                        )
+                }
+            },
+        ) {
+            val finishOnboarding = {
+                appViewModel.completeOnboarding()
+                navController.navigate(TopLevelDestination.TASKS.route) {
+                    popUpTo(Routes.WELCOME_ONBOARDING) { inclusive = true }
+                }
+            }
+
+            composable(Routes.WELCOME_ONBOARDING) {
                 WelcomeOnboardingScreen(
                     onGetStarted = {
                         navController.navigate(Routes.PROFILE_ONBOARDING)
@@ -140,18 +205,9 @@ fun NemoNavHost(
                 )
             }
             composable(Routes.PROFILE_ONBOARDING) {
-                val finishOnboarding = {
-                    appViewModel.completeOnboarding()
-                    navController.navigate(TopLevelDestination.TASKS.route) {
-                        popUpTo(Routes.WELCOME_ONBOARDING) { inclusive = true }
-                    }
-                }
                 ProfileSetupScreen(
                     onContinue = {
-                        // Skip the optional permission step when both permissions are already
-                        // granted (e.g. the OS kept the grants); otherwise let the user opt in
-                        // (PRD §14 — permissions are optional, never forced).
-                        if (appViewModel.optionalPermissionsGranted()) {
+                        if (appViewModel.allRequiredPermissionsGranted()) {
                             finishOnboarding()
                         } else {
                             navController.navigate(Routes.PERMISSION_ONBOARDING)
@@ -161,13 +217,10 @@ fun NemoNavHost(
                 )
             }
             composable(Routes.PERMISSION_ONBOARDING) {
-                val finish = {
-                    appViewModel.completeOnboarding()
-                    navController.navigate(TopLevelDestination.TASKS.route) {
-                        popUpTo(Routes.WELCOME_ONBOARDING) { inclusive = true }
-                    }
-                }
-                PermissionOnboardingScreen(onContinue = finish, onSkip = finish)
+                PermissionOnboardingScreen(
+                    onContinue = finishOnboarding,
+                    onSkip = finishOnboarding,
+                )
             }
 
             composable(TopLevelDestination.TASKS.route) {
@@ -179,10 +232,8 @@ fun NemoNavHost(
             composable(TopLevelDestination.WELLBEING.route) {
                 WellbeingScreen(onOpenSettings = { navController.navigate(Routes.SETTINGS) })
             }
-            // Focus is registered twice by design: the bare tab route ("focus") for bottom-bar
-            // navigation, and the task-scoped route ("focus?taskId={taskId}") used when Focus is
-            // opened for a specific task from Detail/FutureView (PRD v0.5 §10.1). Both render the
-            // same screen; the shared content is factored into `focusContent` to avoid drift.
+            // Focus route handles both the bare tab route ("focus") and the task-scoped route
+            // ("focus?taskId={taskId}") via an optional query parameter.
             val focusContent: @Composable () -> Unit = {
                 val context = LocalContext.current
                 FocusScreen(
@@ -200,7 +251,6 @@ fun NemoNavHost(
                     },
                 )
             }
-            composable(TopLevelDestination.FOCUS.route) { focusContent() }
             composable(
                 route = Routes.FOCUS,
                 arguments = listOf(

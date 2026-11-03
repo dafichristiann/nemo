@@ -37,7 +37,8 @@ import com.anchor.app.R
 import com.anchor.app.core.design.components.AppIcon
 import com.anchor.app.core.design.components.NemoSwitch
 import com.anchor.app.core.design.components.pressable
-import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.GeistFamily
+import com.anchor.app.core.design.theme.GeistMonoFamily
 import com.anchor.app.core.design.theme.Nemo
 import com.anchor.app.core.design.theme.PillShape
 import com.anchor.app.core.design.theme.Radius
@@ -66,7 +67,7 @@ fun AppCategoriesScreen(
         verticalArrangement = Arrangement.spacedBy(Spacing.x4),
     ) {
         BackHeader(
-            eyebrow = "APP ECOSYSTEM",
+            eyebrow = stringResource(R.string.app_categories_eyebrow),
             title = stringResource(R.string.categories_title),
             onBack = onBack,
         )
@@ -80,7 +81,7 @@ fun AppCategoriesScreen(
         if (categories.isEmpty()) {
             Text(
                 text = stringResource(R.string.settings_categories_empty),
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontSize = 13.sp,
                 color = Nemo.colors.mute,
             )
@@ -121,14 +122,14 @@ private fun CategoryManageRow(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = label,
-                    fontFamily = ManropeFamily,
+                    fontFamily = GeistFamily,
                     fontWeight = FontWeight.Medium,
                     fontSize = 14.sp,
                     color = Nemo.colors.ink,
                 )
                 Text(
                     text = category.packageName,
-                    fontFamily = ManropeFamily,
+                    fontFamily = GeistMonoFamily,
                     fontSize = 11.sp,
                     color = Nemo.colors.mute,
                 )
@@ -148,7 +149,7 @@ private fun CategoryManageRow(
                 if (name.isEmpty()) {
                     Text(
                         text = stringResource(R.string.settings_category_name_hint),
-                        fontFamily = ManropeFamily,
+                        fontFamily = GeistFamily,
                         fontSize = 12.sp,
                         color = Nemo.colors.mute,
                     )
@@ -157,7 +158,7 @@ private fun CategoryManageRow(
                     value = name,
                     onValueChange = { name = it },
                     singleLine = true,
-                    textStyle = TextStyle(fontFamily = ManropeFamily, fontSize = 13.sp, color = Nemo.colors.ink),
+                    textStyle = TextStyle(fontFamily = GeistFamily, fontSize = 13.sp, color = Nemo.colors.ink),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -172,7 +173,7 @@ private fun CategoryManageRow(
             ) {
                 Text(
                     text = stringResource(R.string.settings_category_save),
-                    fontFamily = ManropeFamily,
+                    fontFamily = GeistFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 12.sp,
                     color = Nemo.colors.onInk,
@@ -183,7 +184,7 @@ private fun CategoryManageRow(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = stringResource(R.string.settings_category_distraction),
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontSize = 12.sp,
                 color = Nemo.colors.inkSecondary,
                 modifier = Modifier.weight(1f),

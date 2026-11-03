@@ -47,7 +47,7 @@
 
     <!--
       Targeted package visibility (PRD docs 08-permissions.md §7): we deliberately avoid
-      QUERY_ALL_PACKAGES. This <queries> entry lets Anchor see only apps with a launcher entry
+      QUERY_ALL_PACKAGES. This <queries> entry lets Nemo see only apps with a launcher entry
       so the user can pick which apps to pause during Strict/Custom focus (FR-S4).
     -->
     <queries>
@@ -58,7 +58,7 @@
     </queries>
 
     <application
-        android:name=".AnchorApp"
+        android:name=".NemoApp"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="false"
@@ -83,7 +83,7 @@
 
         <!--
           Handles the intervention notification's [Start Focus] / [Later] actions (FR-I7).
-          Not exported: only Anchor itself posts these notifications.
+          Not exported: only Nemo itself posts these notifications.
         -->
         <receiver
             android:name=".platform.notification.InterventionActionReceiver"
@@ -113,7 +113,7 @@
           (canRetrieveWindowContent=false). Not exported.
         -->
         <service
-            android:name=".platform.accessibility.AnchorAccessibilityService"
+            android:name=".platform.accessibility.NemoAccessibilityService"
             android:exported="true"
             android:label="@string/app_name"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
@@ -122,11 +122,11 @@
             </intent-filter>
             <meta-data
                 android:name="android.accessibilityservice"
-                android:resource="@xml/anchor_accessibility_config" />
+                android:resource="@xml/nemo_accessibility_config" />
         </service>
 
         <!--
-          WorkManager is initialised via AnchorApp (Configuration.Provider) so @HiltWorker
+          WorkManager is initialised via NemoApp (Configuration.Provider) so @HiltWorker
           factories can be injected; disable the default initializer to avoid two configs.
         -->
         <provider

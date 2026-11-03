@@ -22,13 +22,13 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class UsageSessionDaoTest {
 
-    private lateinit var db: AnchorDatabase
+    private lateinit var db: NemoDatabase
     private lateinit var dao: UsageSessionDao
 
     @Before
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        db = Room.inMemoryDatabaseBuilder(context, AnchorDatabase::class.java)
+        db = Room.inMemoryDatabaseBuilder(context, NemoDatabase::class.java)
             .allowMainThreadQueries()
             .build()
         dao = db.usageSessionDao()

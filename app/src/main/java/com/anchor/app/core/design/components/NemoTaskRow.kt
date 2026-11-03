@@ -2,10 +2,7 @@ package com.anchor.app.core.design.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -36,8 +33,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
@@ -46,6 +43,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.anchor.app.R
+import com.anchor.app.core.design.theme.Motion
 import com.anchor.app.core.design.theme.Nemo
 import com.anchor.app.core.design.theme.NemoTheme
 import com.anchor.app.core.design.theme.Radius
@@ -74,7 +72,7 @@ fun NemoTaskRow(
     val shape = RoundedCornerShape(Radius.card)
     val titleColor by animateColorAsState(
         targetValue = if (done) Nemo.colors.mute else Nemo.colors.ink,
-        animationSpec = tween(durationMillis = 200),
+        animationSpec = Motion.standardSpec(),
         label = "task_title_color",
     )
 
@@ -191,26 +189,26 @@ fun NemoNode(
     val contentDescription = if (done) "Completed" else "Not completed"
     val backgroundColor by animateColorAsState(
         targetValue = if (done) Nemo.colors.ink else Color.Transparent,
-        animationSpec = tween(durationMillis = 200),
+        animationSpec = Motion.standardSpec(),
         label = "nemo_node_bg",
     )
     val borderColor by animateColorAsState(
         targetValue = if (done) Color.Transparent else Nemo.colors.mute.copy(alpha = 0.5f),
-        animationSpec = tween(durationMillis = 200),
+        animationSpec = Motion.standardSpec(),
         label = "nemo_node_border",
     )
     val scale by animateFloatAsState(
         targetValue = if (done) 1f else 0.94f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMediumLow,
-        ),
+        animationSpec = Motion.calmSpringSpec(),
         label = "nemo_node_scale",
     )
 
     Box(
         modifier = modifier
-            .scale(scale)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .size(20.dp)
             .clip(CircleShape)
             .background(backgroundColor)
@@ -221,13 +219,10 @@ fun NemoNode(
             visible = done,
             enter = scaleIn(
                 initialScale = 0.4f,
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMediumLow,
-                ),
-            ) + fadeIn(animationSpec = tween(durationMillis = 200)),
-            exit = scaleOut(animationSpec = tween(durationMillis = 150)) +
-                fadeOut(animationSpec = tween(durationMillis = 150)),
+                animationSpec = Motion.calmSpringSpec(),
+            ) + fadeIn(animationSpec = Motion.standardSpec()),
+            exit = scaleOut(animationSpec = Motion.instantSpec()) +
+                fadeOut(animationSpec = Motion.instantSpec()),
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_tasks),

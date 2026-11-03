@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Anchor Accessibility service config (FR-F4/F8, PRD v0.4 §10.5, docs 08 §4).
+  Nemo Accessibility service config (FR-F4/F8, PRD v0.4 §10.5, docs 08 §4).
 
   Privacy: canRetrieveWindowContent="false" — we only read the *package name* of the window
   transition event to know which app was opened. We never read on-screen content, and nothing

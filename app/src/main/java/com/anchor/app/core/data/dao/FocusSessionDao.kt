@@ -47,6 +47,12 @@ interface FocusSessionDao {
         fallbackReason: String?,
     )
 
+    @Query("UPDATE focus_session SET rating = :rating WHERE id = :id")
+    suspend fun updateRating(id: String, rating: Int)
+
+    @Query("SELECT * FROM focus_session WHERE rating IS NOT NULL AND startedAt >= :since ORDER BY startedAt ASC")
+    suspend fun getRatedSessionsSince(since: Long): List<FocusSessionEntity>
+
     @Query("DELETE FROM focus_session")
     suspend fun clear()
 }

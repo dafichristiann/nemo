@@ -4,18 +4,13 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.anchor.app.core.common.DispatcherProvider
+import com.anchor.app.core.data.NemoDatabase
 import com.anchor.app.core.design.theme.AppThemeMode
 import com.anchor.app.core.design.theme.ThemePreferences
 import com.anchor.app.core.domain.model.AppCategory
 import com.anchor.app.core.domain.model.AppSettings
 import com.anchor.app.core.domain.model.FocusArea
-import com.anchor.app.core.domain.repository.FocusRepository
-import com.anchor.app.core.domain.repository.InsightRepository
-import com.anchor.app.core.domain.repository.InterventionRepository
 import com.anchor.app.core.domain.repository.SettingsRepository
-import com.anchor.app.core.domain.repository.TaskDefinitionRepository
-import com.anchor.app.core.domain.repository.TaskDependencyRepository
-import com.anchor.app.core.domain.repository.TaskRepository
 import com.anchor.app.core.domain.repository.UsageRepository
 import com.anchor.app.platform.apps.InstalledApp
 import com.anchor.app.platform.apps.InstalledAppsSource
@@ -40,31 +35,27 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @ApplicationContext private val context: Context? = null,
+    private val database: NemoDatabase? = null,
     private val settingsRepository: SettingsRepository,
-    private val taskRepository: TaskRepository,
-    private val taskDependencyRepository: TaskDependencyRepository,
-    private val definitionRepository: TaskDefinitionRepository,
-    private val usageRepository: UsageRepository,
-    private val focusRepository: FocusRepository,
-    private val interventionRepository: InterventionRepository,
-    private val insightRepository: InsightRepository,
-    private val usageStats: UsageStatsSource,
-    private val notificationPermissions: NotificationPermissions,
-    private val appCatalog: InstalledAppsSource,
-    private val accessibilityStatus: AccessibilityStatus,
+    private val usageRepository: UsageRepository? = null,
+    private val usageStats: UsageStatsSource? = null,
+    private val notificationPermissions: NotificationPermissions? = null,
+    private val appCatalog: InstalledAppsSource? = null,
+    private val accessibilityStatus: AccessibilityStatus? = null,
     private val dispatchers: DispatcherProvider,
-    private val themePreferences: ThemePreferences,
+    private val themePreferences: ThemePreferences? = null,
 ) : ViewModel() {
 
-    val themeMode: StateFlow<AppThemeMode> = themePreferences.themeMode
+    val themeMode: StateFlow<AppThemeMode> = themePreferences?.themeMode
+        ?: MutableStateFlow(AppThemeMode.SYSTEM)
 
     fun toggleTheme(isCurrentlyDark: Boolean) {
-        themePreferences.toggleTheme(isCurrentlyDark)
+        themePreferences?.toggleTheme(isCurrentlyDark)
     }
 
     fun setThemeMode(mode: AppThemeMode) {
-        themePreferences.setThemeMode(mode)
+        themePreferences?.setThemeMode(mode)
     }
 
     val settings: StateFlow<AppSettings> = settingsRepository.observe()
@@ -75,9 +66,10 @@ class SettingsViewModel @Inject constructor(
     val permissions: StateFlow<PermissionStatus> = _permissions.asStateFlow()
 
     /** Detected app categories the user can override (FR-S3). */
-    val categories: StateFlow<List<AppCategory>> = usageRepository.observeAppCategories()
-        .map { it.sortedBy { c -> c.packageName } }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val categories: StateFlow<List<AppCategory>> = usageRepository?.observeAppCategories()
+        ?.map { it.sortedBy { c -> c.packageName } }
+        ?.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+        ?: MutableStateFlow(emptyList())
 
     /** Launchable apps on the device, for the blocked-apps picker (FR-S4). */
     private val _installedApps = MutableStateFlow<List<InstalledApp>>(emptyList())
@@ -119,7 +111,7 @@ class SettingsViewModel @Inject constructor(
     /** Loads the launchable apps off the main thread (FR-S4). */
     private fun loadInstalledApps() {
         viewModelScope.launch(dispatchers.io) {
-            _installedApps.value = appCatalog.launchableApps()
+            _installedApps.value = appCatalog?.launchableApps() ?: emptyList()
         }
     }
 
@@ -130,19 +122,19 @@ class SettingsViewModel @Inject constructor(
     /** Human label for a package (from the installed-apps catalog, else package name). */
     fun labelFor(packageName: String): String =
         _installedApps.value.firstOrNull { it.packageName == packageName }?.label
-            ?: appCatalog.labelFor(packageName)
+            ?: appCatalog?.labelFor(packageName) ?: packageName
 
     /** App icon for a package, or null. */
     fun iconFor(packageName: String): android.graphics.drawable.Drawable? =
         _installedApps.value.firstOrNull { it.packageName == packageName }?.icon
-            ?: appCatalog.iconFor(packageName)
+            ?: appCatalog?.iconFor(packageName)
 
     /** Re-reads OS permission state; call on resume after the user returns from Settings. */
     fun refreshPermissions() {
         _permissions.value = PermissionStatus(
-            usageAccessGranted = usageStats.hasPermission(),
-            notificationsGranted = notificationPermissions.canPostNotifications(),
-            focusBlockingGranted = accessibilityStatus.isEnabled(context),
+            usageAccessGranted = usageStats?.hasPermission() ?: false,
+            notificationsGranted = notificationPermissions?.canPostNotifications() ?: false,
+            focusBlockingGranted = if (context != null && accessibilityStatus != null) accessibilityStatus.isEnabled(context) else false,
         )
     }
 
@@ -155,6 +147,20 @@ class SettingsViewModel @Inject constructor(
     /** FR-F4/F8: opt-in toggle for Strict/Custom blocking (PRD v0.4 §10.5). */
     fun setFocusBlockingEnabled(enabled: Boolean) =
         viewModelScope.launch(dispatchers.io) { settingsRepository.setFocusBlockingEnabled(enabled) }
+
+    /** Toggle the continuous doomscroll alert feature (specs 2026-11-01). */
+    fun setDoomscrollAlertEnabled(enabled: Boolean) =
+        viewModelScope.launch(dispatchers.io) { settingsRepository.setDoomscrollAlertEnabled(enabled) }
+
+    /** Update continuous scrolling alert threshold in minutes (10/15/20/30/45). */
+    fun setDoomscrollThresholdMinutes(minutes: Int) {
+        require(minutes in AppSettings.DOOMSCROLL_THRESHOLD_OPTIONS_MIN) {
+            "Invalid duration: $minutes min"
+        }
+        viewModelScope.launch(dispatchers.io) {
+            settingsRepository.setDoomscrollThresholdMinutes(minutes)
+        }
+    }
 
     /** Profile: update the mascot's preferred name (blank clears it). */
     fun setNickname(nickname: String) =
@@ -173,7 +179,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch(dispatchers.io) {
             settingsRepository.setLocale(normalized)
         }
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+        if (context != null && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
             try {
                 val localeManager = context.getSystemService(android.app.LocaleManager::class.java)
                 val target = if (normalized == "id") java.util.Locale("in", "ID") else java.util.Locale.ENGLISH
@@ -183,13 +189,15 @@ class SettingsViewModel @Inject constructor(
     }
 
     /** Opens the OS Accessibility settings so the user can grant the service (docs 08 §4). */
-    fun onOpenAccessibilitySettings() = accessibilityStatus.open(context)
+    fun onOpenAccessibilitySettings() {
+        if (context != null) accessibilityStatus?.open(context)
+    }
 
     /** FR-S3: set/override the category label for a package. */
     fun onSetCategory(packageName: String, category: String) = viewModelScope.launch(dispatchers.io) {
         val trimmed = category.trim()
         if (trimmed.isEmpty()) return@launch
-        usageRepository.upsertAppCategory(
+        usageRepository?.upsertAppCategory(
             AppCategory(
                 packageName = packageName,
                 category = trimmed,
@@ -201,7 +209,7 @@ class SettingsViewModel @Inject constructor(
 
     /** FR-S3: toggle whether an app counts as a distraction. */
     fun onToggleDistraction(category: AppCategory) = viewModelScope.launch(dispatchers.io) {
-        usageRepository.upsertAppCategory(
+        usageRepository?.upsertAppCategory(
             category.copy(isDistraction = !category.isDistraction, overrideSource = AppCategory.SOURCE_USER),
         )
     }
@@ -220,13 +228,7 @@ class SettingsViewModel @Inject constructor(
 
     /** "Delete all data" — erase every user table then reset settings (PRD §10.10). */
     fun onDeleteAllData() = viewModelScope.launch(dispatchers.io) {
-        taskRepository.clear()
-        taskDependencyRepository.clear()
-        definitionRepository.clear()
-        usageRepository.clearAll()
-        focusRepository.clear()
-        interventionRepository.clear()
-        insightRepository.clear()
+        database?.clearAllTables()
         settingsRepository.resetAll()
     }
 }

@@ -26,8 +26,10 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -63,7 +65,8 @@ import com.anchor.app.core.design.components.SectionHeader
 import com.anchor.app.core.design.components.SegmentedChips
 import com.anchor.app.core.design.components.minTouchTarget
 import com.anchor.app.core.design.components.pressable
-import com.anchor.app.core.design.theme.ManropeFamily
+import com.anchor.app.core.design.theme.GeistFamily
+import com.anchor.app.core.design.theme.GeistMonoFamily
 import com.anchor.app.core.design.theme.Nemo
 import com.anchor.app.core.design.theme.NemoNight
 import com.anchor.app.core.design.theme.PillShape
@@ -92,6 +95,7 @@ fun SettingsScreen(
     val permissions by viewModel.permissions.collectAsStateWithLifecycle()
     val categories by viewModel.categories.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
 
     // Re-check OS permission state whenever we return to this screen (FR-S1, docs 08 Â§2 flow).
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -123,7 +127,7 @@ fun SettingsScreen(
         val isDark = Nemo.colors.background == NemoNight.background
 
         NemoScreenHeader(
-            eyebrow = "PREFERENCES",
+            eyebrow = stringResource(R.string.settings_eyebrow),
             title = stringResource(R.string.settings_title),
             onBack = onBack,
             action = {
@@ -153,12 +157,12 @@ fun SettingsScreen(
             },
         )
 
-        // --- Profile (nickname Â· main focus Â· default focus length) ---
+        // --- Profile (nickname · main focus · default focus length) ---
         SectionHeader(title = stringResource(R.string.settings_section_profile))
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.x1)) {
             Text(
                 text = stringResource(R.string.settings_profile_nickname_title),
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = 14.sp,
                 color = Nemo.colors.ink,
@@ -172,7 +176,7 @@ fun SettingsScreen(
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
             Text(
                 text = stringResource(R.string.settings_profile_focus_area_title),
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = 14.sp,
                 color = Nemo.colors.ink,
@@ -190,7 +194,7 @@ fun SettingsScreen(
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
             Text(
                 text = stringResource(R.string.settings_profile_duration_title),
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = 14.sp,
                 color = Nemo.colors.ink,
@@ -207,7 +211,7 @@ fun SettingsScreen(
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
             Text(
                 text = stringResource(R.string.settings_profile_language_title),
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = 14.sp,
                 color = Nemo.colors.ink,
@@ -301,6 +305,50 @@ fun SettingsScreen(
             onCheckedChange = viewModel::setFocusBlockingEnabled,
         )
 
+        // --- Continuous doomscroll alert (specs 2026-11-01) ---
+        Divider()
+        SectionHeader(title = stringResource(R.string.settings_section_doomscroll))
+        SettingRow(
+            title = stringResource(R.string.settings_doomscroll_title),
+            subtitle = stringResource(R.string.settings_doomscroll_subtitle),
+            checked = settings.doomscrollAlertEnabled,
+            onCheckedChange = viewModel::setDoomscrollAlertEnabled,
+        )
+        if (settings.doomscrollAlertEnabled) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.x1)) {
+                    Text(
+                        text = stringResource(R.string.settings_doomscroll_duration_title),
+                        fontFamily = GeistFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.sp,
+                        color = Nemo.colors.ink,
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.settings_doomscroll_duration_summary,
+                            settings.doomscrollThresholdMinutes,
+                        ),
+                        fontFamily = GeistFamily,
+                        fontSize = 12.sp,
+                        color = Nemo.colors.mute,
+                    )
+                }
+                SegmentedChips(
+                    options = AppSettings.DOOMSCROLL_THRESHOLD_OPTIONS_MIN
+                        .map { stringResource(R.string.settings_profile_duration_value, it) },
+                    selectedIndex = AppSettings.DOOMSCROLL_THRESHOLD_OPTIONS_MIN
+                        .indexOf(settings.doomscrollThresholdMinutes)
+                        .coerceAtLeast(0),
+                    onSelect = { index ->
+                        viewModel.setDoomscrollThresholdMinutes(
+                            AppSettings.DOOMSCROLL_THRESHOLD_OPTIONS_MIN[index]
+                        )
+                    },
+                )
+            }
+        }
+
         Divider()
 
         // --- Data controls (FR-S5) ---
@@ -317,22 +365,22 @@ fun SettingsScreen(
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
-                    text = "Data Retention",
-                    fontFamily = ManropeFamily,
+                    text = stringResource(R.string.settings_retention_title),
+                    fontFamily = GeistFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp,
                     color = Nemo.colors.ink,
                 )
                 Text(
                     text = stringResource(R.string.settings_retention_label, settings.usageRetentionDays),
-                    fontFamily = ManropeFamily,
+                    fontFamily = GeistFamily,
                     fontSize = 12.sp,
                     color = Nemo.colors.mute,
                 )
             }
             Text(
                 text = "›",
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
                 color = Nemo.colors.mute,
@@ -346,12 +394,12 @@ fun SettingsScreen(
                 modifier = Modifier
                     .clip(PillShape)
                     .border(1.dp, Nemo.colors.dangerLine, PillShape)
-                    .pressable(shape = PillShape, onClick = { viewModel.onDeleteAllData() })
+                    .pressable(shape = PillShape, onClick = { showDeleteConfirmDialog = true })
                     .padding(horizontal = Spacing.x4, vertical = Spacing.x3),
             ) {
                 Text(
                     text = stringResource(R.string.settings_delete_all),
-                    fontFamily = ManropeFamily,
+                    fontFamily = GeistFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 13.sp,
                     color = Nemo.colors.danger,
@@ -360,6 +408,55 @@ fun SettingsScreen(
             com.anchor.app.core.design.components.NemoMascot(
                 expression = com.anchor.app.core.design.components.MascotExpression.SAD,
                 size = 28.dp,
+            )
+        }
+
+        if (showDeleteConfirmDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteConfirmDialog = false },
+                containerColor = Nemo.colors.surface,
+                title = {
+                    Text(
+                        text = stringResource(R.string.settings_delete_confirm_title),
+                        fontFamily = GeistFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = Nemo.colors.ink,
+                    )
+                },
+                text = {
+                    Text(
+                        text = stringResource(R.string.settings_delete_confirm_body),
+                        fontFamily = GeistFamily,
+                        fontSize = 13.sp,
+                        color = Nemo.colors.mute,
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showDeleteConfirmDialog = false
+                            viewModel.onDeleteAllData()
+                        },
+                    ) {
+                        Text(
+                            text = stringResource(R.string.settings_delete_confirm_action),
+                            fontFamily = GeistFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = Nemo.colors.danger,
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteConfirmDialog = false }) {
+                        Text(
+                            text = stringResource(R.string.dialog_cancel),
+                            fontFamily = GeistFamily,
+                            fontWeight = FontWeight.Medium,
+                            color = Nemo.colors.mute,
+                        )
+                    }
+                },
             )
         }
 
@@ -374,7 +471,7 @@ fun SettingsScreen(
             )
             Text(
                 text = stringResource(R.string.settings_assure_full),
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontSize = 12.sp,
                 color = Nemo.colors.mute,
             )
@@ -399,15 +496,15 @@ fun SettingsScreen(
             )
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
-                    text = "Nemo OS \u00B7 v1.0.4",
-                    fontFamily = ManropeFamily,
+                    text = stringResource(R.string.settings_version_title),
+                    fontFamily = GeistFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp,
                     color = Nemo.colors.ink,
                 )
                 Text(
-                    text = "Calm Attention Architecture \u00B7 Open Source",
-                    fontFamily = ManropeFamily,
+                    text = stringResource(R.string.settings_mission_sub),
+                    fontFamily = GeistFamily,
                     fontWeight = FontWeight.Normal,
                     fontSize = 11.sp,
                     color = Nemo.colors.mute,
@@ -462,7 +559,7 @@ private fun SettingsNicknameField(
             if (text.isEmpty()) {
                 Text(
                     text = hint,
-                    fontFamily = ManropeFamily,
+                    fontFamily = GeistFamily,
                     fontSize = 14.sp,
                     color = Nemo.colors.mute,
                 )
@@ -474,7 +571,7 @@ private fun SettingsNicknameField(
                 },
                 singleLine = true,
                 textStyle = TextStyle(
-                    fontFamily = ManropeFamily,
+                    fontFamily = GeistFamily,
                     fontSize = 14.sp,
                     color = Nemo.colors.ink,
                 ),
@@ -563,14 +660,14 @@ private fun PermissionRow(
         ) {
             Text(
                 text = title,
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp,
                 color = Nemo.colors.ink,
             )
             Text(
                 text = if (granted) stringResource(R.string.settings_p1_granted) else stringResource(R.string.settings_p2_off),
-                fontFamily = ManropeFamily,
+                fontFamily = GeistFamily,
                 fontSize = 12.sp,
                 lineHeight = 16.sp,
                 color = Nemo.colors.mute,
@@ -600,7 +697,7 @@ private fun ManageRow(summary: String, onManage: () -> Unit) {
     ) {
         Text(
             text = summary,
-            fontFamily = ManropeFamily,
+            fontFamily = GeistFamily,
             fontSize = 13.sp,
             color = Nemo.colors.inkSecondary,
             modifier = Modifier.weight(1f),
@@ -608,7 +705,7 @@ private fun ManageRow(summary: String, onManage: () -> Unit) {
         Spacer(modifier = Modifier.width(Spacing.x3))
         Text(
             text = stringResource(R.string.settings_manage),
-            fontFamily = ManropeFamily,
+            fontFamily = GeistFamily,
             fontWeight = FontWeight.SemiBold,
             fontSize = 13.sp,
             color = Nemo.colors.ink,
@@ -629,8 +726,8 @@ private fun SettingRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.x1)) {
-            Text(text = title, fontFamily = ManropeFamily, fontWeight = FontWeight.Medium, fontSize = 14.sp, color = Nemo.colors.ink)
-            Text(text = subtitle, fontFamily = ManropeFamily, fontSize = 12.sp, color = Nemo.colors.mute)
+            Text(text = title, fontFamily = GeistFamily, fontWeight = FontWeight.Medium, fontSize = 14.sp, color = Nemo.colors.ink)
+            Text(text = subtitle, fontFamily = GeistFamily, fontSize = 12.sp, color = Nemo.colors.mute)
         }
         NemoSwitch(
             checked = checked,

@@ -16,6 +16,7 @@ import com.anchor.app.platform.apps.InstalledApp
 import com.anchor.app.platform.apps.InstalledAppsSource
 import com.anchor.app.platform.accessibility.AccessibilityStatus
 import com.anchor.app.platform.notification.NotificationPermissions
+import com.anchor.app.platform.service.FocusService
 import com.anchor.app.platform.usagestats.UsageStatsSource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -60,6 +61,11 @@ class SettingsViewModel @Inject constructor(
 
     val settings: StateFlow<AppSettings> = settingsRepository.observe()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AppSettings())
+
+    /** Persisted master switch for task reminders & interventions. */
+    val notificationsEnabled: StateFlow<Boolean> = settingsRepository.observe()
+        .map { it.notificationsEnabled }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
 
     /** Live permission status for the two optional capabilities (FR-S1). */
     private val _permissions = MutableStateFlow(PermissionStatus())
@@ -143,6 +149,11 @@ class SettingsViewModel @Inject constructor(
 
     fun setTrackingEnabled(enabled: Boolean) =
         viewModelScope.launch(dispatchers.io) { settingsRepository.setTrackingEnabled(enabled) }
+
+    fun setNotificationsEnabled(enabled: Boolean) =
+        viewModelScope.launch(dispatchers.io) { settingsRepository.setNotificationsEnabled(enabled) }
+
+    fun toggleNotifications(enabled: Boolean) = setNotificationsEnabled(enabled)
 
     /** FR-F4/F8: opt-in toggle for Strict/Custom blocking (PRD v0.4 §10.5). */
     fun setFocusBlockingEnabled(enabled: Boolean) =
@@ -228,6 +239,7 @@ class SettingsViewModel @Inject constructor(
 
     /** "Delete all data" — erase every user table then reset settings (PRD §10.10). */
     fun onDeleteAllData() = viewModelScope.launch(dispatchers.io) {
+        context?.let { FocusService.stop(it) }
         database?.clearAllTables()
         settingsRepository.resetAll()
     }

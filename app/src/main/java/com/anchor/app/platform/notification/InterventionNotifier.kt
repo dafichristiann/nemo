@@ -15,6 +15,7 @@ import com.anchor.app.MainActivity
 import com.anchor.app.R
 import com.anchor.app.core.domain.model.InterventionAction
 import com.anchor.app.core.domain.model.InterventionLevel
+import com.anchor.app.core.domain.repository.SettingsRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -30,25 +31,37 @@ import javax.inject.Singleton
 @Singleton
 class InterventionNotifier @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val settingsRepository: SettingsRepository,
 ) {
 
     private val manager = NotificationManagerCompat.from(context)
 
-    /** Whether the OS currently allows posting (channel not disabled + permission granted). */
-    fun canNotify(): Boolean = manager.areNotificationsEnabled()
+    /** Whether the OS and user settings currently allow posting. */
+    suspend fun canNotify(): Boolean =
+        manager.areNotificationsEnabled() && settingsRepository.get().notificationsEnabled
 
     /**
      * Shows one intervention notification. [logId] and [level] travel back through the intent
      * actions so the user's choice updates the exact `intervention_log` row.
      */
-    fun show(logId: String, level: Int, relatedTaskId: String?) {
+    suspend fun show(logId: String, level: Int, relatedTaskId: String?) {
+        val settings = settingsRepository.get()
+        if (!settings.notificationsEnabled) return
+
         ensureChannel()
+
+        val actionName = if (!relatedTaskId.isNullOrBlank()) ACTION_OPEN_TASK else ACTION_START_FOCUS
+        val route = if (!relatedTaskId.isNullOrBlank()) "tasks" else "focus"
 
         val contentIntent = PendingIntent.getActivity(
             context,
             logId.hashCode(),
             Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra(MainActivity.EXTRA_LOG_ID, logId)
+                putExtra(MainActivity.EXTRA_ACTION, actionName)
+                putExtra(MainActivity.EXTRA_TASK_ID, relatedTaskId)
+                putExtra(MainActivity.EXTRA_OPEN_ROUTE, route)
             },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
@@ -62,6 +75,7 @@ class InterventionNotifier @Inject constructor(
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setAutoCancel(true)
             .setContentIntent(contentIntent)
+            .setDeleteIntent(deleteIntent(logId))
             .addAction(
                 0,
                 context.getString(R.string.intervention_action_start_focus),
@@ -87,6 +101,20 @@ class InterventionNotifier @Inject constructor(
     /** Dismisses a previously shown intervention notification. */
     fun cancel(logId: String) {
         manager.cancel(logId.hashCode())
+    }
+
+    private fun deleteIntent(logId: String): PendingIntent {
+        val intent = Intent(context, InterventionActionReceiver::class.java).apply {
+            action = InterventionActionReceiver.ACTION
+            putExtra(InterventionActionReceiver.EXTRA_LOG_ID, logId)
+            putExtra(InterventionActionReceiver.EXTRA_ACTION, "DISMISSED")
+        }
+        return PendingIntent.getBroadcast(
+            context,
+            (logId + "_delete").hashCode(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
     }
 
     private fun actionIntent(
@@ -119,8 +147,10 @@ class InterventionNotifier @Inject constructor(
         manager.createNotificationChannel(channel)
     }
 
-    private companion object {
-        const val CHANNEL_ID = "intervention"
+    companion object {
+        const val CHANNEL_ID = NotificationChannels.INTERVENTION
+        const val ACTION_OPEN_TASK = "ACTION_OPEN_TASK"
+        const val ACTION_START_FOCUS = "ACTION_START_FOCUS"
 
         fun titleFor(level: Int): Int = when (level) {
             InterventionLevel.FOCUS -> R.string.intervention_notif_title_focus

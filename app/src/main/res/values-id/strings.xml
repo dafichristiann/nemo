@@ -199,6 +199,8 @@
     <string name="settings_doomscroll_subtitle">Ingatkan saya saat terlalu lama membuka aplikasi yang dibatasi tanpa henti.</string>
     <string name="settings_doomscroll_duration_title">Batas Waktu Sesi</string>
     <string name="settings_doomscroll_duration_summary">%1$d menit per sesi</string>
+    <string name="settings_doomscroll_perm_warning">Membutuhkan izin Aksesibilitas agar dapat mendeteksi durasi scrolling.</string>
+    <string name="settings_doomscroll_perm_action">Buka Aksesibilitas</string>
     <string name="settings_blocked_desc">Aplikasi yang bakal dijeda pas sesi fokus Ketat atau Kustom.</string>
     <string name="settings_blocked_empty">Belum ada aplikasi yang dijeda.</string>
     <string name="settings_blocked_add_hint">Nama package (contoh: com.tiktok)</string>
@@ -255,6 +257,18 @@
     <string name="onboarding_profile_doomscroll_label">Peringatan Medsos (Opsional)</string>
     <string name="onboarding_profile_doomscroll_desc">Ingatkan saya dengan lembut setelah 20 menit terus-menerus membuka medsos.</string>
     <string name="onboarding_profile_doomscroll_toggle">Aktifkan Peringatan 20 Menit</string>
+    <string name="onboarding_profile_features_label">Fitur Andalan</string>
+    <string name="onboarding_profile_tracking_title">Pelacakan Penggunaan</string>
+    <string name="onboarding_profile_tracking_desc">Catat waktu layar lokal untuk melihat wawasan kebiasaanmu.</string>
+    <string name="onboarding_profile_ai_title">Wawasan AI</string>
+    <string name="onboarding_profile_ai_desc">Saran pintar dan rangkuman berdasarkan kebiasaan fokusmu.</string>
+    <string name="onboarding_profile_focus_blocking_title">Blokir Pas Fokus</string>
+    <string name="onboarding_profile_focus_blocking_desc">Jaga fokus dari godaan buka aplikasi lain saat sesi aktif.</string>
+    <string name="onboarding_profile_dialog_title">Lanjut tanpa fitur andalan?</string>
+    <string name="onboarding_profile_dialog_message">Pelacakan penggunaan, Wawasan AI, dan Blokir pas fokus masih belum aktif nih. Tanpa fitur ini, Nemo nggak bisa ngasih insight kebiasaanmu atau ngejaga fokusmu dari distraksi. Mau nyalain dulu atau tetap lanjut?</string>
+    <string name="onboarding_profile_dialog_enable_all">Nyalain semua</string>
+    <string name="onboarding_profile_dialog_continue_anyway">Tetap lanjut</string>
+    <string name="onboarding_profile_dialog_adjust">Atur sendiri</string>
     <string name="onboarding_profile_continue">Lanjut</string>
     <string name="onboarding_profile_skip">Nanti Dulu</string>
 
@@ -339,6 +353,13 @@
     <string name="focus_channel_desc">Nampilin sesi fokus yang lagi jalan plus opsi keluar kapan aja.</string>
     <string name="focus_service_title">Sesi fokus lagi jalan nih</string>
     <string name="focus_service_text">Tap buat balik. Opsi keluar darurat selalu ada.</string>
+    <string name="focus_service_paused">Fokus dijeda</string>
+
+    <!-- Task reminder notifications -->
+    <string name="task_reminder_title_approaching">Tenggat Tugas Mendekat</string>
+    <string name="task_reminder_title_due">Tenggat Tugas Tiba</string>
+    <string name="task_reminder_body_approaching">Tugas \"%1$s\" akan jatuh tempo dalam 1 jam.</string>
+    <string name="task_reminder_body_due">Tugas \"%1$s\" telah mencapai batas waktu.</string>
 
     <!-- 07 Future View + Domino -->
     <string name="future_title">Bakal gimana harimu?</string>

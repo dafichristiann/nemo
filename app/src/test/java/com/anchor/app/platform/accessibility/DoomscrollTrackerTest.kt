@@ -284,4 +284,68 @@ class DoomscrollTrackerTest {
         assertEquals(1, triggerCount)
         assertTrue(tracker.isOverlayShowing)
     }
+
+    @Test
+    fun test_default_targets_monitored_when_blocked_apps_customized() = runTest {
+        val tracker = DoomscrollTracker(
+            scope = this,
+            clock = { testScheduler.currentTime },
+        ).apply {
+            updateConfiguration(
+                enabled = true,
+                thresholdMinutes = 20,
+                blockedApps = setOf("com.custom.game"),
+            )
+        }
+
+        // Both custom app and default social target (YouTube) must be tracked
+        tracker.onPackageEvent("com.google.android.youtube")
+        assertTrue(tracker.isTracking)
+        assertEquals("com.google.android.youtube", tracker.currentPackage)
+
+        tracker.reset()
+
+        tracker.onPackageEvent("com.custom.game")
+        assertTrue(tracker.isTracking)
+        assertEquals("com.custom.game", tracker.currentPackage)
+    }
+
+    @Test
+    fun test_dedicated_screen_off_and_on_grace_period() = runTest {
+        var triggerCount = 0
+
+        val tracker = DoomscrollTracker(
+            scope = this,
+            clock = { testScheduler.currentTime },
+            debounceDelayMs = 10_000L,
+            onThresholdReached = { _, _ -> triggerCount++ },
+        ).apply {
+            updateConfiguration(
+                enabled = true,
+                thresholdMinutes = 20,
+                blockedApps = targetApps,
+            )
+        }
+
+        tracker.onPackageEvent("com.instagram.android")
+        advanceTimeBy(10 * 60 * 1000L)
+        runCurrent()
+
+        // Screen turned off for 5 seconds (< 10s debounce timeout)
+        tracker.onScreenOff()
+        assertTrue(tracker.isPaused)
+
+        advanceTimeBy(5_000L)
+        runCurrent()
+
+        // Screen turned back on
+        tracker.onScreenOn()
+        assertFalse(tracker.isPaused)
+        assertTrue(tracker.isTracking)
+
+        // Advance remaining 10 minutes
+        advanceTimeBy(10 * 60 * 1000L)
+        runCurrent()
+        assertEquals(1, triggerCount)
+    }
 }

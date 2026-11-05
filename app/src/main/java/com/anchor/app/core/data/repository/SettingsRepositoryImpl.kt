@@ -29,6 +29,11 @@ class SettingsRepositoryImpl @Inject constructor(
         dao.upsert(current.copy(trackingEnabled = enabled).toEntity())
     }
 
+    override suspend fun setNotificationsEnabled(enabled: Boolean) {
+        val current = dao.get()?.toDomain() ?: AppSettings()
+        dao.upsert(current.copy(notificationsEnabled = enabled).toEntity())
+    }
+
     override suspend fun setAiEnabled(enabled: Boolean) {
         val current = dao.get()?.toDomain() ?: AppSettings()
         dao.upsert(current.copy(aiEnabled = enabled).toEntity())

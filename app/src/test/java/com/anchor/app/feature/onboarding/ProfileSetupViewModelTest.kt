@@ -93,6 +93,57 @@ class ProfileSetupViewModelTest {
     }
 
     @Test
+    fun onToggleTracking_persistsEnabled() = runTest(dispatcher) {
+        val vm = viewModel()
+        assertEquals(false, settings.state.value.trackingEnabled)
+        vm.onToggleTracking(true)
+        advanceUntilIdle()
+        assertEquals(true, settings.state.value.trackingEnabled)
+        vm.onToggleTracking(false)
+        advanceUntilIdle()
+        assertEquals(false, settings.state.value.trackingEnabled)
+    }
+
+    @Test
+    fun onToggleAi_persistsEnabled() = runTest(dispatcher) {
+        val vm = viewModel()
+        assertEquals(false, settings.state.value.aiEnabled)
+        vm.onToggleAi(true)
+        advanceUntilIdle()
+        assertEquals(true, settings.state.value.aiEnabled)
+        vm.onToggleAi(false)
+        advanceUntilIdle()
+        assertEquals(false, settings.state.value.aiEnabled)
+    }
+
+    @Test
+    fun onToggleFocusBlocking_persistsEnabled() = runTest(dispatcher) {
+        val vm = viewModel()
+        assertEquals(false, settings.state.value.focusBlockingEnabled)
+        vm.onToggleFocusBlocking(true)
+        advanceUntilIdle()
+        assertEquals(true, settings.state.value.focusBlockingEnabled)
+        vm.onToggleFocusBlocking(false)
+        advanceUntilIdle()
+        assertEquals(false, settings.state.value.focusBlockingEnabled)
+    }
+
+    @Test
+    fun onEnableAllKeyFeatures_enablesAllThree() = runTest(dispatcher) {
+        val vm = viewModel()
+        assertEquals(false, settings.state.value.trackingEnabled)
+        assertEquals(false, settings.state.value.aiEnabled)
+        assertEquals(false, settings.state.value.focusBlockingEnabled)
+
+        vm.onEnableAllKeyFeatures()
+        advanceUntilIdle()
+
+        assertEquals(true, settings.state.value.trackingEnabled)
+        assertEquals(true, settings.state.value.aiEnabled)
+        assertEquals(true, settings.state.value.focusBlockingEnabled)
+    }
+
+    @Test
     fun defaults_areCollegeAnd25Minutes() {
         // New users start on the safe defaults the onboarding chips preselect.
         assertEquals(FocusArea.COLLEGE, AppSettings().focusArea)
@@ -100,6 +151,6 @@ class ProfileSetupViewModelTest {
         assertEquals(listOf(25, 45, 60), AppSettings.FOCUS_DURATION_OPTIONS_MIN)
         assertEquals(false, AppSettings().doomscrollAlertEnabled)
         assertEquals(20, AppSettings().doomscrollThresholdMinutes)
-        assertEquals(listOf(10, 15, 20, 30, 45), AppSettings.DOOMSCROLL_THRESHOLD_OPTIONS_MIN)
+        assertEquals(listOf(1, 10, 15, 20, 30, 45), AppSettings.DOOMSCROLL_THRESHOLD_OPTIONS_MIN)
     }
 }

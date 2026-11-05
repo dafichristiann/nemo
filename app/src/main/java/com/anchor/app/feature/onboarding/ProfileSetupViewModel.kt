@@ -51,4 +51,22 @@ class ProfileSetupViewModel @Inject constructor(
     fun onSelectDoomscrollThreshold(minutes: Int) = viewModelScope.launch(dispatchers.io) {
         settingsRepository.setDoomscrollThresholdMinutes(minutes)
     }
+
+    fun onToggleTracking(enabled: Boolean) = viewModelScope.launch(dispatchers.io) {
+        settingsRepository.setTrackingEnabled(enabled)
+    }
+
+    fun onToggleAi(enabled: Boolean) = viewModelScope.launch(dispatchers.io) {
+        settingsRepository.setAiEnabled(enabled)
+    }
+
+    fun onToggleFocusBlocking(enabled: Boolean) = viewModelScope.launch(dispatchers.io) {
+        settingsRepository.setFocusBlockingEnabled(enabled)
+    }
+
+    fun onEnableAllKeyFeatures() = viewModelScope.launch(dispatchers.io) {
+        settingsRepository.setTrackingEnabled(true)
+        settingsRepository.setAiEnabled(true)
+        settingsRepository.setFocusBlockingEnabled(true)
+    }
 }

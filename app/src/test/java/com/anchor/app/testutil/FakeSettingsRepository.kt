@@ -24,6 +24,10 @@ class FakeSettingsRepository(
         state.value = state.value.copy(trackingEnabled = enabled)
     }
 
+    override suspend fun setNotificationsEnabled(enabled: Boolean) {
+        state.value = state.value.copy(notificationsEnabled = enabled)
+    }
+
     override suspend fun setAiEnabled(enabled: Boolean) {
         state.value = state.value.copy(aiEnabled = enabled)
     }

@@ -44,9 +44,10 @@ class GenerateRecurringTasksUseCase @Inject constructor(
             val alreadyIssued = taskRepository.countForDefinitionOnDate(definition.id, occurrenceDate)
             if (alreadyIssued > 0) continue
 
+            val newTaskId = idProvider.newId()
             val inserted = taskRepository.insertIgnoringDuplicate(
                 Task(
-                    id = idProvider.newId(),
+                    id = newTaskId,
                     definitionId = definition.id,
                     title = definition.title,
                     description = definition.description,
@@ -58,7 +59,25 @@ class GenerateRecurringTasksUseCase @Inject constructor(
                     definitionOccurrenceDate = occurrenceDate,
                 ),
             )
-            if (inserted) created++
+            if (inserted) {
+                created++
+                val prevInstance = taskRepository.latestInstanceForDefinition(definition.id, occurrenceDate)
+                    ?.takeIf { it.id != newTaskId }
+                    ?: taskRepository.latestInstanceForDefinition(definition.id, occurrenceDate - 1)
+                if (prevInstance != null) {
+                    val prevSubtasks = taskRepository.getSubtasks(prevInstance.id)
+                    if (prevSubtasks.isNotEmpty()) {
+                        val clonedSubtasks = prevSubtasks.map { subtask ->
+                            subtask.copy(
+                                id = idProvider.newId(),
+                                taskId = newTaskId,
+                                isDone = false,
+                            )
+                        }
+                        taskRepository.addSubtasks(clonedSubtasks)
+                    }
+                }
+            }
         }
         return created
     }

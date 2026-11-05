@@ -9,6 +9,7 @@ import com.anchor.app.core.domain.model.Subtask
 import com.anchor.app.core.domain.model.Task
 import com.anchor.app.core.domain.model.TaskStatus
 import com.anchor.app.core.domain.repository.TaskRepository
+import com.anchor.app.platform.notification.TaskReminderScheduler
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -19,6 +20,7 @@ import javax.inject.Singleton
 class TaskRepositoryImpl @Inject constructor(
     private val taskDao: TaskDao,
     private val subtaskDao: SubtaskDao,
+    private val taskReminderScheduler: TaskReminderScheduler? = null,
 ) : TaskRepository {
 
     override fun observeAll(): Flow<List<Task>> =
@@ -51,14 +53,32 @@ class TaskRepositoryImpl @Inject constructor(
 
     override suspend fun getById(id: String): Task? = taskDao.getById(id)?.toDomain()
 
-    override suspend fun insert(task: Task) = taskDao.insert(task.toEntity())
+    override suspend fun insert(task: Task) {
+        taskDao.insert(task.toEntity())
+        taskReminderScheduler?.scheduleReminder(task)
+    }
 
-    override suspend fun insertIgnoringDuplicate(task: Task): Boolean =
-        taskDao.insertIgnoringDuplicate(task.toEntity()) != -1L
+    override suspend fun insertIgnoringDuplicate(task: Task): Boolean {
+        val inserted = taskDao.insertIgnoringDuplicate(task.toEntity()) != -1L
+        if (inserted) {
+            taskReminderScheduler?.scheduleReminder(task)
+        }
+        return inserted
+    }
 
-    override suspend fun update(task: Task) = taskDao.update(task.toEntity())
+    override suspend fun update(task: Task) {
+        taskDao.update(task.toEntity())
+        if (task.isDone) {
+            taskReminderScheduler?.cancelReminder(task.id)
+        } else {
+            taskReminderScheduler?.scheduleReminder(task)
+        }
+    }
 
-    override suspend fun delete(id: String) = taskDao.deleteById(id)
+    override suspend fun delete(id: String) {
+        taskDao.deleteById(id)
+        taskReminderScheduler?.cancelReminder(id)
+    }
 
     override suspend fun markDone(id: String, completedAt: Long, source: CompletionSource) {
         val current = taskDao.getById(id) ?: return
@@ -70,6 +90,7 @@ class TaskRepositoryImpl @Inject constructor(
                 completionSource = source.name,
             ),
         )
+        taskReminderScheduler?.cancelReminder(id)
     }
 
     override suspend fun setStatus(id: String, status: TaskStatus) {
@@ -82,6 +103,7 @@ class TaskRepositoryImpl @Inject constructor(
                     progressPercent = 100,
                 ),
             )
+            taskReminderScheduler?.cancelReminder(id)
         } else {
             val totalSubtasks = subtaskDao.countForTask(id)
             val newProgress = if (totalSubtasks > 0) {
@@ -90,14 +112,14 @@ class TaskRepositoryImpl @Inject constructor(
             } else {
                 0
             }
-            taskDao.update(
-                current.copy(
-                    status = status.name,
-                    completedAt = null,
-                    completionSource = null,
-                    progressPercent = newProgress,
-                ),
+            val updated = current.copy(
+                status = status.name,
+                completedAt = null,
+                completionSource = null,
+                progressPercent = newProgress,
             )
+            taskDao.update(updated)
+            taskReminderScheduler?.scheduleReminder(updated.toDomain())
         }
     }
 

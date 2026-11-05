@@ -64,6 +64,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.anchor.app.R
 import com.anchor.app.core.design.components.Banner
+import com.anchor.app.core.design.components.Divider
 import com.anchor.app.core.design.components.NemoPill
 import com.anchor.app.core.design.components.NemoSwitch
 import com.anchor.app.core.design.components.PrimaryButton
@@ -218,11 +219,10 @@ fun PermissionOnboardingScreen(
         ActivityResultContracts.RequestPermission(),
     ) { granted ->
         notificationsGranted = granted
-        if (!granted) openNotificationSettings(context)
     }
 
     val tryProceed = {
-        if (usageGranted && notificationsGranted && accessibilityGranted) {
+        if (usageGranted && accessibilityGranted) {
             onContinue()
         } else {
             showBlockedDialog = true
@@ -337,6 +337,14 @@ fun PermissionOnboardingScreen(
             granted = notificationsGranted,
             iconRes = R.drawable.ic_insights,
             onEnable = { requestNotifications(notifLauncher, context) },
+            helperText = if (!notificationsGranted) {
+                val isIndo = java.util.Locale.getDefault().language.let { it.startsWith("id") || it.startsWith("in") }
+                if (isIndo) {
+                    "Notifikasi dinonaktifkan. Pengingat dalam aplikasi (in-app reminder) akan digunakan sebagai alternatif."
+                } else {
+                    "Notifications disabled. In-app reminder will be used as a fallback."
+                }
+            } else null,
         )
         PermissionCard(
             title = stringResource(R.string.onboarding_perm_blocking_title),
@@ -397,6 +405,71 @@ fun ProfileSetupScreen(
     viewModel: ProfileSetupViewModel = hiltViewModel(),
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
+    var showWarningDialog by rememberSaveable { mutableStateOf(false) }
+
+    if (showWarningDialog) {
+        AlertDialog(
+            onDismissRequest = { showWarningDialog = false },
+            title = {
+                Text(
+                    text = stringResource(R.string.onboarding_profile_dialog_title),
+                    fontFamily = GeistFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 18.sp,
+                    color = Nemo.colors.ink,
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.onboarding_profile_dialog_message),
+                    fontFamily = GeistFamily,
+                    fontSize = 14.sp,
+                    lineHeight = 20.sp,
+                    color = Nemo.colors.inkSecondary,
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.onEnableAllKeyFeatures()
+                        showWarningDialog = false
+                        onContinue()
+                    },
+                ) {
+                    Text(
+                        text = stringResource(R.string.onboarding_profile_dialog_enable_all),
+                        fontFamily = GeistFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Nemo.colors.ink,
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showWarningDialog = false }) {
+                    Text(
+                        text = stringResource(R.string.onboarding_profile_dialog_adjust),
+                        fontFamily = GeistFamily,
+                        color = Nemo.colors.mute,
+                    )
+                }
+                TextButton(
+                    onClick = {
+                        showWarningDialog = false
+                        onContinue()
+                    },
+                ) {
+                    Text(
+                        text = stringResource(R.string.onboarding_profile_dialog_continue_anyway),
+                        fontFamily = GeistFamily,
+                        fontWeight = FontWeight.Medium,
+                        color = Nemo.colors.inkSecondary,
+                    )
+                }
+            },
+            containerColor = Nemo.colors.surface,
+            shape = RoundedCornerShape(Radius.card),
+        )
+    }
 
     Column(
         modifier = modifier
@@ -536,11 +609,50 @@ fun ProfileSetupScreen(
             }
         }
 
+        // Field 5 — Key Features (Usage Tracking, AI Insights, Focus Blocking).
+        SectionHeader(title = stringResource(R.string.onboarding_profile_features_label))
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(Radius.card))
+                .border(1.dp, Nemo.colors.line, RoundedCornerShape(Radius.card))
+                .background(Nemo.colors.surface)
+                .padding(Spacing.cardHorizontal),
+            verticalArrangement = Arrangement.spacedBy(Spacing.x3),
+        ) {
+            FeatureToggleRow(
+                title = stringResource(R.string.onboarding_profile_tracking_title),
+                subtitle = stringResource(R.string.onboarding_profile_tracking_desc),
+                checked = settings.trackingEnabled,
+                onCheckedChange = viewModel::onToggleTracking,
+            )
+            Divider()
+            FeatureToggleRow(
+                title = stringResource(R.string.onboarding_profile_ai_title),
+                subtitle = stringResource(R.string.onboarding_profile_ai_desc),
+                checked = settings.aiEnabled,
+                onCheckedChange = viewModel::onToggleAi,
+            )
+            Divider()
+            FeatureToggleRow(
+                title = stringResource(R.string.onboarding_profile_focus_blocking_title),
+                subtitle = stringResource(R.string.onboarding_profile_focus_blocking_desc),
+                checked = settings.focusBlockingEnabled,
+                onCheckedChange = viewModel::onToggleFocusBlocking,
+            )
+        }
+
         Spacer(modifier = Modifier.height(Spacing.x4))
 
         PrimaryButton(
             label = stringResource(R.string.onboarding_profile_continue),
-            onClick = onContinue,
+            onClick = {
+                if (!settings.trackingEnabled && !settings.aiEnabled && !settings.focusBlockingEnabled) {
+                    showWarningDialog = true
+                } else {
+                    onContinue()
+                }
+            },
         )
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             Text(
@@ -552,6 +664,46 @@ fun ProfileSetupScreen(
                 modifier = Modifier.clickable(onClick = onSkip),
             )
         }
+    }
+}
+
+@Composable
+private fun FeatureToggleRow(
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(Spacing.x1),
+        ) {
+            Text(
+                text = title,
+                fontFamily = GeistFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp,
+                color = Nemo.colors.ink,
+            )
+            Text(
+                text = subtitle,
+                fontFamily = GeistFamily,
+                fontSize = 12.sp,
+                lineHeight = 16.sp,
+                color = Nemo.colors.inkSecondary,
+            )
+        }
+        Spacer(modifier = Modifier.width(Spacing.x2))
+        NemoSwitch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+        )
     }
 }
 
@@ -656,57 +808,72 @@ private fun PermissionCard(
     granted: Boolean,
     onEnable: () -> Unit,
     iconRes: Int? = null,
+    helperText: String? = null,
 ) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(Radius.card))
             .border(1.dp, Nemo.colors.line, RoundedCornerShape(Radius.card))
             .background(Nemo.colors.surface)
             .padding(Spacing.cardHorizontal),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
+        verticalArrangement = Arrangement.spacedBy(Spacing.x2),
     ) {
-        if (iconRes != null) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(Nemo.colors.fog),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    painter = painterResource(iconRes),
-                    contentDescription = null,
-                    tint = Nemo.colors.ink,
-                    modifier = Modifier.size(18.dp),
-                )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (iconRes != null) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(Nemo.colors.fog),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        painter = painterResource(iconRes),
+                        contentDescription = null,
+                        tint = Nemo.colors.ink,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+                Spacer(modifier = Modifier.width(Spacing.x3))
             }
-            Spacer(modifier = Modifier.width(Spacing.x3))
-        }
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.x1)) {
-            Text(text = title, fontFamily = GeistFamily, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Nemo.colors.ink)
-            Text(text = subtitle, fontFamily = GeistFamily, fontSize = 12.sp, color = Nemo.colors.mute)
-        }
-        Spacer(modifier = Modifier.width(Spacing.x2))
-        if (granted) {
-            NemoPill(text = stringResource(R.string.onboarding_perm_enabled), filled = true)
-        } else {
-            Box(
-                modifier = Modifier
-                    .clip(PillShape)
-                    .background(Nemo.colors.ink)
-                    .clickable(onClick = onEnable)
-                    .padding(horizontal = Spacing.x3, vertical = Spacing.x2),
-            ) {
-                Text(
-                    text = stringResource(R.string.onboarding_perm_enable),
-                    fontFamily = GeistFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 12.sp,
-                    color = Nemo.colors.onInk,
-                )
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.x1)) {
+                Text(text = title, fontFamily = GeistFamily, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = Nemo.colors.ink)
+                Text(text = subtitle, fontFamily = GeistFamily, fontSize = 12.sp, color = Nemo.colors.mute)
             }
+            Spacer(modifier = Modifier.width(Spacing.x2))
+            if (granted) {
+                NemoPill(text = stringResource(R.string.onboarding_perm_enabled), filled = true)
+            } else {
+                Box(
+                    modifier = Modifier
+                        .clip(PillShape)
+                        .background(Nemo.colors.ink)
+                        .clickable(onClick = onEnable)
+                        .padding(horizontal = Spacing.x3, vertical = Spacing.x2),
+                ) {
+                    Text(
+                        text = stringResource(R.string.onboarding_perm_enable),
+                        fontFamily = GeistFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 12.sp,
+                        color = Nemo.colors.onInk,
+                    )
+                }
+            }
+        }
+        if (helperText != null) {
+            Text(
+                text = helperText,
+                fontFamily = GeistFamily,
+                fontSize = 12.sp,
+                lineHeight = 16.sp,
+                color = Nemo.colors.mute,
+            )
         }
     }
 }

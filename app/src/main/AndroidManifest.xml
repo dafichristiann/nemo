@@ -35,6 +35,10 @@
         android:name="android.permission.POST_NOTIFICATIONS"
         tools:ignore="ProtectedPermissions" />
 
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <!--
       Focus foreground service (Phase 3, docs 08-permissions.md §5, PRD §10.5). Runs only while a
       focus session is active, with a persistent notification + emergency exit. FOREGROUND_SERVICE
@@ -90,6 +94,39 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="com.anchor.app.INTERVENTION_ACTION" />
+            </intent-filter>
+        </receiver>
+
+        <!--
+          Handles task deadline reminder alarms.
+        -->
+        <receiver
+            android:name=".platform.notification.TaskReminderReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.anchor.app.action.TASK_REMINDER" />
+            </intent-filter>
+        </receiver>
+
+        <!--
+          Reschedules task reminders upon device boot completion.
+        -->
+        <receiver
+            android:name=".platform.notification.BootCompletedReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <!--
+          Handles focus session completion when timer reaches zero in background.
+        -->
+        <receiver
+            android:name=".platform.service.FocusCompletedReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.anchor.app.action.FOCUS_COMPLETED" />
             </intent-filter>
         </receiver>
 

@@ -76,11 +76,11 @@ class AppViewModel @Inject constructor(
     }
 
     /**
-     * True when all required permissions (Usage Access, Notifications, and Accessibility) are granted.
+     * True when all required permissions (Usage Access and Accessibility) are granted.
+     * Notifications are optional since in-app overlays act as a fallback.
      */
     fun allRequiredPermissionsGranted(): Boolean =
         usageStats.hasPermission() &&
-            notificationPermissions.canPostNotifications() &&
             accessibilityStatus.isEnabled(context)
 
     /**

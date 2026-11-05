@@ -193,6 +193,8 @@
     <string name="settings_doomscroll_subtitle">Remind me when browsing limited apps continuously for too long.</string>
     <string name="settings_doomscroll_duration_title">Session Time Limit</string>
     <string name="settings_doomscroll_duration_summary" tools:ignore="PluralsCandidate">%1$d minutes per session</string>
+    <string name="settings_doomscroll_perm_warning">Accessibility permission is required to detect continuous scrolling time.</string>
+    <string name="settings_doomscroll_perm_action">Open Accessibility</string>
     <string name="settings_blocked_desc">Apps to pause during Strict or Custom focus sessions.</string>
     <string name="settings_blocked_empty">No apps blocked yet.</string>
     <string name="settings_blocked_add_hint">Package name (e.g. com.tiktok)</string>
@@ -242,6 +244,18 @@
     <string name="onboarding_profile_doomscroll_label">Social Media Alert (Optional)</string>
     <string name="onboarding_profile_doomscroll_desc">Gently remind me after 20 minutes of continuous social browsing.</string>
     <string name="onboarding_profile_doomscroll_toggle">Enable 20-Min Alert</string>
+    <string name="onboarding_profile_features_label">Key Features</string>
+    <string name="onboarding_profile_tracking_title">Usage Tracking</string>
+    <string name="onboarding_profile_tracking_desc">Track screen time locally to power wellbeing insights.</string>
+    <string name="onboarding_profile_ai_title">AI Personal Insights</string>
+    <string name="onboarding_profile_ai_desc">Smart suggestions and summaries based on your focus habits.</string>
+    <string name="onboarding_profile_focus_blocking_title">Focus Blocking</string>
+    <string name="onboarding_profile_focus_blocking_desc">Keep distracting apps away during focus sessions.</string>
+    <string name="onboarding_profile_dialog_title">Continue without key features?</string>
+    <string name="onboarding_profile_dialog_message">Usage tracking, AI Insights, and Focus Blocking are all turned off. Without these, Nemo can\'t provide habit insights or keep your focus protected from distractions. Would you like to turn them on first or continue anyway?</string>
+    <string name="onboarding_profile_dialog_enable_all">Turn on all</string>
+    <string name="onboarding_profile_dialog_continue_anyway">Continue anyway</string>
+    <string name="onboarding_profile_dialog_adjust">Adjust manually</string>
     <string name="onboarding_profile_continue">Continue</string>
     <string name="onboarding_profile_skip">Skip for now</string>
 
@@ -326,6 +340,13 @@
     <string name="focus_channel_desc">Shows an ongoing focus session with a way to exit at any time.</string>
     <string name="focus_service_title">Focus session in progress</string>
     <string name="focus_service_text">Tap to return. Emergency exit is always available.</string>
+    <string name="focus_service_paused">Focus paused</string>
+
+    <!-- Task reminder notifications -->
+    <string name="task_reminder_title_approaching">Task Deadline Approaching</string>
+    <string name="task_reminder_title_due">Task Deadline Reached</string>
+    <string name="task_reminder_body_approaching">Task \"%1$s\" is due in 1 hour.</string>
+    <string name="task_reminder_body_due">Task \"%1$s\" has reached its deadline.</string>
 
     <!-- 07 Future View + Domino (07-screens.md §2.11, PRD §10.6-10.7) -->
     <string name="future_title">What happens next?</string>

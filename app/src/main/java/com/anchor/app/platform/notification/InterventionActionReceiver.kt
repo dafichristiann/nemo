@@ -27,9 +27,11 @@ class InterventionActionReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val logId = intent.getStringExtra(EXTRA_LOG_ID) ?: return
-        val action = intent.getStringExtra(EXTRA_ACTION)
-            ?.let { name -> InterventionAction.entries.firstOrNull { it.name == name } }
-            ?: return
+        val actionString = intent.getStringExtra(EXTRA_ACTION) ?: return
+        val action = when (actionString) {
+            "DISMISSED", InterventionAction.DISMISS.name -> InterventionAction.DISMISS
+            else -> InterventionAction.entries.firstOrNull { it.name == actionString }
+        } ?: return
 
         val pendingResult = goAsync()
         CoroutineScope(Dispatchers.Default).launch {

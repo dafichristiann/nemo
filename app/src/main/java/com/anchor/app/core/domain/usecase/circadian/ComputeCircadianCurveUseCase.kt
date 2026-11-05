@@ -30,7 +30,8 @@ data class CircadianCurveData(
     /** Evaluates capacity in [0.0..1.0] at hours from wake in [0..24]. */
     fun evaluate(hoursFromWake: Float): Float {
         val h = (hoursFromWake % 24f + 24f) % 24f
-        val seg = segments.find { h >= it.startX && h <= it.endX } ?: segments.last()
+        if (segments.isEmpty()) return 0.5f
+        val seg = segments.find { h >= it.startX && h <= it.endX } ?: segments.lastOrNull() ?: return 0.5f
         val len = seg.endX - seg.startX
         if (len <= 0f) return seg.startY
         val u = (h - seg.startX) / len

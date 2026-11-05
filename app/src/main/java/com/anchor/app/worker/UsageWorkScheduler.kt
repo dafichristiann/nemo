@@ -54,11 +54,14 @@ class UsageWorkScheduler @Inject constructor(
             pruning,
         )
 
-        // Daily reflection: once per day (FR-DR1). Cached per day, so an extra run is harmless.
-        val reflection = PeriodicWorkRequestBuilder<DailyReflectionWorker>(1, TimeUnit.DAYS).build()
+        // Daily reflection: once per day (FR-DR1). Scheduled near evening (21:00) local time.
+        val reflectionInitialDelay = calculateInitialDelayForReflection(targetHour = 21, targetMinute = 0)
+        val reflection = PeriodicWorkRequestBuilder<DailyReflectionWorker>(1, TimeUnit.DAYS)
+            .setInitialDelay(reflectionInitialDelay, TimeUnit.MILLISECONDS)
+            .build()
         workManager.enqueueUniquePeriodicWork(
             DailyReflectionWorker.UNIQUE_NAME,
-            ExistingPeriodicWorkPolicy.KEEP,
+            ExistingPeriodicWorkPolicy.UPDATE,
             reflection,
         )
 
@@ -123,6 +126,20 @@ class UsageWorkScheduler @Inject constructor(
             ExistingWorkPolicy.KEEP,
             now,
         )
+    }
+
+    private fun calculateInitialDelayForReflection(targetHour: Int = 21, targetMinute: Int = 0): Long {
+        val now = java.util.Calendar.getInstance()
+        val target = java.util.Calendar.getInstance().apply {
+            set(java.util.Calendar.HOUR_OF_DAY, targetHour)
+            set(java.util.Calendar.MINUTE, targetMinute)
+            set(java.util.Calendar.SECOND, 0)
+            set(java.util.Calendar.MILLISECOND, 0)
+        }
+        if (now.after(target)) {
+            target.add(java.util.Calendar.DAY_OF_YEAR, 1)
+        }
+        return target.timeInMillis - now.timeInMillis
     }
 
     companion object {

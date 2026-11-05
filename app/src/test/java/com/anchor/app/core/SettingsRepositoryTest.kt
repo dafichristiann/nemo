@@ -23,5 +23,9 @@ class SettingsRepositoryTest {
 
         repo.setDoomscrollThresholdMinutes(30)
         assertEquals(30, repo.get().doomscrollThresholdMinutes)
+
+        assertTrue(repo.get().notificationsEnabled)
+        repo.setNotificationsEnabled(false)
+        assertFalse(repo.get().notificationsEnabled)
     }
 }

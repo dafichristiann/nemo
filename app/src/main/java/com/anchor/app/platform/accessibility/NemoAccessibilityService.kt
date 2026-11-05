@@ -60,8 +60,9 @@ class NemoAccessibilityService : AccessibilityService() {
 
     private val screenReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == Intent.ACTION_SCREEN_OFF) {
-                doomscrollTracker.onPackageEvent("android.intent.action.SCREEN_OFF")
+            when (intent?.action) {
+                Intent.ACTION_SCREEN_OFF -> doomscrollTracker.onScreenOff()
+                Intent.ACTION_USER_PRESENT, Intent.ACTION_SCREEN_ON -> doomscrollTracker.onScreenOn()
             }
         }
     }
@@ -79,12 +80,30 @@ class NemoAccessibilityService : AccessibilityService() {
             "com.android.systemui",
             "com.google.android.packageinstaller",
             "com.android.packageinstaller",
+            // Keyboards / IMEs: input events must not reset or interrupt doomscroll tracking
+            "com.google.android.inputmethod.latin",
+            "com.samsung.android.honeyboard",
+            "com.sec.android.inputmethod",
+            "com.touchtype.swiftkey",
+            "com.sohu.inputmethod.sogou",
+            "com.baidu.input",
         )
+    }
+
+    private fun isImmunePackage(pkg: String): Boolean {
+        if (pkg == packageName || pkg in SYSTEM_IMMUNE_PACKAGES) return true
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? android.view.inputmethod.InputMethodManager
+        val imeList = runCatching { imm?.enabledInputMethodList }.getOrNull()
+        return imeList?.any { it.packageName == pkg } == true
     }
 
     override fun onServiceConnected() {
         super.onServiceConnected()
-        val filter = IntentFilter(Intent.ACTION_SCREEN_OFF)
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_OFF)
+            addAction(Intent.ACTION_SCREEN_ON)
+            addAction(Intent.ACTION_USER_PRESENT)
+        }
         runCatching { registerReceiver(screenReceiver, filter) }
 
         serviceScope.launch {
@@ -101,8 +120,7 @@ class NemoAccessibilityService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         val pkg = event?.packageName?.toString() ?: return
 
-        val isImmune = pkg == packageName || pkg in SYSTEM_IMMUNE_PACKAGES
-        if (isImmune) return
+        if (isImmunePackage(pkg)) return
 
         val snapshot = blockingState.snapshot()
         val isBlocked = snapshot.sessionActive && pkg in snapshot.blockedApps

@@ -75,6 +75,7 @@ fun NemoNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
     initialRoute: String? = null,
+    onRouteHandled: () -> Unit = {},
     appViewModel: AppViewModel = hiltViewModel(),
 ) {
     val onboardingCompleted by appViewModel.onboardingCompleted.collectAsStateWithLifecycle()
@@ -95,11 +96,15 @@ fun NemoNavHost(
 
     LaunchedEffect(initialRoute, onboardingCompleted) {
         if (initialRoute != null && onboardingCompleted == true) {
+            val isTargetTopLevel = TopLevelDestination.entries.any { it.route == initialRoute.substringBefore('?') }
+            val hasArgs = initialRoute.contains('?')
+            val shouldRestore = isTargetTopLevel && !hasArgs
             navController.navigate(initialRoute) {
-                popUpTo(TopLevelDestination.TASKS.route) { saveState = true }
+                popUpTo(TopLevelDestination.TASKS.route) { saveState = shouldRestore }
                 launchSingleTop = true
-                restoreState = true
+                restoreState = shouldRestore
             }
+            onRouteHandled()
         }
     }
 

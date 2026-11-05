@@ -10,6 +10,7 @@ interface SettingsRepository {
     suspend fun get(): AppSettings
     suspend fun update(settings: AppSettings)
     suspend fun setTrackingEnabled(enabled: Boolean)
+    suspend fun setNotificationsEnabled(enabled: Boolean)
     suspend fun setAiEnabled(enabled: Boolean)
     suspend fun setOnboardingCompleted(completed: Boolean)
     /** Persists the blocked-apps set (FR-S4). */

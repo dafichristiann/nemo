@@ -72,7 +72,7 @@ class DoomscrollTracker(
             return
         }
 
-        val effectiveTargets = blockedApps.ifEmpty { DoomscrollTargets.DEFAULT_TARGETS }
+        val effectiveTargets = DoomscrollTargets.DEFAULT_TARGETS + blockedApps
         val isTarget = pkg in effectiveTargets
 
         if (isTarget) {
@@ -137,6 +137,8 @@ class DoomscrollTracker(
     }
 
     private fun resumeSession() {
+        debounceJob?.cancel()
+        debounceJob = null
         isPaused = false
         segmentStartRealtimeMs = clock()
         scheduleThresholdJob(targetRemainingMs)
@@ -152,6 +154,25 @@ class DoomscrollTracker(
             isOverlayShowing = true
             currentPackage?.let { pkg ->
                 onThresholdReached(pkg, thresholdMinutes)
+            }
+        }
+    }
+
+    fun onScreenOff() {
+        if (!isEnabled || currentPackage == null) return
+        if (!isPaused) {
+            pauseSession()
+        }
+    }
+
+    fun onScreenOn() {
+        if (!isEnabled || currentPackage == null) return
+        if (isPaused) {
+            val pausedDuration = maxOf(0L, clock() - segmentStartRealtimeMs)
+            if (pausedDuration < debounceDelayMs) {
+                resumeSession()
+            } else {
+                reset()
             }
         }
     }

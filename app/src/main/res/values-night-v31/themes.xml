@@ -5,7 +5,7 @@
         <item name="android:statusBarColor">@color/nemo_background</item>
         <item name="android:navigationBarColor">@color/nemo_background</item>
         <item name="android:windowLightStatusBar">false</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/nemo_mascot</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@android:color/transparent</item>
         <item name="android:windowSplashScreenBackground">@color/nemo_background</item>
         <item name="android:windowSplashScreenIconBackgroundColor">@color/nemo_background</item>
     </style>

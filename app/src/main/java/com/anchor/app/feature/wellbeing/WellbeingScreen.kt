@@ -301,7 +301,13 @@ private fun AdaptiveCircadianCurveCard(
         val inkColor = Nemo.colors.ink
         val surfaceColor = Nemo.colors.surface
         val segments = curve?.segments ?: emptyList()
-        val now = remember { LocalTime.now() }
+        var now by remember { mutableStateOf(LocalTime.now()) }
+        LaunchedEffect(Unit) {
+            while (true) {
+                kotlinx.coroutines.delay(30_000L)
+                now = LocalTime.now()
+            }
+        }
         val nowMin = now.hour * 60 + now.minute
         val wakeMin = wakeTime.hour * 60 + wakeTime.minute
         val diffMin = (nowMin - wakeMin + 1440) % 1440
@@ -312,25 +318,32 @@ private fun AdaptiveCircadianCurveCard(
                 .fillMaxWidth()
                 .height(110.dp)
                 .pointerInput(Unit) {
+                    detectTapGestures(
+                        onTap = { offset ->
+                            if (size.width > 0) {
+                                touchedHoursFromWake = (offset.x / size.width).coerceIn(0f, 1f) * 24f
+                            }
+                        },
+                    )
+                }
+                .pointerInput(Unit) {
                     detectDragGestures(
                         onDragStart = { offset ->
-                            touchedHoursFromWake = (offset.x / size.width).coerceIn(0f, 1f) * 24f
+                            if (size.width > 0) {
+                                touchedHoursFromWake = (offset.x / size.width).coerceIn(0f, 1f) * 24f
+                            }
                         },
                         onDrag = { change, _ ->
-                            touchedHoursFromWake = (change.position.x / size.width).coerceIn(0f, 1f) * 24f
+                            if (size.width > 0) {
+                                touchedHoursFromWake = (change.position.x / size.width).coerceIn(0f, 1f) * 24f
+                            }
                         },
                         onDragEnd = { touchedHoursFromWake = null },
                         onDragCancel = { touchedHoursFromWake = null },
                     )
-                }
-                .pointerInput(Unit) {
-                    detectTapGestures(
-                        onTap = { offset ->
-                            touchedHoursFromWake = (offset.x / size.width).coerceIn(0f, 1f) * 24f
-                        },
-                    )
                 },
         ) {
+            if (size.width <= 0f || size.height <= 0f) return@Canvas
             val w = size.width
             val h = size.height
             val padTop = 16.dp.toPx()

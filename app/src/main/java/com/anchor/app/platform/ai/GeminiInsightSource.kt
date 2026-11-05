@@ -197,6 +197,7 @@ private object DefaultSettingsRepository : SettingsRepository {
         com.anchor.app.core.domain.model.AppSettings()
     override suspend fun update(settings: com.anchor.app.core.domain.model.AppSettings) {}
     override suspend fun setTrackingEnabled(enabled: Boolean) {}
+    override suspend fun setNotificationsEnabled(enabled: Boolean) {}
     override suspend fun setAiEnabled(enabled: Boolean) {}
     override suspend fun setOnboardingCompleted(completed: Boolean) {}
     override suspend fun setBlockedApps(packages: Set<String>) {}

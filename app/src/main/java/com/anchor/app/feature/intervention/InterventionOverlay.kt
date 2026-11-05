@@ -1,6 +1,11 @@
 package com.anchor.app.feature.intervention
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -30,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -139,6 +145,23 @@ fun InterventionOverlay(
                     }
 
                     // Breathing Ring Container (canvas JuZ1E)
+                    val infiniteTransition = rememberInfiniteTransition(label = "breathing")
+                    val breathProgress by infiniteTransition.animateFloat(
+                        initialValue = 0f,
+                        targetValue = 3f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(12000, easing = LinearEasing),
+                            repeatMode = RepeatMode.Restart,
+                        ),
+                        label = "breathPhase",
+                    )
+
+                    val (phaseLabel, phaseScale, phaseSec) = when {
+                        breathProgress < 1f -> Triple("INHALE", 0.75f + 0.25f * breathProgress, ((breathProgress * 4).toInt() + 1).coerceIn(1, 4))
+                        breathProgress < 2f -> Triple("HOLD", 1.0f, (((breathProgress - 1f) * 4).toInt() + 1).coerceIn(1, 4))
+                        else -> Triple("EXHALE", 1.0f - 0.25f * (breathProgress - 2f), (((breathProgress - 2f) * 4).toInt() + 1).coerceIn(1, 4))
+                    }
+
                     Box(
                         modifier = Modifier
                             .size(120.dp)
@@ -149,6 +172,7 @@ fun InterventionOverlay(
                         Box(
                             modifier = Modifier
                                 .size(120.dp)
+                                .scale(phaseScale)
                                 .clip(CircleShape)
                                 .background(Nemo.colors.fog.copy(alpha = 0.5f)),
                         )
@@ -156,6 +180,7 @@ fun InterventionOverlay(
                         Box(
                             modifier = Modifier
                                 .size(90.dp)
+                                .scale(phaseScale)
                                 .clip(CircleShape)
                                 .border(
                                     1.dp,
@@ -173,14 +198,14 @@ fun InterventionOverlay(
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
-                                    text = stringResource(R.string.intervention_breath_seconds),
+                                    text = "${phaseSec}s",
                                     fontFamily = GeistMonoFamily,
                                     fontWeight = FontWeight.Light,
                                     fontSize = 18.sp,
                                     color = Nemo.colors.ink,
                                 )
                                 Text(
-                                    text = stringResource(R.string.intervention_breath_cue),
+                                    text = phaseLabel,
                                     fontFamily = GeistFamily,
                                     fontSize = 8.sp,
                                     color = Nemo.colors.mute,

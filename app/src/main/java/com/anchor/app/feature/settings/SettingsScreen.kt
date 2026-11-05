@@ -125,6 +125,7 @@ fun SettingsScreen(
         verticalArrangement = Arrangement.spacedBy(Spacing.x4),
     ) {
         val isDark = Nemo.colors.background == NemoNight.background
+        val isIndo = settings.locale.startsWith("id", ignoreCase = true) || settings.locale.startsWith("in", ignoreCase = true)
 
         NemoScreenHeader(
             eyebrow = stringResource(R.string.settings_eyebrow),
@@ -216,7 +217,6 @@ fun SettingsScreen(
                 fontSize = 14.sp,
                 color = Nemo.colors.ink,
             )
-            val isIndo = settings.locale.startsWith("id", ignoreCase = true) || settings.locale.startsWith("in", ignoreCase = true)
             SegmentedChips(
                 options = listOf(
                     stringResource(R.string.settings_language_en),
@@ -250,6 +250,17 @@ fun SettingsScreen(
             description = stringResource(R.string.settings_perm_accessibility_desc),
             granted = permissions.focusBlockingGranted,
             onEnable = { viewModel.onOpenAccessibilitySettings() },
+        )
+
+        Divider()
+
+        // --- Notifications (Pengingat & Notifikasi) ---
+        SectionHeader(title = if (isIndo) "Pengingat & Notifikasi" else "Notifications")
+        SettingRow(
+            title = if (isIndo) "Pengingat & Notifikasi" else "Notifications",
+            subtitle = if (isIndo) "Aktifkan notifikasi untuk pengingat tugas dan intervensi fokus." else "Enable notifications for task reminders and focus interventions.",
+            checked = settings.notificationsEnabled,
+            onCheckedChange = viewModel::setNotificationsEnabled,
         )
 
         Divider()
@@ -315,6 +326,51 @@ fun SettingsScreen(
             onCheckedChange = viewModel::setDoomscrollAlertEnabled,
         )
         if (settings.doomscrollAlertEnabled) {
+            if (!permissions.focusBlockingGranted) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(Radius.card))
+                        .border(1.dp, Nemo.colors.line, RoundedCornerShape(Radius.card))
+                        .background(Nemo.colors.fog)
+                        .pressable(
+                            shape = RoundedCornerShape(Radius.card),
+                            onClick = viewModel::onOpenAccessibilitySettings,
+                        )
+                        .padding(Spacing.cardHorizontal),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.x1),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.settings_doomscroll_perm_warning),
+                            fontFamily = GeistFamily,
+                            fontSize = 12.sp,
+                            lineHeight = 16.sp,
+                            color = Nemo.colors.ink,
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(Spacing.x2))
+                    Box(
+                        modifier = Modifier
+                            .clip(PillShape)
+                            .background(Nemo.colors.ink)
+                            .padding(horizontal = Spacing.x3, vertical = Spacing.x1),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.settings_doomscroll_perm_action),
+                            fontFamily = GeistFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 11.sp,
+                            color = Nemo.colors.surface,
+                        )
+                    }
+                }
+            }
+
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.x1)) {
                     Text(

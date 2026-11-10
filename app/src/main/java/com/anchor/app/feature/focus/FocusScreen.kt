@@ -188,6 +188,15 @@ private fun FocusSetupContent(
             },
         )
 
+        // Post-session feedback if present (Spec 2026-11-03)
+        state.lastCompletion?.let { completion ->
+            FocusCompletionCard(
+                completion = completion,
+                onRate = viewModel::onRateLastSession,
+                onDismiss = viewModel::onDismissCompletion,
+            )
+        }
+
         // --- Task Section ---
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
@@ -1026,81 +1035,12 @@ private fun FocusActiveContent(
 
         // Post-session feedback if present (Spec 2026-11-03)
         state.lastCompletion?.let { completion ->
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(cardBg)
-                    .padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    NemoMascot(
-                        expression = if (completion.verified) MascotExpression.LAUGHING else MascotExpression.SAD,
-                        size = 28.dp,
-                    )
-                    Text(
-                        text = if (completion.verified) {
-                            stringResource(R.string.focus_finished_verified, completion.focusMinutes, completion.taskTitle)
-                        } else {
-                            stringResource(R.string.focus_finished_not_verified, completion.focusMinutes)
-                        },
-                        fontFamily = GeistFamily,
-                        fontSize = 12.sp,
-                        color = textPrimary,
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-
-                // Rating row for sessions >= 15 minutes (Spec 2026-11-03 §4.2)
-                if (completion.focusMinutes >= 15) {
-                    if (completion.rating == null) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                        ) {
-                            Text(
-                                text = stringResource(R.string.focus_rating_prompt),
-                                fontFamily = GeistFamily,
-                                fontSize = 11.sp,
-                                color = textPrimary.copy(alpha = 0.65f),
-                            )
-                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                (1..5).forEach { r ->
-                                    Box(
-                                        modifier = Modifier
-                                            .size(28.dp)
-                                            .clip(CircleShape)
-                                            .background(Color(0xFF262626))
-                                            .pressable(onClick = { viewModel.onRateLastSession(r) }),
-                                        contentAlignment = Alignment.Center,
-                                    ) {
-                                        Text(
-                                            text = r.toString(),
-                                            fontFamily = GeistMonoFamily,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 11.sp,
-                                            color = Color.White,
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        Text(
-                            text = stringResource(R.string.focus_rating_thank_you),
-                            fontFamily = GeistMonoFamily,
-                            fontSize = 11.sp,
-                            color = Color(0xFF4CAF50),
-                        )
-                    }
-                }
-            }
+            FocusCompletionCard(
+                completion = completion,
+                onRate = viewModel::onRateLastSession,
+                onDismiss = viewModel::onDismissCompletion,
+                darkTheme = true,
+            )
         }
     }
 
@@ -1407,7 +1347,7 @@ private fun ActiveTimerRing(
             }
         }
 
-        // Mascot inside white circular badge (proportional 144.dp mascot centered without text)
+        // Mascot inside white circular badge (proportional enlarged mascot centered without text)
         if (mascotAlpha > 0.001f) {
             val circleSize = diameter - (strokeWidth * 2) - 4.dp
             val currentExpression = if (isPaused) {
@@ -1431,7 +1371,7 @@ private fun ActiveTimerRing(
             ) {
                 NemoMascot(
                     expression = currentExpression,
-                    size = 144.dp,
+                    size = 172.dp,
                     paused = isPaused,
                 )
             }

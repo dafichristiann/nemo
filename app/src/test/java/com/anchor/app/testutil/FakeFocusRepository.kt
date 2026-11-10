@@ -43,6 +43,7 @@ class FakeFocusRepository : FocusRepository {
         actualDurationMs: Long,
         endedAt: Long?,
         fallbackReason: String?,
+        startedAt: Long?,
     ) {
         sessions.value = sessions.value.map {
             if (it.id == id) {
@@ -51,6 +52,7 @@ class FakeFocusRepository : FocusRepository {
                     actualDurationMs = actualDurationMs,
                     endedAt = endedAt,
                     fallbackReason = fallbackReason,
+                    startedAt = startedAt ?: it.startedAt,
                 )
             } else {
                 it

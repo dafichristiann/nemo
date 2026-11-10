@@ -21,6 +21,7 @@ import com.anchor.app.core.domain.usecase.focus.FinishFocusUseCase
 import com.anchor.app.core.domain.usecase.focus.FinishFocusUseCase.FinishFocusResult
 import com.anchor.app.core.domain.usecase.focus.PauseFocusUseCase
 import com.anchor.app.core.domain.usecase.focus.StartFocusUseCase
+import com.anchor.app.core.domain.usecase.focus.isFocusVerified
 import com.anchor.app.core.domain.usecase.task.ManageSubtasksUseCase
 import com.anchor.app.BuildConfig
 import com.anchor.app.platform.accessibility.AccessibilityStatus
@@ -245,9 +246,11 @@ class FocusViewModel @Inject constructor(
         // focus-block overlay's "Back to focus"): keep the clock counting from its real start
         // instead of resetting to zero. An ACTIVE row's wall-clock start *is* the anchor, so the
         // elapsed shown stays `now - startedAt` (accumulated duration is only folded in on pause).
+        var previousSessionId: String? = null
         viewModelScope.launch {
             focusRepository.observeCurrent().collect { session ->
                 if (session != null) {
+                    previousSessionId = session.id
                     when (session.status) {
                         FocusStatus.ACTIVE -> {
                             val anchor = if (session.actualDurationMs > 0L) {
@@ -260,10 +263,31 @@ class FocusViewModel @Inject constructor(
                         FocusStatus.PAUSED -> {
                             stopTicking()
                             elapsedMs.value = session.actualDurationMs
+                            startedAt = 0L
                         }
                         else -> {
                             stopTicking()
                             elapsedMs.value = 0L
+                            startedAt = 0L
+                        }
+                    }
+                } else {
+                    stopTicking()
+                    startedAt = 0L
+                    elapsedMs.value = 0L
+                    val lastId = previousSessionId
+                    previousSessionId = null
+                    if (lastId != null && lastCompletion.value == null) {
+                        val finished = focusRepository.getById(lastId)
+                        if (finished != null && finished.status == FocusStatus.FINISHED) {
+                            val title = finished.taskId?.let { taskRepository.getById(it)?.title } ?: ""
+                            lastCompletion.value = CompletionResult(
+                                sessionId = finished.id,
+                                taskTitle = title,
+                                verified = isFocusVerified(finished.actualDurationMs, finished.plannedDurationSec),
+                                focusMinutes = (finished.actualDurationMs / 60_000L).toInt(),
+                                rating = finished.rating,
+                            )
                         }
                     }
                 }
@@ -392,6 +416,7 @@ class FocusViewModel @Inject constructor(
                 actualDurationMs = session.actualDurationMs,
                 endedAt = null,
                 fallbackReason = session.fallbackReason,
+                startedAt = anchor,
             )
             if (soundscapeEnabled.value) {
                 FocusService.resume(context)
@@ -413,24 +438,43 @@ class FocusViewModel @Inject constructor(
         }
     }
 
+    private var isFinishing = false
+
     /** Normal finish (FR-F6): records the duration and completes the linked task. */
     fun onFinish() = viewModelScope.launch(dispatchers.io) {
-        val session = focusRepository.current() ?: return@launch
-        val result = finishFocus(session.id, currentElapsed(), aborted = false, forceCompleteTask = true)
-        stopTicking()
-        FocusService.stop(context)
-        lastCompletion.value = result.toCompletionResult()
-        elapsedMs.value = 0L
+        if (isFinishing) return@launch
+        isFinishing = true
+        try {
+            val session = focusRepository.current() ?: return@launch
+            val elapsed = currentElapsed()
+            val plannedMs = (session.plannedDurationSec ?: 0) * 1000L
+            val finalElapsed = if (plannedMs > 0 && elapsed >= plannedMs) maxOf(elapsed, plannedMs) else elapsed
+            val result = finishFocus(session.id, finalElapsed, aborted = false, forceCompleteTask = true)
+            stopTicking()
+            FocusService.stop(context)
+            lastCompletion.value = result.toCompletionResult()
+            elapsedMs.value = 0L
+            startedAt = 0L
+        } finally {
+            isFinishing = false
+        }
     }
 
     /** Emergency exit (FR-F6, PRD §10.5): always available, aborts the session (no completion). */
     fun onEmergencyExit() = viewModelScope.launch(dispatchers.io) {
-        val session = focusRepository.current() ?: return@launch
-        val result = finishFocus(session.id, currentElapsed(), aborted = true)
-        stopTicking()
-        FocusService.stop(context)
-        lastCompletion.value = result.toCompletionResult()
-        elapsedMs.value = 0L
+        if (isFinishing) return@launch
+        isFinishing = true
+        try {
+            val session = focusRepository.current() ?: return@launch
+            val result = finishFocus(session.id, currentElapsed(), aborted = true)
+            stopTicking()
+            FocusService.stop(context)
+            lastCompletion.value = result.toCompletionResult()
+            elapsedMs.value = 0L
+            startedAt = 0L
+        } finally {
+            isFinishing = false
+        }
     }
 
     /** Clears the post-session feedback banner. */
@@ -473,7 +517,13 @@ class FocusViewModel @Inject constructor(
         startedAt = anchorStartMillis
         tickJob = viewModelScope.launch {
             while (true) {
-                elapsedMs.value = (timeProvider.nowMillis() - startedAt).coerceAtLeast(0L)
+                val current = (timeProvider.nowMillis() - startedAt).coerceAtLeast(0L)
+                elapsedMs.value = current
+                val plannedSec = uiState.value.active?.plannedDurationSec
+                if (plannedSec != null && plannedSec > 0 && current >= plannedSec * 1_000L) {
+                    onFinish()
+                    break
+                }
                 delay(1_000)
             }
         }

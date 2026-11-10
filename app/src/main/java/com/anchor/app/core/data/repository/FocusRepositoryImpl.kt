@@ -36,7 +36,8 @@ class FocusRepositoryImpl @Inject constructor(
         actualDurationMs: Long,
         endedAt: Long?,
         fallbackReason: String?,
-    ) = dao.updateState(id, status.name, actualDurationMs, endedAt, fallbackReason)
+        startedAt: Long?,
+    ) = dao.updateState(id, status.name, actualDurationMs, endedAt, fallbackReason, startedAt)
 
     override suspend fun updateRating(id: String, rating: Int) = dao.updateRating(id, rating)
 

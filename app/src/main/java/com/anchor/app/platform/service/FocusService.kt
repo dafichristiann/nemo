@@ -26,8 +26,10 @@ import com.anchor.app.platform.notification.NotificationChannels
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -60,13 +62,14 @@ class FocusService : Service() {
     lateinit var soundscapePlayer: SoundscapePlayer
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private var completionJob: Job? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_STOP_FOCUS, ACTION_STOP -> {
-                cancelCompletionAlarm()
+                cancelCompletion()
                 soundscapePlayer.stop()
                 serviceScope.launch {
                     try {
@@ -87,7 +90,7 @@ class FocusService : Service() {
                 return START_NOT_STICKY
             }
             ACTION_PAUSE_FOCUS -> {
-                cancelCompletionAlarm()
+                cancelCompletion()
                 soundscapePlayer.pause()
                 serviceScope.launch {
                     val session = focusRepository.current()
@@ -99,7 +102,7 @@ class FocusService : Service() {
                 soundscapePlayer.resume()
                 serviceScope.launch {
                     val session = focusRepository.current()
-                    session?.let { scheduleCompletionAlarm(it) }
+                    session?.let { scheduleCompletion(it) }
                     updateNotification(session = session, isPaused = false)
                 }
                 return START_NOT_STICKY
@@ -108,7 +111,7 @@ class FocusService : Service() {
                 startForegroundCompat()
                 serviceScope.launch {
                     val session = focusRepository.current()
-                    session?.let { scheduleCompletionAlarm(it) }
+                    session?.let { scheduleCompletion(it) }
                     updateNotification(session = session, isPaused = false)
                 }
                 val soundscapeEnabled = intent?.getBooleanExtra(EXTRA_SOUNDSCAPE_ENABLED, true) ?: true
@@ -126,7 +129,7 @@ class FocusService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        cancelCompletionAlarm()
+        cancelCompletion()
         soundscapePlayer.release()
         serviceScope.cancel()
     }
@@ -165,7 +168,7 @@ class FocusService : Service() {
 
         if (!isPaused && session != null && session.status == FocusStatus.ACTIVE && session.plannedDurationSec != null && session.plannedDurationSec > 0) {
             val now = timeProvider.nowMillis()
-            val elapsedMs = session.actualDurationMs + (now - session.startedAt).coerceAtLeast(0L)
+            val elapsedMs = (now - session.startedAt).coerceAtLeast(session.actualDurationMs)
             val remainingMs = (session.plannedDurationSec * 1000L - elapsedMs).coerceAtLeast(0L)
             if (remainingMs > 0) {
                 val targetEndTime = now + remainingMs
@@ -177,18 +180,29 @@ class FocusService : Service() {
         return builder.build()
     }
 
-    private fun scheduleCompletionAlarm(session: FocusSession) {
+    private fun scheduleCompletion(session: FocusSession) {
+        cancelCompletion()
         if (session.plannedDurationSec == null || session.plannedDurationSec <= 0) return
         val now = timeProvider.nowMillis()
-        val elapsedMs = session.actualDurationMs + if (session.status == FocusStatus.ACTIVE) {
-            (now - session.startedAt).coerceAtLeast(0L)
+        val elapsedMs = if (session.status == FocusStatus.ACTIVE) {
+            (now - session.startedAt).coerceAtLeast(session.actualDurationMs)
         } else {
-            0L
+            session.actualDurationMs
         }
         val remainingMs = (session.plannedDurationSec * 1000L - elapsedMs).coerceAtLeast(0L)
-        if (remainingMs <= 0) return
-        val triggerAtMillis = now + remainingMs
+        if (remainingMs <= 0) {
+            completeSession(session.id)
+            return
+        }
 
+        // 1. Direct coroutine timer while service is actively running in foreground
+        completionJob = serviceScope.launch {
+            delay(remainingMs)
+            completeSession(session.id)
+        }
+
+        // 2. AlarmManager backup in case service is temporarily paused or OS-throttled
+        val triggerAtMillis = now + remainingMs
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
         val intent = Intent(this, FocusCompletedReceiver::class.java).apply {
             action = FocusCompletedReceiver.ACTION
@@ -212,7 +226,9 @@ class FocusService : Service() {
         }
     }
 
-    private fun cancelCompletionAlarm() {
+    private fun cancelCompletion() {
+        completionJob?.cancel()
+        completionJob = null
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
         val intent = Intent(this, FocusCompletedReceiver::class.java).apply {
             action = FocusCompletedReceiver.ACTION
@@ -226,6 +242,30 @@ class FocusService : Service() {
         if (pendingIntent != null) {
             alarmManager.cancel(pendingIntent)
             pendingIntent.cancel()
+        }
+    }
+
+    private fun completeSession(sessionId: String) {
+        cancelCompletion()
+        soundscapePlayer.stop()
+        serviceScope.launch {
+            try {
+                val session = focusRepository.getById(sessionId) ?: focusRepository.current()
+                if (session != null && (session.status == FocusStatus.ACTIVE || session.status == FocusStatus.PAUSED)) {
+                    val plannedMs = (session.plannedDurationSec ?: 0) * 1000L
+                    val now = timeProvider.nowMillis()
+                    val rawElapsed = if (session.status == FocusStatus.ACTIVE) {
+                        (now - session.startedAt).coerceAtLeast(session.actualDurationMs)
+                    } else {
+                        session.actualDurationMs
+                    }
+                    val elapsed = if (plannedMs > 0) maxOf(rawElapsed, plannedMs) else rawElapsed
+                    finishFocus(session.id, elapsed, aborted = false, forceCompleteTask = true)
+                }
+            } finally {
+                stopForeground(STOP_FOREGROUND_REMOVE)
+                stopSelf()
+            }
         }
     }
 

@@ -24,13 +24,14 @@ interface FocusRepository {
     /** Total focused milliseconds for sessions started in `[from, to)`. */
     suspend fun totalDurationBetween(from: Long, to: Long): Long
 
-    /** Updates lifecycle fields (status / accumulated duration / endedAt / fallback reason). */
+    /** Updates lifecycle fields (status / accumulated duration / endedAt / fallback reason / startedAt). */
     suspend fun updateState(
         id: String,
         status: FocusStatus,
         actualDurationMs: Long,
         endedAt: Long?,
         fallbackReason: String?,
+        startedAt: Long? = null,
     )
 
     suspend fun updateRating(id: String, rating: Int)

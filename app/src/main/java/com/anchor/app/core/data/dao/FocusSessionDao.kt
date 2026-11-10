@@ -35,7 +35,8 @@ interface FocusSessionDao {
         """
         UPDATE focus_session
         SET status = :status, actualDurationMs = :actualDurationMs,
-            endedAt = :endedAt, fallbackReason = :fallbackReason
+            endedAt = :endedAt, fallbackReason = :fallbackReason,
+            startedAt = CASE WHEN :startedAt IS NOT NULL THEN :startedAt ELSE startedAt END
         WHERE id = :id
         """,
     )
@@ -45,6 +46,7 @@ interface FocusSessionDao {
         actualDurationMs: Long,
         endedAt: Long?,
         fallbackReason: String?,
+        startedAt: Long? = null,
     )
 
     @Query("UPDATE focus_session SET rating = :rating WHERE id = :id")

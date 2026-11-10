@@ -50,9 +50,15 @@ class FocusCompletedReceiver : BroadcastReceiver() {
                     focusRepository.current()
                 }
 
-                if (session != null && session.status == FocusStatus.ACTIVE) {
-                    val elapsed = (timeProvider.nowMillis() - session.startedAt).coerceAtLeast(session.actualDurationMs)
-                    finishFocus(session.id, elapsed, aborted = false)
+                if (session != null && (session.status == FocusStatus.ACTIVE || session.status == FocusStatus.PAUSED)) {
+                    val plannedMs = (session.plannedDurationSec ?: 0) * 1000L
+                    val rawElapsed = if (session.status == FocusStatus.ACTIVE) {
+                        (timeProvider.nowMillis() - session.startedAt).coerceAtLeast(session.actualDurationMs)
+                    } else {
+                        session.actualDurationMs
+                    }
+                    val elapsed = if (plannedMs > 0) maxOf(rawElapsed, plannedMs) else rawElapsed
+                    finishFocus(session.id, elapsed, aborted = false, forceCompleteTask = true)
                     FocusService.stop(context)
 
                     if (settingsRepository.get().notificationsEnabled) {

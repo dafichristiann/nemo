@@ -1,19 +1,13 @@
 package com.anchor.app.feature.focus
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -62,7 +56,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -1252,23 +1248,18 @@ private fun ActiveTimerRing(
         label = "active-timer-ring-progress",
     )
 
-    data class MascotCheer(
-        val expression: MascotExpression,
-        val message: String,
-    )
-
-    val cheers = remember {
+    val expressions = remember {
         listOf(
-            MascotCheer(MascotExpression.HAPPY, "Tetap fokus, kamu hebat! ✨"),
-            MascotCheer(MascotExpression.WINK, "Satu tugas dalam satu waktu 😉"),
-            MascotCheer(MascotExpression.THINKING, "Fokus adalah kekuatanmu 💡"),
-            MascotCheer(MascotExpression.TALKING, "Tarik napas, lanjut pelan-pelan 🌿"),
-            MascotCheer(MascotExpression.LAUGHING, "Sedikit lagi selesai! Semangat 🚀"),
-            MascotCheer(MascotExpression.NEUTRAL, "Nemo nemenin kamu fokus 🧘"),
+            MascotExpression.HAPPY,
+            MascotExpression.WINK,
+            MascotExpression.THINKING,
+            MascotExpression.TALKING,
+            MascotExpression.LAUGHING,
+            MascotExpression.NEUTRAL,
         )
     }
 
-    var cheerIndex by remember { mutableIntStateOf(0) }
+    var expressionIndex by remember { mutableIntStateOf(0) }
     var mascotShownUntilMs by remember { mutableLongStateOf(0L) }
     var isMascotVisible by remember { mutableStateOf(false) }
 
@@ -1280,7 +1271,7 @@ private fun ActiveTimerRing(
         }
         while (isActive) {
             delay(45_000L)
-            cheerIndex = (cheerIndex + 1) % cheers.size
+            expressionIndex = (expressionIndex + 1) % expressions.size
             mascotShownUntilMs = System.currentTimeMillis() + 6_000L
             delay(6_500L)
         }
@@ -1297,6 +1288,47 @@ private fun ActiveTimerRing(
         }
     }
 
+    // Smooth, organic layer animations (soft bouncy enter, gentle ease-out collapse on exit)
+    val mascotAlpha by animateFloatAsState(
+        targetValue = if (isMascotVisible) 1f else 0f,
+        animationSpec = if (isMascotVisible) {
+            tween(durationMillis = 380, easing = FastOutSlowInEasing)
+        } else {
+            tween(durationMillis = 400, easing = CubicBezierEasing(0.4f, 0f, 0.2f, 1f))
+        },
+        label = "active-mascot-alpha",
+    )
+
+    val mascotScale by animateFloatAsState(
+        targetValue = if (isMascotVisible) 1f else 0.55f,
+        animationSpec = if (isMascotVisible) {
+            spring(dampingRatio = 0.72f, stiffness = Spring.StiffnessLow)
+        } else {
+            tween(durationMillis = 400, easing = CubicBezierEasing(0.4f, 0f, 0.2f, 1f))
+        },
+        label = "active-mascot-scale",
+    )
+
+    val clockAlpha by animateFloatAsState(
+        targetValue = if (isMascotVisible) 0f else 1f,
+        animationSpec = if (isMascotVisible) {
+            tween(durationMillis = 200, easing = FastOutLinearInEasing)
+        } else {
+            tween(durationMillis = 380, delayMillis = 120, easing = FastOutSlowInEasing)
+        },
+        label = "active-clock-alpha",
+    )
+
+    val clockScale by animateFloatAsState(
+        targetValue = if (isMascotVisible) 0.88f else 1f,
+        animationSpec = if (isMascotVisible) {
+            tween(durationMillis = 250, easing = FastOutSlowInEasing)
+        } else {
+            tween(durationMillis = 380, delayMillis = 100, easing = FastOutSlowInEasing)
+        },
+        label = "active-clock-scale",
+    )
+
     Box(
         modifier = Modifier
             .size(diameter)
@@ -1304,8 +1336,12 @@ private fun ActiveTimerRing(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
             ) {
-                cheerIndex = (cheerIndex + 1) % cheers.size
-                mascotShownUntilMs = System.currentTimeMillis() + 6_000L
+                if (isMascotVisible) {
+                    mascotShownUntilMs = 0L
+                } else {
+                    expressionIndex = (expressionIndex + 1) % expressions.size
+                    mascotShownUntilMs = System.currentTimeMillis() + 6_000L
+                }
             },
         contentAlignment = Alignment.Center,
     ) {
@@ -1339,114 +1375,65 @@ private fun ActiveTimerRing(
             }
         }
 
-        AnimatedContent(
-            targetState = isMascotVisible,
-            transitionSpec = {
-                if (targetState) {
-                    // Soft, organic spring entrance (not stiff)
-                    (fadeIn(animationSpec = tween(400, easing = FastOutSlowInEasing)) +
-                        scaleIn(
-                            initialScale = 0.82f,
-                            animationSpec = spring(
-                                dampingRatio = Spring.DampingRatioMediumBouncy,
-                                stiffness = Spring.StiffnessLow,
-                            ),
-                        ) +
-                        slideInVertically(
-                            initialOffsetY = { (it * 0.08f).toInt() },
-                            animationSpec = spring(
-                                dampingRatio = Spring.DampingRatioMediumBouncy,
-                                stiffness = Spring.StiffnessLow,
-                            ),
-                        )).togetherWith(
-                        fadeOut(animationSpec = tween(220, easing = FastOutLinearInEasing)) +
-                            scaleOut(targetScale = 0.92f, animationSpec = tween(220)),
-                    )
-                } else {
-                    // Calm exit back to clock countdown
-                    (fadeIn(animationSpec = tween(350, easing = FastOutSlowInEasing)) +
-                        scaleIn(initialScale = 0.94f, animationSpec = tween(350))).togetherWith(
-                        fadeOut(animationSpec = tween(250, easing = FastOutLinearInEasing)) +
-                            scaleOut(
-                                targetScale = 0.85f,
-                                animationSpec = tween(250),
-                            ),
-                    )
-                }
-            },
-            label = "timer-mascot-transition",
-        ) { showMascot ->
-            if (showMascot) {
-                val circleSize = diameter - (strokeWidth * 2) - 4.dp
-                val activeCheer = if (isPaused) {
-                    MascotCheer(MascotExpression.SLEEPY, "Sesi dijeda • Istirahat sejenak ☕")
-                } else {
-                    cheers[cheerIndex % cheers.size]
-                }
+        // Clock Numbers
+        if (clockAlpha > 0.001f) {
+            Column(
+                modifier = Modifier.graphicsLayer {
+                    alpha = clockAlpha
+                    scaleX = clockScale
+                    scaleY = clockScale
+                    transformOrigin = TransformOrigin.Center
+                },
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(
+                    text = time,
+                    fontFamily = GeistMonoFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 44.sp,
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                )
+                Text(
+                    text = caption,
+                    fontFamily = GeistFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 11.sp,
+                    letterSpacing = 0.5.sp,
+                    color = Color(0xFF8A8A8A),
+                    textAlign = TextAlign.Center,
+                )
+            }
+        }
 
-                Box(
-                    modifier = Modifier
-                        .size(circleSize)
-                        .clip(CircleShape)
-                        .background(Color.White),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
-                        modifier = Modifier.padding(horizontal = 14.dp),
-                    ) {
-                        NemoMascot(
-                            expression = activeCheer.expression,
-                            size = 96.dp,
-                            paused = isPaused,
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = activeCheer.message,
-                            fontFamily = GeistFamily,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
-                            color = Color(0xFF141414),
-                            textAlign = TextAlign.Center,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "$time • $caption",
-                            fontFamily = GeistMonoFamily,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 10.sp,
-                            letterSpacing = 0.5.sp,
-                            color = Color(0xFF707070),
-                            textAlign = TextAlign.Center,
-                        )
-                    }
-                }
+        // Mascot inside white circular badge (proportional 144.dp mascot centered without text)
+        if (mascotAlpha > 0.001f) {
+            val circleSize = diameter - (strokeWidth * 2) - 4.dp
+            val currentExpression = if (isPaused) {
+                MascotExpression.SLEEPY
             } else {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
-                ) {
-                    Text(
-                        text = time,
-                        fontFamily = GeistMonoFamily,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 44.sp,
-                        color = Color.White,
-                        textAlign = TextAlign.Center,
-                    )
-                    Text(
-                        text = caption,
-                        fontFamily = GeistFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 11.sp,
-                        letterSpacing = 0.5.sp,
-                        color = Color(0xFF8A8A8A),
-                        textAlign = TextAlign.Center,
-                    )
-                }
+                expressions[expressionIndex % expressions.size]
+            }
+
+            Box(
+                modifier = Modifier
+                    .size(circleSize)
+                    .graphicsLayer {
+                        alpha = mascotAlpha
+                        scaleX = mascotScale
+                        scaleY = mascotScale
+                        transformOrigin = TransformOrigin.Center
+                    }
+                    .clip(CircleShape)
+                    .background(Color.White),
+                contentAlignment = Alignment.Center,
+            ) {
+                NemoMascot(
+                    expression = currentExpression,
+                    size = 144.dp,
+                    paused = isPaused,
+                )
             }
         }
     }

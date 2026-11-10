@@ -15,6 +15,7 @@ import com.anchor.app.core.domain.repository.UsageRepository
 import com.anchor.app.platform.apps.InstalledApp
 import com.anchor.app.platform.apps.InstalledAppsSource
 import com.anchor.app.platform.accessibility.AccessibilityStatus
+import com.anchor.app.platform.ai.AiPreferences
 import com.anchor.app.platform.notification.NotificationPermissions
 import com.anchor.app.platform.service.FocusService
 import com.anchor.app.platform.usagestats.UsageStatsSource
@@ -46,6 +47,7 @@ class SettingsViewModel @Inject constructor(
     private val accessibilityStatus: AccessibilityStatus? = null,
     private val dispatchers: DispatcherProvider,
     private val themePreferences: ThemePreferences? = null,
+    private val aiPreferences: AiPreferences? = null,
 ) : ViewModel() {
 
     val themeMode: StateFlow<AppThemeMode> = themePreferences?.themeMode
@@ -58,6 +60,17 @@ class SettingsViewModel @Inject constructor(
     fun setThemeMode(mode: AppThemeMode) {
         themePreferences?.setThemeMode(mode)
     }
+
+    val customApiKey: StateFlow<String> = aiPreferences?.customApiKey
+        ?: MutableStateFlow("")
+
+    fun setCustomApiKey(key: String) {
+        aiPreferences?.setCustomApiKey(key)
+    }
+
+    fun hasCustomApiKey(): Boolean = aiPreferences?.hasCustomApiKey() ?: false
+
+    fun hasEffectiveApiKey(): Boolean = aiPreferences?.hasEffectiveApiKey() ?: false
 
     val settings: StateFlow<AppSettings> = settingsRepository.observe()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AppSettings())
@@ -242,6 +255,7 @@ class SettingsViewModel @Inject constructor(
         context?.let { FocusService.stop(it) }
         database?.clearAllTables()
         settingsRepository.resetAll()
+        aiPreferences?.clear()
     }
 }
 

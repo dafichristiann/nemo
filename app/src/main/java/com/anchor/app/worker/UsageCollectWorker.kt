@@ -8,6 +8,7 @@ import com.anchor.app.core.domain.usecase.usage.AggregateUsageUseCase
 import com.anchor.app.core.domain.usecase.usage.CollectUsageUseCase
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CancellationException
 
 /**
  * Periodic collection of raw usage sessions (FR-W2, docs 02-architecture.md §5).
@@ -24,13 +25,14 @@ class UsageCollectWorker @AssistedInject constructor(
     private val aggregateUsage: AggregateUsageUseCase,
 ) : CoroutineWorker(appContext, params) {
 
-    override suspend fun doWork(): Result = runCatching {
+    override suspend fun doWork(): Result = try {
         collectUsage()
         aggregateUsage()
         Result.success()
-    }.getOrElse {
-        // Transient failures (OEM throttling) → retry with backoff; never crash (docs 02 §6).
-        Result.retry()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (t: Throwable) {
+        if (runAttemptCount >= 3) Result.failure() else Result.retry()
     }
 
     companion object {

@@ -1410,7 +1410,7 @@ private fun ActiveTimerRing(
             }
         }
 
-        // Mascot inside white circular badge (proportional enlarged mascot centered without text)
+        // Mascot inside active timer countdown ring with soft radial backlight
         if (mascotAlpha > 0.001f) {
             val circleSize = diameter - (strokeWidth * 2) - 4.dp
             val currentExpression = if (isPaused) {
@@ -1427,9 +1427,7 @@ private fun ActiveTimerRing(
                         scaleX = mascotScale
                         scaleY = mascotScale
                         transformOrigin = TransformOrigin.Center
-                    }
-                    .clip(CircleShape)
-                    .background(Color.White),
+                    },
                 contentAlignment = Alignment.Center,
             ) {
                 NemoMascot(

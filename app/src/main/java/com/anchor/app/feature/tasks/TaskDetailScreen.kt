@@ -1,6 +1,7 @@
 package com.anchor.app.feature.tasks
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
@@ -31,6 +33,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -61,10 +65,10 @@ import com.anchor.app.core.design.theme.Spacing
 import com.anchor.app.core.domain.model.TaskPriority
 
 /**
- * 10 Task Detail (docs/superpowers/design/07-screens.md Ã‚Â§2.14).
+ * 10 Task Detail (docs/superpowers/design/07-screens.md §2.14).
  *
- * Priority bar, title, badges, meta, progress track, subtasks (check/order), a Future
- * View callout (wired in Sprint 6), and the actions: Start Focus, Reschedule, Mark Done.
+ * Title, badges, meta, progress track, subtasks (check/order), a Future
+ * View callout, and actions: Start Focus, Reschedule, Mark Done.
  */
 @Composable
 fun TaskDetailScreen(
@@ -124,15 +128,6 @@ fun TaskDetailScreen(
                 }
             }
 
-            // Priority bar skeleton
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(3.dp)
-                    .clip(RoundedCornerShape(Radius.track))
-                    .nemoShimmer(),
-            )
-
             // Baris judul skeleton
             NemoSkeletonCard(height = 36.dp)
 
@@ -147,9 +142,6 @@ fun TaskDetailScreen(
 
             // Meta info skeleton
             NemoSkeletonCard(height = 40.dp)
-
-            // Progress track skeleton
-            NemoSkeletonCard(height = 6.dp)
 
             // 2 baris NemoSkeletonRow() untuk placeholder subtasks/steps
             NemoSkeletonRow()
@@ -215,47 +207,73 @@ fun TaskDetailScreen(
             return@Column
         }
 
-        // Priority bar
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(3.dp)
-                .clip(RoundedCornerShape(Radius.track))
-                .background(Nemo.colors.ink),
-        )
-
+        // Title
         Text(
             text = task.title,
             fontFamily = GeistFamily,
-            fontWeight = FontWeight.Normal,
+            fontWeight = FontWeight.SemiBold,
             fontSize = 28.sp,
             lineHeight = 34.sp,
             letterSpacing = (-0.3).sp,
             color = Nemo.colors.ink,
         )
 
-        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.x2)) {
-            NemoPill(text = priorityLabel(task.priority), filled = task.priority == TaskPriority.HIGH)
+        // Status & Priority Badges
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(Spacing.x2),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            NemoPill(
+                text = priorityLabel(task.priority),
+                filled = task.priority == TaskPriority.HIGH || task.priority == TaskPriority.URGENT,
+            )
             NemoPill(
                 text = stringResource(
                     if (task.isDone) R.string.detail_status_completed else R.string.detail_status_in_progress
-                )
+                ),
+                filled = task.isDone,
             )
         }
 
-        Column(verticalArrangement = Arrangement.spacedBy(Spacing.x1)) {
-            state.deadlineLabel?.let {
-                Text(it, fontFamily = GeistMonoFamily, fontSize = 13.sp, color = Nemo.colors.mute)
+        // Meta info (Deadline, Duration, Progress)
+        val cleanEstimated = remember(state.estimatedLabel) {
+            state.estimatedLabel?.replace(" est", "")?.trim()
+        }
+
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.x3),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                state.deadlineLabel?.let {
+                    Text(
+                        text = it,
+                        fontFamily = GeistMonoFamily,
+                        fontSize = 13.sp,
+                        color = Nemo.colors.mute,
+                    )
+                }
+                if (state.deadlineLabel != null && cleanEstimated != null) {
+                    Box(
+                        modifier = Modifier
+                            .size(3.dp)
+                            .clip(CircleShape)
+                            .background(Nemo.colors.mute),
+                    )
+                }
+                cleanEstimated?.let {
+                    Text(
+                        text = stringResource(R.string.detail_meta_estimated, it),
+                        fontFamily = GeistMonoFamily,
+                        fontSize = 13.sp,
+                        color = Nemo.colors.mute,
+                    )
+                }
             }
-            state.estimatedLabel?.let {
-                Text(
-                    text = stringResource(R.string.detail_meta_estimated, it),
-                    fontFamily = GeistMonoFamily,
-                    fontSize = 13.sp,
-                    color = Nemo.colors.mute,
-                )
-            }
+
             if (state.subtasks.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(Spacing.x1))
                 Text(
                     text = stringResource(
                         R.string.detail_meta_progress,
@@ -267,10 +285,9 @@ fun TaskDetailScreen(
                     fontSize = 13.sp,
                     color = Nemo.colors.mute,
                 )
+                ProgressTrack(progress = state.progressPercent / 100f)
             }
         }
-
-        ProgressTrack(progress = state.progressPercent / 100f)
 
         Divider()
 
@@ -285,20 +302,23 @@ fun TaskDetailScreen(
             )
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
-                // Remembered: re-sorting on every recomposition (e.g. each keystroke in the
-                // quick-add field below) is wasted work; only the subtask list matters.
                 val orderedSubtasks = remember(state.subtasks) {
                     state.subtasks.sortedBy { it.orderIndex }
                 }
                 val firstIncompleteIndex = orderedSubtasks.indexOfFirst { !it.isDone }
                 orderedSubtasks.forEachIndexed { idx, sub ->
-                    val isActive = idx == firstIncompleteIndex
+                    val isActive = idx == firstIncompleteIndex && !sub.isDone
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(Radius.card))
-                            .background(if (isActive) Nemo.colors.fog else Nemo.colors.background)
-                            .padding(horizontal = Spacing.x2, vertical = Spacing.x2),
+                            .background(if (isActive) Nemo.colors.fog else Nemo.colors.surface)
+                            .border(
+                                width = 1.dp,
+                                color = if (isActive) Nemo.colors.line else Color.Transparent,
+                                shape = RoundedCornerShape(Radius.card),
+                            )
+                            .padding(horizontal = Spacing.x3, vertical = Spacing.x2 + 2.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         RoundCheckbox(checked = sub.isDone, onToggle = { viewModel.onToggleSubtask(sub) })
@@ -317,15 +337,21 @@ fun TaskDetailScreen(
             }
         }
 
-        // Quick add subtask
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        // Quick add subtask (integrated modern input pill)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .clip(RoundedCornerShape(Radius.field))
+                .background(Nemo.colors.fog)
+                .border(1.dp, Nemo.colors.line, RoundedCornerShape(Radius.field))
+                .padding(start = Spacing.x3, end = Spacing.x1),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .height(44.dp)
-                    .clip(RoundedCornerShape(Radius.field))
-                    .background(Nemo.colors.fog)
-                    .padding(horizontal = Spacing.x3),
+                    .padding(vertical = Spacing.x1),
                 contentAlignment = Alignment.CenterStart,
             ) {
                 if (newSubtask.isEmpty()) {
@@ -340,27 +366,31 @@ fun TaskDetailScreen(
                     value = newSubtask,
                     onValueChange = { newSubtask = it },
                     singleLine = true,
-                    textStyle = TextStyle(fontFamily = GeistFamily, fontSize = 13.sp, color = Nemo.colors.ink),
+                    textStyle = TextStyle(
+                        fontFamily = GeistFamily,
+                        fontSize = 13.sp,
+                        color = Nemo.colors.ink,
+                    ),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
-            Spacer(modifier = Modifier.width(Spacing.x2))
             Box(
                 modifier = Modifier
                     .clip(PillShape)
-                    .background(Nemo.colors.ink)
-                    .clickable {
+                    .background(if (newSubtask.isNotBlank()) Nemo.colors.ink else Color.Transparent)
+                    .clickable(enabled = newSubtask.isNotBlank()) {
                         viewModel.onAddSubtask(newSubtask)
                         newSubtask = ""
                     }
-                    .padding(horizontal = Spacing.x4, vertical = Spacing.x2),
+                    .padding(horizontal = Spacing.x3, vertical = Spacing.x2),
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = stringResource(R.string.detail_add_subtask),
                     fontFamily = GeistFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 12.sp,
-                    color = Nemo.colors.onInk,
+                    color = if (newSubtask.isNotBlank()) Nemo.colors.onInk else Nemo.colors.mute,
                 )
             }
         }
@@ -370,32 +400,54 @@ fun TaskDetailScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(Radius.card))
-                .background(Nemo.colors.fog)
-                .clickable { onOpenFutureView(task.id) }
-                .padding(Spacing.x4),
+                .background(Nemo.colors.surface)
+                .border(1.dp, Nemo.colors.line, RoundedCornerShape(Radius.card))
+                .pressable(
+                    shape = RoundedCornerShape(Radius.card),
+                    pressedScale = 0.98f,
+                    onClick = { onOpenFutureView(task.id) },
+                )
+                .padding(horizontal = Spacing.x4, vertical = Spacing.x3),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Spacing.x3),
         ) {
             com.anchor.app.core.design.components.NemoMascot(
                 expression = com.anchor.app.core.design.components.MascotExpression.THINKING,
-                size = 32.dp,
+                size = 34.dp,
             )
             Text(
                 text = stringResource(R.string.detail_future_callout),
                 fontFamily = GeistFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = 13.sp,
-                color = Nemo.colors.inkSecondary,
+                color = Nemo.colors.ink,
                 modifier = Modifier.weight(1f),
+            )
+            Icon(
+                painter = painterResource(R.drawable.ic_back),
+                contentDescription = null,
+                tint = Nemo.colors.mute,
+                modifier = Modifier
+                    .size(16.dp)
+                    .graphicsLayer { rotationZ = 180f },
             )
         }
 
-        // Actions: Mark Done / Todo and Focus side-by-side per specification
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(Spacing.x2),
+        // Actions: Primary Focus CTA, Secondary Mark Done, plus centered bottom actions
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = Spacing.x2),
+            verticalArrangement = Arrangement.spacedBy(Spacing.x3),
         ) {
             val isDone = task.isDone
+            NemoButton(
+                text = stringResource(R.string.detail_action_complete_via_focus),
+                onClick = { onStartFocusToComplete(task.id) },
+                modifier = Modifier.fillMaxWidth(),
+                style = if (isDone) NemoButtonStyle.Secondary else NemoButtonStyle.Primary,
+            )
+
             val doneLabel = if (isDone) {
                 stringResource(R.string.detail_action_todo)
             } else {
@@ -404,22 +456,31 @@ fun TaskDetailScreen(
             NemoButton(
                 text = doneLabel,
                 onClick = { viewModel.onToggleDone() },
-                modifier = Modifier.weight(1f),
-                style = if (isDone) NemoButtonStyle.Secondary else NemoButtonStyle.Primary,
-            )
-            NemoButton(
-                text = stringResource(R.string.detail_action_complete_via_focus),
-                onClick = { onStartFocusToComplete(task.id) },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.fillMaxWidth(),
                 style = if (isDone) NemoButtonStyle.Primary else NemoButtonStyle.Secondary,
             )
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.x2)) {
-            SecondaryAction(stringResource(R.string.detail_action_reschedule)) {
-                showReschedule = true
-            }
-            SecondaryAction(stringResource(R.string.detail_action_delete), danger = true) {
-                showDeleteConfirmDialog = true
+
+            // Quiet secondary actions centered
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = Spacing.x1),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                SecondaryAction(stringResource(R.string.detail_action_reschedule)) {
+                    showReschedule = true
+                }
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = Spacing.x3)
+                        .size(3.dp)
+                        .clip(CircleShape)
+                        .background(Nemo.colors.mute),
+                )
+                SecondaryAction(stringResource(R.string.detail_action_delete), danger = true) {
+                    showDeleteConfirmDialog = true
+                }
             }
         }
     }

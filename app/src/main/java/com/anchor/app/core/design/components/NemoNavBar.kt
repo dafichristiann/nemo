@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
@@ -46,7 +47,12 @@ fun NemoNavBar(
     onNavigate: (TopLevelDestination) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.fillMaxWidth().background(Nemo.colors.surface)) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(Nemo.colors.surface)
+            .navigationBarsPadding(),
+    ) {
         Divider(thickness = 1.dp, color = Nemo.colors.line)
         Row(
             modifier = Modifier

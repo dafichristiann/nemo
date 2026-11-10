@@ -153,6 +153,17 @@
     <string name="settings_section_privacy">Privacy &amp; AI</string>
     <string name="settings_section_data">Data controls</string>
     <string name="settings_ai_title">AI Personal Insights</string>    <string name="settings_ai_subtitle">Only aggregated summaries are sent, never raw usage.</string>
+    <string name="settings_ai_api_key_title">Gemini API Key (BYOK)</string>
+    <string name="settings_ai_api_key_subtitle">Use your own key from Google AI Studio. Stored in private app storage on device.</string>
+    <string name="settings_ai_api_key_hint">Enter Gemini API key (AIzaSy…)</string>
+    <string name="settings_ai_api_key_custom_active">Using custom user API key (%1$s)</string>
+    <string name="settings_ai_api_key_builtin_active">Using built-in developer key (optional: enter custom key)</string>
+    <string name="settings_ai_api_key_none">No API key configured (AI offline)</string>
+    <string name="settings_ai_api_key_set_action">Set Key</string>
+    <string name="settings_ai_api_key_edit_action">Edit</string>
+    <string name="settings_ai_api_key_clear_action">Clear</string>
+    <string name="settings_ai_api_key_dialog_title">Gemini API Key</string>
+    <string name="settings_ai_api_key_dialog_desc">Provide your Gemini API key from Google AI Studio (aistudio.google.com). Stored locally in private app preferences.</string>
     <string name="settings_tracking_title">Usage tracking</string>
     <string name="settings_tracking_subtitle">Collect local screen-time to power Wellbeing.</string>
     <string name="settings_retention_label" tools:ignore="PluralsCandidate">Data retention — keep at most %1$d days</string>

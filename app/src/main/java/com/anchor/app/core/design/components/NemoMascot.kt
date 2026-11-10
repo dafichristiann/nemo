@@ -22,8 +22,10 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.clipRect
@@ -474,7 +476,7 @@ private fun rememberReduceMotion(): Boolean {
  * - 12 Chibi expressions powered by code keyframes, face swaps, and FX layers.
  * - Respects system reduced-motion and [paused] parameter.
  * - Smooth 120ms crossfade between expression changes.
- * - Automatic white circle badge on dark backgrounds for crisp ink visibility.
+ * - Soft radial backlight glow on dark backgrounds for natural silhouette contrast without harsh solid badges.
  */
 @Composable
 fun NemoMascot(
@@ -493,9 +495,18 @@ fun NemoMascot(
             .size(size)
             .then(
                 if (isDark) {
-                    Modifier
-                        .background(Color.White, CircleShape)
-                        .padding(size * 0.08f)
+                    Modifier.drawBehind {
+                        drawCircle(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    Color.White.copy(alpha = 0.18f),
+                                    Color.White.copy(alpha = 0.06f),
+                                    Color.Transparent,
+                                ),
+                                radius = this.size.minDimension / 1.5f,
+                            ),
+                        )
+                    }
                 } else {
                     Modifier
                 },

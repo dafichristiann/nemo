@@ -159,6 +159,17 @@
     <string name="settings_section_data">Kontrol Data</string>
     <string name="settings_ai_title">Insight Personal AI</string>
     <string name="settings_ai_subtitle">Cuma rangkuman umum yang diproses, bukan riwayat pemakaian mentah.</string>
+    <string name="settings_ai_api_key_title">Kunci API Gemini (BYOK)</string>
+    <string name="settings_ai_api_key_subtitle">Gunakan kunci sendiri dari Google AI Studio. Disimpan di penyimpanan privat perangkat.</string>
+    <string name="settings_ai_api_key_hint">Masukkan kunci API Gemini (AIzaSy…)</string>
+    <string name="settings_ai_api_key_custom_active">Menggunakan kunci API pribadi (%1$s)</string>
+    <string name="settings_ai_api_key_builtin_active">Menggunakan kunci bawaan developer (opsional: ganti dengan kunci pribadi)</string>
+    <string name="settings_ai_api_key_none">Belum ada kunci API (AI offline)</string>
+    <string name="settings_ai_api_key_set_action">Atur Kunci</string>
+    <string name="settings_ai_api_key_edit_action">Ubah</string>
+    <string name="settings_ai_api_key_clear_action">Hapus</string>
+    <string name="settings_ai_api_key_dialog_title">Kunci API Gemini</string>
+    <string name="settings_ai_api_key_dialog_desc">Masukkan kunci API Gemini dari Google AI Studio (aistudio.google.com). Disimpan secara privat di perangkat.</string>
     <string name="settings_tracking_title">Pelacakan Waktu Layar</string>
     <string name="settings_tracking_subtitle">Catat pemakaian lokal biar fitur Waktu Layar berfungsi.</string>
     <string name="settings_retention_label" tools:ignore="PluralsCandidate">Simpen data maksimal %1$d hari</string>

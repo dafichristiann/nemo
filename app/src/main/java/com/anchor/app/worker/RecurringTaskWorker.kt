@@ -7,6 +7,7 @@ import androidx.work.WorkerParameters
 import com.anchor.app.core.domain.usecase.task.GenerateRecurringTasksUseCase
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CancellationException
 
 /**
  * Issues the day's recurring task instances in the background (PRD FR-T7, §10.1), so a new
@@ -22,11 +23,13 @@ class RecurringTaskWorker @AssistedInject constructor(
     private val generateRecurring: GenerateRecurringTasksUseCase,
 ) : CoroutineWorker(appContext, params) {
 
-    override suspend fun doWork(): Result = runCatching {
+    override suspend fun doWork(): Result = try {
         generateRecurring()
         Result.success()
-    }.getOrElse {
-        Result.retry()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (t: Throwable) {
+        if (runAttemptCount >= 3) Result.failure() else Result.retry()
     }
 
     companion object {

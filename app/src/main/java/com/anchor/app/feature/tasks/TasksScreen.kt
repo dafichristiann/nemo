@@ -142,6 +142,7 @@ fun TasksScreen(
                 items(
                     items = state.overdueRows,
                     key = { "overdue-${it.task.id}" },
+                    contentType = { "overdue_task" },
                 ) { row ->
                     OverdueTaskRow(
                         row = row,
@@ -186,7 +187,11 @@ fun TasksScreen(
             } else if (state.rows.isEmpty()) {
                 item { EmptyState() }
             } else {
-                items(items = state.rows, key = { it.task.id }) { row ->
+                items(
+                    items = state.rows,
+                    key = { it.task.id },
+                    contentType = { "task_row" },
+                ) { row ->
                     TaskCardRow(
                         row = row,
                         onClick = { onOpenTask(row.task.id) },
@@ -638,40 +643,21 @@ private fun QuickAddBar(onClick: () -> Unit, modifier: Modifier = Modifier) {
             .pressable(shape = RoundedCornerShape(12.dp), onClick = onClick)
             .padding(horizontal = Spacing.x4),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.x3),
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Spacing.x3),
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_add),
-                contentDescription = null,
-                tint = Nemo.colors.ink,
-                modifier = Modifier.size(16.dp),
-            )
-            Text(
-                text = stringResource(R.string.tasks_quick_add_hint),
-                fontFamily = GeistFamily,
-                fontWeight = FontWeight.Normal,
-                fontSize = 13.sp,
-                color = Nemo.colors.mute,
-            )
-        }
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(5.dp))
-                .background(Nemo.colors.fog)
-                .padding(horizontal = 8.dp, vertical = 2.dp),
-        ) {
-            Text(
-                text = stringResource(R.string.tasks_shortcut_kbd),
-                fontFamily = GeistFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 11.sp,
-                color = Nemo.colors.mute,
-            )
-        }
+        Icon(
+            painter = painterResource(R.drawable.ic_add),
+            contentDescription = null,
+            tint = Nemo.colors.ink,
+            modifier = Modifier.size(16.dp),
+        )
+        Text(
+            text = stringResource(R.string.tasks_quick_add_hint),
+            fontFamily = GeistFamily,
+            fontWeight = FontWeight.Normal,
+            fontSize = 13.sp,
+            color = Nemo.colors.mute,
+        )
     }
 }
 

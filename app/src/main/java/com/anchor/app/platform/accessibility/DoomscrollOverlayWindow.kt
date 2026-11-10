@@ -17,6 +17,8 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.anchor.app.R
+import com.anchor.app.core.design.components.AnimatedMascotView
+import com.anchor.app.core.design.components.MascotExpression
 
 /**
  * Non-coercive intervention overlay for continuous doomscrolling (specs 2026-11-01).
@@ -36,7 +38,7 @@ class DoomscrollOverlayWindow(private val context: Context) {
     fun show(
         thresholdMinutes: Int,
         onStop: (() -> Unit)? = null,
-        onSnooze: () -> Unit,
+        onSnooze: (() -> Unit)? = null,
     ): Boolean {
         if (view != null) return true
 
@@ -54,8 +56,8 @@ class DoomscrollOverlayWindow(private val context: Context) {
             }
         }
 
-        val mascot = ImageView(context).apply {
-            setImageResource(R.drawable.mascot_thinking)
+        val mascot = AnimatedMascotView(context).apply {
+            setExpression(MascotExpression.THINKING)
             layoutParams = LinearLayout.LayoutParams(dp(80), dp(80)).apply {
                 gravity = Gravity.CENTER_HORIZONTAL
                 bottomMargin = dp(16)
@@ -102,34 +104,10 @@ class DoomscrollOverlayWindow(private val context: Context) {
             }
         }
 
-        val snoozeButton = Button(context).apply {
-            text = context.getString(R.string.doomscroll_overlay_snooze)
-            setTextColor(color(R.color.nemo_ink))
-            textSize = 15f
-            typeface = Typeface.DEFAULT_BOLD
-            isAllCaps = false
-            stateListAnimator = null
-            background = GradientDrawable().apply {
-                cornerRadius = dp(24).toFloat()
-                setColor(color(R.color.nemo_fog))
-            }
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dp(48),
-            ).apply {
-                topMargin = dp(10)
-            }
-            setOnClickListener {
-                hide()
-                onSnooze()
-            }
-        }
-
         card.addView(mascot)
         card.addView(title)
         card.addView(body)
         card.addView(stopButton)
-        card.addView(snoozeButton)
 
         val root = object : LinearLayout(context) {
             override fun dispatchKeyEvent(event: KeyEvent): Boolean {

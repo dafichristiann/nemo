@@ -651,6 +651,16 @@ body {
   justify-content: center;
 }
 
+[data-theme="night"] .mascot-badge-backing::before {
+  content: '';
+  position: absolute;
+  inset: -12%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.06) 45%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
 .mascot-graphic,
 .mascot-face-swap {
   width: 100%;

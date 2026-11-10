@@ -82,4 +82,29 @@ class SettingsViewModelTest {
         val vm = createViewModel()
         vm.setDoomscrollThresholdMinutes(25)
     }
+
+    @Test
+    fun customApiKey_defaultsToEmptyWhenUnset() = runTest(dispatcher) {
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals("", vm.customApiKey.value)
+        assertFalse(vm.hasCustomApiKey())
+    }
+
+    @Test
+    fun onDeleteAllData_invokesRepositoryReset() = runTest(dispatcher) {
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.setDoomscrollAlertEnabled(true)
+        advanceUntilIdle()
+        assertTrue(settingsRepository.state.value.doomscrollAlertEnabled)
+
+        vm.onDeleteAllData()
+        advanceUntilIdle()
+
+        // FakeSettingsRepository resets to empty/default on resetAll()
+        assertFalse(settingsRepository.state.value.doomscrollAlertEnabled)
+    }
 }

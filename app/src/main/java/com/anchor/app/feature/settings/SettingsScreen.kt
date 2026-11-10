@@ -57,7 +57,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.anchor.app.BuildConfig
 import com.anchor.app.R
+import com.anchor.app.platform.ai.AiPreferences
 import com.anchor.app.core.design.components.Divider
 import com.anchor.app.core.design.components.NemoScreenHeader
 import com.anchor.app.core.design.components.NemoSwitch
@@ -94,9 +96,11 @@ fun SettingsScreen(
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val permissions by viewModel.permissions.collectAsStateWithLifecycle()
     val categories by viewModel.categories.collectAsStateWithLifecycle()
+    val customApiKey by viewModel.customApiKey.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
     var showMascotShowcase by remember { mutableStateOf(false) }
+    var showApiKeyDialog by remember { mutableStateOf(false) }
 
     // Re-check OS permission state whenever we return to this screen (FR-S1, docs 08 Â§2 flow).
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -273,6 +277,84 @@ fun SettingsScreen(
             checked = settings.aiEnabled,
             onCheckedChange = viewModel::setAiEnabled,
         )
+
+        // BYOK: Runtime Gemini API Key (OWASP Mobile M1 / M9)
+        val hasCustomKey = customApiKey.isNotBlank()
+        val hasBuiltinKey = BuildConfig.GEMINI_API_KEY.isNotBlank()
+        val apiKeySummary = when {
+            hasCustomKey -> stringResource(R.string.settings_ai_api_key_custom_active, AiPreferences.maskKey(customApiKey))
+            hasBuiltinKey -> stringResource(R.string.settings_ai_api_key_builtin_active)
+            else -> stringResource(R.string.settings_ai_api_key_none)
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(Radius.card))
+                .border(1.dp, Nemo.colors.line, RoundedCornerShape(Radius.card))
+                .background(Nemo.colors.surface)
+                .padding(Spacing.cardHorizontal),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.settings_ai_api_key_title),
+                    fontFamily = GeistFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                    color = Nemo.colors.ink,
+                )
+                Text(
+                    text = apiKeySummary,
+                    fontFamily = GeistFamily,
+                    fontSize = 12.sp,
+                    color = if (hasCustomKey || hasBuiltinKey) Nemo.colors.inkSecondary else Nemo.colors.mute,
+                )
+            }
+            Spacer(modifier = Modifier.width(Spacing.x2))
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.x2)) {
+                if (hasCustomKey) {
+                    Box(
+                        modifier = Modifier
+                            .clip(PillShape)
+                            .border(1.dp, Nemo.colors.dangerLine, PillShape)
+                            .pressable(shape = PillShape, onClick = { viewModel.setCustomApiKey("") })
+                            .padding(horizontal = Spacing.x3, vertical = Spacing.x1),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.settings_ai_api_key_clear_action),
+                            fontFamily = GeistFamily,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 12.sp,
+                            color = Nemo.colors.danger,
+                        )
+                    }
+                }
+                Box(
+                    modifier = Modifier
+                        .clip(PillShape)
+                        .background(Nemo.colors.ink)
+                        .pressable(shape = PillShape, onClick = { showApiKeyDialog = true })
+                        .padding(horizontal = Spacing.x3, vertical = Spacing.x1),
+                ) {
+                    Text(
+                        text = stringResource(
+                            if (hasCustomKey) R.string.settings_ai_api_key_edit_action
+                            else R.string.settings_ai_api_key_set_action
+                        ),
+                        fontFamily = GeistFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 12.sp,
+                        color = Nemo.colors.surface,
+                    )
+                }
+            }
+        }
+
         SettingRow(
             title = stringResource(R.string.settings_tracking_title),
             subtitle = stringResource(R.string.settings_tracking_subtitle),
@@ -519,6 +601,89 @@ fun SettingsScreen(
                 },
                 dismissButton = {
                     TextButton(onClick = { showDeleteConfirmDialog = false }) {
+                        Text(
+                            text = stringResource(R.string.dialog_cancel),
+                            fontFamily = GeistFamily,
+                            fontWeight = FontWeight.Medium,
+                            color = Nemo.colors.mute,
+                        )
+                    }
+                },
+            )
+        }
+
+        if (showApiKeyDialog) {
+            var tempKey by rememberSaveable { mutableStateOf(customApiKey) }
+            AlertDialog(
+                onDismissRequest = { showApiKeyDialog = false },
+                containerColor = Nemo.colors.surface,
+                title = {
+                    Text(
+                        text = stringResource(R.string.settings_ai_api_key_dialog_title),
+                        fontFamily = GeistFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = Nemo.colors.ink,
+                    )
+                },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.x3)) {
+                        Text(
+                            text = stringResource(R.string.settings_ai_api_key_dialog_desc),
+                            fontFamily = GeistFamily,
+                            fontSize = 13.sp,
+                            color = Nemo.colors.mute,
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                                .clip(RoundedCornerShape(Radius.field))
+                                .background(Nemo.colors.fog)
+                                .padding(horizontal = Spacing.x3),
+                            contentAlignment = Alignment.CenterStart,
+                        ) {
+                            if (tempKey.isEmpty()) {
+                                Text(
+                                    text = stringResource(R.string.settings_ai_api_key_hint),
+                                    fontFamily = GeistFamily,
+                                    fontSize = 13.sp,
+                                    color = Nemo.colors.mute,
+                                )
+                            }
+                            BasicTextField(
+                                value = tempKey,
+                                onValueChange = { tempKey = it.trim() },
+                                singleLine = true,
+                                textStyle = TextStyle(
+                                    fontFamily = GeistMonoFamily,
+                                    fontSize = 13.sp,
+                                    color = Nemo.colors.ink,
+                                ),
+                                cursorBrush = SolidColor(Nemo.colors.ink),
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            viewModel.setCustomApiKey(tempKey)
+                            showApiKeyDialog = false
+                        },
+                    ) {
+                        Text(
+                            text = stringResource(R.string.dialog_set),
+                            fontFamily = GeistFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = Nemo.colors.ink,
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showApiKeyDialog = false }) {
                         Text(
                             text = stringResource(R.string.dialog_cancel),
                             fontFamily = GeistFamily,

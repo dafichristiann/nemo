@@ -61,7 +61,7 @@ class UsageWorkScheduler @Inject constructor(
             .build()
         workManager.enqueueUniquePeriodicWork(
             DailyReflectionWorker.UNIQUE_NAME,
-            ExistingPeriodicWorkPolicy.UPDATE,
+            ExistingPeriodicWorkPolicy.KEEP,
             reflection,
         )
 

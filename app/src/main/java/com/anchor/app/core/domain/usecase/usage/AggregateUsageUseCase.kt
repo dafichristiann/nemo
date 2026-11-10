@@ -35,8 +35,10 @@ class AggregateUsageUseCase @Inject constructor(
 
         val computed = mutableListOf<Long>()
         for (epochDay in firstDay..lastDay) {
-            val summary = aggregateDay(epochDay)
-            usageRepository.upsertDailySummary(summary)
+            if (epochDay >= lastDay - 1 || usageRepository.dailySummary(epochDay) == null) {
+                val summary = aggregateDay(epochDay)
+                usageRepository.upsertDailySummary(summary)
+            }
             computed += epochDay
         }
 

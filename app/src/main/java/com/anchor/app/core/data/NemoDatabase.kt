@@ -438,18 +438,12 @@ abstract class NemoDatabase : RoomDatabase() {
                     DELETE FROM `task_instance`
                     WHERE `definitionId` IS NOT NULL
                       AND `definitionOccurrenceDate` IS NOT NULL
-                      AND `id` NOT IN (
-                          SELECT `id` FROM (
-                              SELECT `id`,
-                                     ROW_NUMBER() OVER (
-                                         PARTITION BY `definitionId`, `definitionOccurrenceDate`
-                                         ORDER BY `createdAt` ASC, `id` ASC
-                                     ) AS rn
-                              FROM `task_instance`
-                              WHERE `definitionId` IS NOT NULL
-                                AND `definitionOccurrenceDate` IS NOT NULL
-                          )
-                          WHERE rn = 1
+                      AND EXISTS (
+                          SELECT 1 FROM `task_instance` t2
+                          WHERE t2.`definitionId` = `task_instance`.`definitionId`
+                            AND t2.`definitionOccurrenceDate` = `task_instance`.`definitionOccurrenceDate`
+                            AND (t2.`createdAt` < `task_instance`.`createdAt`
+                                 OR (t2.`createdAt` = `task_instance`.`createdAt` AND t2.`id` < `task_instance`.`id`))
                       )
                     """.trimIndent(),
                 )

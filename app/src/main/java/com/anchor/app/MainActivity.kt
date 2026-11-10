@@ -20,11 +20,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -69,7 +69,7 @@ class MainActivity : ComponentActivity() {
         // Deep-link from notification or focus-block overlay
         openRouteState.value = resolveRouteFromIntent(intent)
         setContent {
-            val themeMode by themePreferences.themeMode.collectAsState()
+            val themeMode by themePreferences.themeMode.collectAsStateWithLifecycle(initialValue = AppThemeMode.SYSTEM)
             val systemDark = isSystemInDarkTheme()
             val isDark = when (themeMode) {
                 AppThemeMode.SYSTEM -> systemDark
@@ -95,7 +95,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            val settings by settingsRepository.observe().collectAsState(initial = AppSettings(locale = initialLocale))
+            val settings by settingsRepository.observe().collectAsStateWithLifecycle(initialValue = AppSettings(locale = initialLocale))
             val targetLocale = remember(settings.locale) {
                 if (isIndonesian(settings.locale)) Locale("in", "ID") else Locale.ENGLISH
             }

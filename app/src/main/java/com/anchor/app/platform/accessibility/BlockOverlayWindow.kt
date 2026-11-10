@@ -15,6 +15,8 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import com.anchor.app.MainActivity
 import com.anchor.app.R
+import com.anchor.app.core.design.components.AnimatedMascotView
+import com.anchor.app.core.design.components.MascotExpression
 
 /**
  * The "back to focus" interlude, drawn as an accessibility overlay window
@@ -82,8 +84,8 @@ internal class BlockOverlayWindow(private val context: Context) {
             gravity = Gravity.CENTER
             setPadding(0, dp(12), 0, 0)
         }
-        val mascot = ImageView(context).apply {
-            setImageResource(R.drawable.mascot_angry)
+        val mascot = AnimatedMascotView(context).apply {
+            setExpression(MascotExpression.ANGRY)
             layoutParams = LinearLayout.LayoutParams(dp(72), dp(72)).apply {
                 gravity = Gravity.CENTER_HORIZONTAL
                 bottomMargin = dp(12)

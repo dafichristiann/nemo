@@ -50,6 +50,8 @@ fun Modifier.pressable(
     pressedScale: Float = 0.97f,
     debounceTimeMs: Long = 400L,
     indication: androidx.compose.foundation.Indication? = null,
+    role: androidx.compose.ui.semantics.Role? = null,
+    onClickLabel: String? = null,
     onClick: () -> Unit,
 ): Modifier = composed {
     if (!enabled) {
@@ -71,6 +73,9 @@ fun Modifier.pressable(
         .clickable(
             interactionSource = interactionSource,
             indication = indication,
+            enabled = enabled,
+            onClickLabel = onClickLabel,
+            role = role,
             onClick = {
                 if (debounceTimeMs <= 0L) {
                     onClick()

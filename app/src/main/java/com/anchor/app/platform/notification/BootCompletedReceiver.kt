@@ -23,7 +23,8 @@ class BootCompletedReceiver : BroadcastReceiver() {
     lateinit var taskReminderScheduler: TaskReminderScheduler
 
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
+        val action = intent.action ?: return
+        if (action !in SUPPORTED_ACTIONS) return
         val pendingResult = goAsync()
 
         CoroutineScope(Dispatchers.IO).launch {
@@ -32,9 +33,20 @@ class BootCompletedReceiver : BroadcastReceiver() {
                 tasks.filter { !it.isDone && it.deadline != null }.forEach { task ->
                     taskReminderScheduler.scheduleReminder(task)
                 }
+            } catch (_: Throwable) {
+                // Ignore reschedule errors during broadcast handling
             } finally {
                 pendingResult.finish()
             }
         }
+    }
+
+    companion object {
+        private val SUPPORTED_ACTIONS = setOf(
+            Intent.ACTION_BOOT_COMPLETED,
+            Intent.ACTION_MY_PACKAGE_REPLACED,
+            Intent.ACTION_TIME_CHANGED,
+            Intent.ACTION_TIMEZONE_CHANGED,
+        )
     }
 }

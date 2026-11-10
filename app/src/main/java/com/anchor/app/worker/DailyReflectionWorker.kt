@@ -20,6 +20,7 @@ import com.anchor.app.core.domain.usecase.insight.GenerateDailyReflectionUseCase
 import com.anchor.app.platform.notification.NotificationChannels
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CancellationException
 
 /**
  * Generates the Daily Reflection once per day (FR-DR1). Safe to run repeatedly: the use case
@@ -36,12 +37,14 @@ class DailyReflectionWorker @AssistedInject constructor(
     private val settingsRepository: SettingsRepository,
 ) : CoroutineWorker(appContext, params) {
 
-    override suspend fun doWork(): Result = runCatching {
+    override suspend fun doWork(): Result = try {
         val insight = generateDailyReflection(force = true)
         postNotification(insight)
         Result.success()
-    }.getOrElse {
-        Result.retry()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (t: Throwable) {
+        if (runAttemptCount >= 3) Result.failure() else Result.retry()
     }
 
     private suspend fun postNotification(insight: Insight) {

@@ -54,10 +54,10 @@ class NemoAccessibilityService : AccessibilityService() {
 
     private val doomscrollTracker: DoomscrollTracker by lazy {
         DoomscrollTracker(scope = serviceScope).apply {
-            onThresholdReached = { pkg, thresholdMinutes ->
+            onThresholdReached = { _, thresholdMinutes ->
                 android.util.Log.i(
                     "NemoAccessibilityService",
-                    "Doomscroll threshold reached for $pkg ($thresholdMinutes min)! Showing overlay & alert.",
+                    "Doomscroll threshold reached ($thresholdMinutes min)! Showing overlay & alert.",
                 )
                 doomscrollOverlay.show(
                     thresholdMinutes = thresholdMinutes,
@@ -172,11 +172,6 @@ class NemoAccessibilityService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         val pkg = event?.packageName?.toString() ?: return
 
-        android.util.Log.i(
-            "NemoAccessibilityService",
-            "RAW EVENT: pkg=$pkg class=${event?.className} isFullScreen=${event?.isFullScreen} eventType=${event?.eventType}",
-        )
-
         if (isImmunePackage(pkg)) return
 
         // Non-fullscreen sub-windows or overlays from other packages (e.g. launcher exit animations,
@@ -185,11 +180,6 @@ class NemoAccessibilityService : AccessibilityService() {
         if (!isTarget && event?.isFullScreen == false && doomscrollTracker.isTracking) {
             return
         }
-
-        android.util.Log.i(
-            "NemoAccessibilityService",
-            "onAccessibilityEvent pkg=$pkg isEnabled=${doomscrollTracker.isEnabled} threshold=${doomscrollTracker.thresholdMinutes} tracking=${doomscrollTracker.isTracking}",
-        )
 
         val snapshot = blockingState.snapshot()
         val isBlocked = snapshot.sessionActive && pkg in snapshot.blockedApps

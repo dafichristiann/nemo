@@ -7,6 +7,7 @@ import androidx.work.WorkerParameters
 import com.anchor.app.core.domain.usecase.usage.AggregateUsageUseCase
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CancellationException
 
 /**
  * Aggregates raw sessions into daily/weekly summaries (FR-W3, docs 02-architecture.md §5).
@@ -21,11 +22,13 @@ class AggregationWorker @AssistedInject constructor(
     private val aggregateUsage: AggregateUsageUseCase,
 ) : CoroutineWorker(appContext, params) {
 
-    override suspend fun doWork(): Result = runCatching {
+    override suspend fun doWork(): Result = try {
         aggregateUsage()
         Result.success()
-    }.getOrElse {
-        Result.retry()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (t: Throwable) {
+        if (runAttemptCount >= 3) Result.failure() else Result.retry()
     }
 
     companion object {

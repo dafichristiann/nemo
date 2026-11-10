@@ -35,13 +35,14 @@ import javax.inject.Singleton
 @Singleton
 class GeminiInsightSource @Inject constructor(
     private val settingsRepository: SettingsRepository,
+    private val aiPreferences: AiPreferences? = null,
 ) : AiInsightSource {
 
     /** 0-arg constructor for tests or standalone usage with default settings. */
-    constructor() : this(DefaultSettingsRepository)
+    constructor() : this(DefaultSettingsRepository, null)
 
     override suspend fun generate(payload: InsightPayload): InsightDraft? {
-        val key = BuildConfig.GEMINI_API_KEY
+        val key = aiPreferences?.getEffectiveApiKey() ?: BuildConfig.GEMINI_API_KEY.trim()
         if (key.isBlank()) return null // unconfigured → rule-based, no network attempt
         if (!InsightPayload.passesPrivacyAudit(payload)) return null
 

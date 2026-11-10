@@ -10,6 +10,7 @@ import com.anchor.app.platform.notification.InterventionDispatcher
 import com.anchor.app.platform.notification.NotificationPermissions
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CancellationException
 
 /**
  * Full intervention cycle (Sprint 4): detect drift → evaluate against quota/cooldown →
@@ -30,7 +31,7 @@ class InterventionCheckWorker @AssistedInject constructor(
     private val notificationPermissions: NotificationPermissions,
 ) : CoroutineWorker(appContext, params) {
 
-    override suspend fun doWork(): Result = runCatching {
+    override suspend fun doWork(): Result = try {
         val signal = detectDrift()
         // The worker runs in the background, so the user is not inside Nemo; the channel is
         // picked from notification availability (falls back to in-app when denied).
@@ -41,8 +42,10 @@ class InterventionCheckWorker @AssistedInject constructor(
         )
         dispatcher.dispatch(decision)
         Result.success()
-    }.getOrElse {
-        Result.retry()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (t: Throwable) {
+        if (runAttemptCount >= 3) Result.failure() else Result.retry()
     }
 
     companion object {

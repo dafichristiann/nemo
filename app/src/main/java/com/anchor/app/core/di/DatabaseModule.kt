@@ -2,6 +2,8 @@ package com.anchor.app.core.di
 
 import android.content.Context
 import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.anchor.app.core.data.NemoDatabase
 import com.anchor.app.core.data.dao.AppCategoryDao
 import com.anchor.app.core.data.dao.AppSettingsDao
@@ -43,6 +45,12 @@ object DatabaseModule {
         NemoDatabase.NAME,
     )
         .addMigrations(*NemoDatabase.ALL_MIGRATIONS)
+        .addCallback(object : RoomDatabase.Callback() {
+            override fun onOpen(db: SupportSQLiteDatabase) {
+                super.onOpen(db)
+                db.setForeignKeyConstraintsEnabled(true)
+            }
+        })
         .build()
 
     @Provides

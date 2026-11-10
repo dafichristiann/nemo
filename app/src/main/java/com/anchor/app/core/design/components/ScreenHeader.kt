@@ -80,25 +80,20 @@ fun NemoScreenHeader(
             }
         }
 
-        if (eyebrow != null || (action != null && onBack != null)) {
+        if (eyebrow != null) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (eyebrow != null) {
-                    Text(
-                        text = eyebrow.uppercase(),
-                        fontFamily = GeistFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 11.sp,
-                        letterSpacing = 1.sp,
-                        color = Nemo.colors.mute,
-                    )
-                }
-                if (onBack != null && action != null) {
-                    action()
-                }
+                Text(
+                    text = eyebrow.uppercase(),
+                    fontFamily = GeistFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 11.sp,
+                    letterSpacing = 1.sp,
+                    color = Nemo.colors.mute,
+                )
             }
         }
 
@@ -117,7 +112,7 @@ fun NemoScreenHeader(
                 color = Nemo.colors.ink,
                 modifier = Modifier.weight(1f, fill = false),
             )
-            if (onBack == null && action != null) {
+            if (action != null) {
                 action()
             }
         }

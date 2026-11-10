@@ -55,7 +55,7 @@ class DoomscrollOverlayWindow(private val context: Context) {
         }
 
         val mascot = ImageView(context).apply {
-            setImageResource(R.drawable.nemo_mascot_thinking)
+            setImageResource(R.drawable.mascot_thinking)
             layoutParams = LinearLayout.LayoutParams(dp(80), dp(80)).apply {
                 gravity = Gravity.CENTER_HORIZONTAL
                 bottomMargin = dp(16)

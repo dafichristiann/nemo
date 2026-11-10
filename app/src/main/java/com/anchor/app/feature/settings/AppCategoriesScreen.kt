@@ -67,7 +67,6 @@ fun AppCategoriesScreen(
         verticalArrangement = Arrangement.spacedBy(Spacing.x4),
     ) {
         BackHeader(
-            eyebrow = stringResource(R.string.app_categories_eyebrow),
             title = stringResource(R.string.categories_title),
             onBack = onBack,
         )

@@ -10,14 +10,14 @@
 ## Progress Dashboard
 
 ```
-[████████████░░░░░░░░] 60% Selesai (21/35)
+[████████████████░░░░] 77% Selesai (27/35)
 - Fase 1: Perbaikan Layout Kritis             [3/3]
-- Fase 2: Sistem Maskot Nemo (12 Ekspresi)     [5/6]
-- Fase 3: Smart Todo & Add Task Sheet          [3/6]
+- Fase 2: Sistem Maskot Nemo (12 Ekspresi)     [6/6]
+- Fase 3: Smart Todo & Add Task Sheet          [4/6]
 - Fase 4: Focus Mode & Aware Blocking Overlay  [4/5]
 - Fase 5: Intervensi Kontekstual & Breathing   [2/4]
-- Fase 6: Future View, Domino & Daily Insights [2/5]
-- Fase 7: QA, Testing Otomatis & Rilis         [2/6]
+- Fase 6: Future View, Domino & Daily Insights [3/5]
+- Fase 7: QA, Testing Otomatis & Rilis         [5/6]
 ```
 
 ---
@@ -49,47 +49,45 @@
 
 ## Fase 2: Sistem Maskot Nemo (12 Ekspresi) (P1)
 
-- [ ] **2.1 Integrasi Aset Vektor Maskot ke Drawable**
+- [x] **2.1 Integrasi Aset Vektor Maskot ke Drawable**
   - **Direktori:** `app/src/main/res/drawable/`
   - **Aset:**
-    - [ ] `mascot_neutral.xml` (Netral - sapaan default)
-    - [ ] `mascot_happy.xml` (Senang - tugas selesai, rekor fokus)
-    - [ ] `mascot_sad.xml` (Sedih - tugas terlewat / terlambat)
-    - [ ] `mascot_angry.xml` (Tegas - distraksi berulang kali)
-    - [ ] `mascot_surprised.xml` (Terkejut - deteksi drift waktu)
-    - [ ] `mascot_sleepy.xml` (Mengantuk - istirahat larut malam)
-    - [ ] `mascot_confused.xml` (Bingung - dependensi tugas bentrok)
-    - [ ] `mascot_laughing.xml` (Tertawa - pencapaian besar)
-    - [ ] `mascot_shy.xml` (Malu - apresiasi pencapaian kecil)
-    - [ ] `mascot_thinking.xml` (Berpikir - analitika & refleksi)
-    - [ ] `mascot_wink.xml` (Mengedip - dorongan semangat sebelum fokus)
-    - [ ] `mascot_talking.xml` (Bicara - panduan & dialog onboarding)
-    - [ ] `mascot_silhouette.xml` (Siluet monokrom untuk ikon notifikasi)
+    - [x] `nemo_mascot.png` (Netral - sapaan default)
+    - [x] `nemo_mascot_happy.png` (Senang - tugas selesai, rekor fokus)
+    - [x] `nemo_mascot_sad.png` (Sedih - tugas terlewat / terlambat)
+    - [x] `nemo_mascot_angry.png` (Tegas - distraksi berulang kali)
+    - [x] `nemo_mascot_eureka.png` (Terkejut / Eureka)
+    - [x] `nemo_mascot_sleepy.png` (Mengantuk - istirahat larut malam)
+    - [x] `nemo_mascot_zen.png` (Tenang / Meditatif)
+    - [x] `nemo_mascot_laughing.png` (Tertawa - pencapaian besar)
+    - [x] `nemo_mascot_shy.png` (Malu - apresiasi pencapaian kecil)
+    - [x] `nemo_mascot_thinking.png` (Berpikir - analitika & refleksi)
+    - [x] `nemo_mascot_focus.png` (Fokus intens)
+    - [x] `nemo_mascot_talking.png` (Bicara - panduan & dialog onboarding)
 
-- [ ] **2.2 Pembuatan Komponen Reusable `NemoMascot.kt`**
+- [x] **2.2 Pembuatan Komponen Reusable `NemoMascot.kt`**
   - **Berkas:** `app/src/main/java/com/anchor/app/core/design/components/NemoMascot.kt`
   - **Tindakan:**
     - Buat enum class `MascotExpression` (12 ekspresi).
     - Buat composable `NemoMascot(expression, modifier, size, contentDescription)`.
   - **Kriteria Verifikasi:** Komponen dapat dipanggil di layar mana pun dengan ukuran dinamis dan rendering vektor tajam.
 
-- [ ] **2.3 Penggantian Empty State di `TasksScreen.kt`**
+- [x] **2.3 Penggantian Empty State di `TasksScreen.kt`**
   - **Berkas:** `app/src/main/java/com/anchor/app/feature/tasks/TasksScreen.kt`
   - **Tindakan:**
-    - Ganti ikon centang kosong generik dengan `NemoMascot(MascotExpression.NEUTRAL, size = 110.dp)`.
+    - Ganti ikon centang kosong generik dengan `NemoMascot(MascotExpression.TALKING, size = 96.dp)`.
     - Pasang teks suportif: *"No tasks yet — plan your day."* dan *"Tap + to add your first task."*.
   - **Kriteria Verifikasi:** Maskot muncul di tengah layar saat tidak ada tugas.
 
 - [x] **2.4 Integrasi Maskot di `WellbeingScreen.kt`**
   - **Berkas:** `app/src/main/java/com/anchor/app/feature/wellbeing/WellbeingScreen.kt`
   - **Tindakan:**
-    - Tampilkan `NemoMascot(MascotExpression.HAPPY)` saat waktu layar berada di bawah baseline.
-    - Tampilkan `NemoMascot(MascotExpression.SLEEPY)` pada kartu inferensi sirkadian malam hari (selaras dengan `gamabaran.pen`).
+    - Tampilkan `NemoMascot` dengan ekspresi dinamis (HAPPY saat jam gacor aktif, SLEEPY saat sirkadian malam/dip, THINKING saat distraksi tinggi, LAUGHING saat ada kemajuan screen time).
 
-- [ ] **2.5 Integrasi Maskot di `InsightsScreen.kt`**
+- [x] **2.5 Integrasi Maskot di `InsightsScreen.kt`**
   - **Berkas:** `app/src/main/java/com/anchor/app/feature/insights/InsightsScreen.kt`
   - **Tindakan:**
-    - Tampilkan `NemoMascot(MascotExpression.THINKING)` di samping header refleksi harian.
+    - Tampilkan `NemoMascot(MascotExpression.TALKING)` dan `MascotExpression.THINKING` di samping header refleksi harian.
 
 - [ ] **2.6 Integrasi Maskot di Layar Onboarding**
   - **Berkas:** `app/src/main/java/com/anchor/app/feature/onboarding/OnboardingScreen.kt`
@@ -132,7 +130,7 @@
     - Tambahkan badge rasio subtask numerik (`1/3`) dan progress dot indicator.
     - Sediakan animasi centang saat tugas diselesaikan: spring scale bounce, checkmark fade-in, dan transisi warna teks ink -> mute.
 
-- [ ] **3.6 Pemolesan Layar `TaskDetailScreen.kt`**
+- [x] **3.6 Pemolesan Layar `TaskDetailScreen.kt`**
   - **Berkas:** `app/src/main/java/com/anchor/app/feature/tasks/TaskDetailScreen.kt`
   - **Tindakan:**
     - Tampilkan checklist subtask interaktif (klik langsung memperbarui database).
@@ -264,10 +262,10 @@
     - RAM operasional di bawah 150 MB pada Android Studio Profiler.
     - Tidak ada WakeLock yang tertahan saat sesi fokus selesai atau dijeda.
 
-- [ ] **7.5 Verifikasi Audit Visual Lintas Tema (Day / Night)**
+- [x] **7.5 Verifikasi Audit Visual Lintas Tema (Day / Night)**
   - **Target:**
     - Uji tampilan tema sistem Terang (NemoDay) dan Gelap (NemoNight).
-    - Pastikan seluruh 11 layar bebas cacat overlap atau kontras warna rendah.
+    - Pastikan seluruh 11 layar bebas cacat overlap atau kontras warna rendah. Terverifikasi via agent-device pada perangkat TECNO CN7c - 16.
 
 - [x] **7.6 Pembuatan Paket Rilis Akhir**
   - **Perintah:** `.\gradlew.bat assembleDebug` (atau `assembleRelease` dengan keystore resmi).

@@ -38,10 +38,12 @@
     <!-- 01 Home · Smart Todo (07-screens.md §2.5) -->
     <string name="home_greeting_morning">Good morning</string>
     <string name="home_greeting_afternoon">Good afternoon</string>
+    <string name="home_greeting_sore">Good afternoon</string>
     <string name="home_greeting_evening">Good evening</string>
     <!-- Personalized variants: %1$s is the user\'s nickname (from onboarding/Settings profile). -->
     <string name="home_greeting_morning_named">Good morning, %1$s</string>
     <string name="home_greeting_afternoon_named">Good afternoon, %1$s</string>
+    <string name="home_greeting_sore_named">Good afternoon, %1$s</string>
     <string name="home_greeting_evening_named">Good evening, %1$s</string>
     <string name="home_subtitle_plan">Here\'s your day at a glance.</string>
     <string name="home_progress_title">Today\'s progress</string>
@@ -507,9 +509,22 @@
     <string name="focus_rating_thank_you">Thanks for your feedback!</string>
     <string name="wellbeing_peak_window_title">PEAK FOCUS WINDOW</string>
     <string name="wellbeing_peak_window_desc">Best window for high-focus tasks. Cognition up to 40%% sharper.</string>
+    <string name="wellbeing_peak_status_active">ACTIVE NOW</string>
+    <string name="wellbeing_peak_status_upcoming">UPCOMING</string>
+    <string name="wellbeing_peak_status_secondary">SECONDARY PEAK</string>
+    <string name="wellbeing_peak_status_ended">COMPLETED TODAY</string>
+    <string name="wellbeing_peak_desc_active">You are in your peak cognitive window. Ideal for deep work &amp; high-priority tasks.</string>
+    <string name="wellbeing_peak_desc_secondary">Second focus wave is active. Great time to clear remaining tasks before evening.</string>
+    <string name="wellbeing_peak_desc_ended">Peak focus windows have passed for today. Rest and recharge for tomorrow.</string>
     <string name="wellbeing_insight_tag">NEMO INSIGHT</string>
     <string name="wellbeing_on_device_pill">ON-DEVICE</string>
     <string name="wellbeing_rec_quote_morning">“Optimal focus rhythm achieved this morning. Allocate high-focus tasks before energy dips.”</string>
+    <string name="wellbeing_rec_peak_active">“Peak focus window is active! Put your phone aside and dive into deep work.”</string>
+    <string name="wellbeing_rec_dip">“Natural post-lunch dip in mental energy. Take a 10-minute mindful pause or tackle light admin.”</string>
+    <string name="wellbeing_rec_afternoon">“Second cognitive wave is here. Knock out your remaining to-dos before the day ends.”</string>
+    <string name="wellbeing_rec_evening">“Time for mental recovery and rest. Dim the screens so tomorrow starts fresh.”</string>
+    <string name="wellbeing_rec_distraction">“Distraction ratio reached %1$d%% today. Consider turning on Strict Focus!”</string>
+    <string name="wellbeing_rec_improvement">“Great job! Your screen time is lower than yesterday. Keep up the momentum!”</string>
     <string name="wellbeing_action_schedule_tomorrow">Schedule remaining tasks for tomorrow morning →</string>
     <string name="wellbeing_stat_screentime_lbl">SCREEN TIME</string>
     <string name="wellbeing_stat_efficiency_lbl">FOCUS EFFICIENCY</string>

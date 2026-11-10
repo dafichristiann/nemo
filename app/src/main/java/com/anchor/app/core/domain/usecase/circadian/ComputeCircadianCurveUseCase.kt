@@ -46,6 +46,24 @@ data class CircadianCurveData(
         val y = h00 * seg.startY + h10 * len * d0 + h01 * seg.endY + h11 * len * d1
         return y.coerceIn(0f, 1f)
     }
+
+    val peakStart: LocalTime
+        get() = wakeResult.time.plusMinutes(120) // T+2.0h
+
+    val peakEnd: LocalTime
+        get() = wakeResult.time.plusMinutes(270) // T+4.5h
+
+    val secondaryPeakStart: LocalTime
+        get() = wakeResult.time.plusMinutes(480) // T+8.0h
+
+    val secondaryPeakEnd: LocalTime
+        get() = wakeResult.time.plusMinutes(630) // T+10.5h
+
+    fun peakWindowFormatted(): String =
+        String.format("%02d:%02d - %02d:%02d", peakStart.hour, peakStart.minute, peakEnd.hour, peakEnd.minute)
+
+    fun secondaryPeakWindowFormatted(): String =
+        String.format("%02d:%02d - %02d:%02d", secondaryPeakStart.hour, secondaryPeakStart.minute, secondaryPeakEnd.hour, secondaryPeakEnd.minute)
 }
 
 /**

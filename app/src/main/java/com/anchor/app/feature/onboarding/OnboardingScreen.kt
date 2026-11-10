@@ -354,14 +354,21 @@ fun PermissionOnboardingScreen(
             onEnable = { accessibilityStatus.open(context) },
         )
 
+        val allPermissionsGranted = usageGranted && notificationsGranted && accessibilityGranted
+        val permMascot = if (allPermissionsGranted) {
+            com.anchor.app.core.design.components.MascotExpression.HAPPY
+        } else {
+            com.anchor.app.core.design.components.MascotExpression.SHY
+        }
+
         Banner {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 com.anchor.app.core.design.components.NemoMascot(
-                    expression = com.anchor.app.core.design.components.MascotExpression.HAPPY,
-                    size = 24.dp,
+                    expression = permMascot,
+                    size = 32.dp,
                 )
                 Spacer(modifier = Modifier.width(Spacing.x3))
                 Text(

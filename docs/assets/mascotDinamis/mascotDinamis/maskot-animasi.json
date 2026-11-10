@@ -1,0 +1,386 @@
+{
+  "name": "Animasi Maskot Nemo",
+  "version": 1,
+  "source_of_truth": "CSS di maskot-animasi-spec.md bagian 4",
+  "conventions": {
+    "units": {"x_y": "persen dari sisi kotak maskot (y positif = turun, x positif = ke kanan)", "rot": "derajat, positif = searah jarum jam", "sx_sy": "skala, 1 = ukuran asli", "opacity": "0 sampai 1", "t": "posisi dalam satu siklus, 0 sampai 1", "duration_ms": "milidetik per siklus", "reveal": "0 = tersembunyi, 1 = terlihat penuh"},
+    "transform_order": "translate, lalu rotate, lalu scale, terhadap titik origin [x%, y%] kotak maskot (0,0 = kiri-atas)",
+    "interpolation": "linear per parameter di antara keyframe; easing diterapkan di setiap segmen antar keyframe",
+    "easing_defs": {"ease-in-out": "cubic-bezier(0.42,0,0.58,1)", "ease-out": "cubic-bezier(0,0,0.58,1)", "linear": "linear", "steps(3,end)": "nilai melompat 3 kali di setiap segmen; lompatan terjadi di akhir tiap langkah"},
+    "loop": "semua animasi berulang tanpa henti; direction alternate = maju lalu mundur",
+    "layers_bottom_to_top": ["head (wajah dasar)", "face_swaps (wajah lain menggantikan wajah dasar selama show_during, loncat langsung tanpa fade)", "fx (simbol)"],
+    "layer_rules": "semua PNG persegi 760x760 dan kepalanya sudah sejajar; tumpuk semua layer di kotak yang sama tanpa crop atau penengahan ulang. body.transform berlaku untuk SEMUA layer; track fx berjalan di atas itu"
+  },
+  "animations": [
+    {
+      "index": 1,
+      "id": "neutral",
+      "intent": "Bernapas pelan, sesekali mengedip sebelah.",
+      "assets": {"head": "mascot_neutral.png", "fx": null},
+      "body": {
+        "duration_ms": 4000,
+        "direction": "normal",
+        "easing": "ease-in-out",
+        "origin": [50, 88],
+        "keyframes": [
+          {"t": 0, "x": 0, "y": 0, "rot": 0, "sx": 1, "sy": 1},
+          {"t": 0.5, "x": 0, "y": -4, "rot": 0, "sx": 1.015, "sy": 1.015},
+          {"t": 1, "x": 0, "y": 0, "rot": 0, "sx": 1, "sy": 1}
+        ]
+      },
+      "face_swaps": {
+        "duration_ms": 4000,
+        "swaps": [
+          {
+            "face": "wink",
+            "show_during": [
+              [0.72, 0.77]
+            ]
+          }
+        ]
+      },
+      "fx": null
+    },
+    {
+      "index": 2,
+      "id": "happy",
+      "intent": "Melompat kecil dengan efek gepeng dan melar (squash and stretch).",
+      "assets": {"head": "mascot_happy.png", "fx": null},
+      "body": {
+        "duration_ms": 1100,
+        "direction": "normal",
+        "easing": "cubic-bezier(0.3,0,0.4,1)",
+        "origin": [50, 88],
+        "keyframes": [
+          {"t": 0, "x": 0, "y": 0, "rot": 0, "sx": 1.07, "sy": 0.93},
+          {"t": 0.15, "x": 0, "y": 0, "rot": 0, "sx": 0.96, "sy": 1.05},
+          {"t": 0.45, "x": 0, "y": -16, "rot": 0, "sx": 0.98, "sy": 1.04},
+          {"t": 0.75, "x": 0, "y": 0, "rot": 0, "sx": 1.07, "sy": 0.93},
+          {"t": 1, "x": 0, "y": 0, "rot": 0, "sx": 1.07, "sy": 0.93}
+        ]
+      },
+      "face_swaps": null,
+      "fx": null
+    },
+    {
+      "index": 3,
+      "id": "sad",
+      "intent": "Kepala merosot pelan sambil miring, seperti menghela napas.",
+      "assets": {"head": "mascot_sad.png", "fx": null},
+      "body": {
+        "duration_ms": 5000,
+        "direction": "normal",
+        "easing": "ease-in-out",
+        "origin": [50, 88],
+        "keyframes": [
+          {"t": 0, "x": 0, "y": 0, "rot": 0, "sx": 1, "sy": 1},
+          {"t": 0.5, "x": 0, "y": 7, "rot": -5, "sx": 0.97, "sy": 0.97},
+          {"t": 1, "x": 0, "y": 0, "rot": 0, "sx": 1, "sy": 1}
+        ]
+      },
+      "face_swaps": null,
+      "fx": null
+    },
+    {
+      "index": 4,
+      "id": "angry",
+      "intent": "Diam menahan, lalu mengamuk: getar kiri-kanan cepat sambil sedikit membesar, lalu tenang.",
+      "assets": {"head": "mascot_angry.png", "fx": null},
+      "body": {
+        "duration_ms": 2400,
+        "direction": "normal",
+        "easing": "linear",
+        "origin": [50, 88],
+        "keyframes": [
+          {"t": 0, "x": 0, "y": 0, "rot": 0, "sx": 1, "sy": 1},
+          {"t": 0.54, "x": 0, "y": 0, "rot": 0, "sx": 1, "sy": 1},
+          {"t": 0.57, "x": -3, "y": 0, "rot": -2, "sx": 1.04, "sy": 1.04},
+          {"t": 0.61, "x": 3, "y": 0, "rot": 2, "sx": 1.04, "sy": 1.04},
+          {"t": 0.65, "x": -3, "y": 0, "rot": -2, "sx": 1.04, "sy": 1.04},
+          {"t": 0.69, "x": 3, "y": 0, "rot": 2, "sx": 1.04, "sy": 1.04},
+          {"t": 0.73, "x": -3, "y": 0, "rot": -2, "sx": 1.04, "sy": 1.04},
+          {"t": 0.77, "x": 3, "y": 0, "rot": 2, "sx": 1.04, "sy": 1.04},
+          {"t": 0.82, "x": 0, "y": 0, "rot": 0, "sx": 1.04, "sy": 1.04},
+          {"t": 1, "x": 0, "y": 0, "rot": 0, "sx": 1, "sy": 1}
+        ]
+      },
+      "face_swaps": null,
+      "fx": null
+    },
+    {
+      "index": 5,
+      "id": "surprised",
+      "intent": "Terlonjak membesar lalu memantul; garis kejut muncul serentak dan menghilang.",
+      "assets": {"head": "mascot_surprised.png", "fx": "mascot_surprised_fx.png"},
+      "body": {
+        "duration_ms": 2800,
+        "direction": "normal",
+        "easing": "ease-out",
+        "origin": [50, 88],
+        "keyframes": [
+          {"t": 0, "x": 0, "y": 0, "rot": 0, "sx": 1, "sy": 1},
+          {"t": 0.55, "x": 0, "y": 0, "rot": 0, "sx": 1, "sy": 1},
+          {"t": 0.6, "x": 0, "y": -6, "rot": 0, "sx": 1.18, "sy": 1.18},
+          {"t": 0.68, "x": 0, "y": 0, "rot": 0, "sx": 0.96, "sy": 0.96},
+          {"t": 0.76, "x": 0, "y": 0, "rot": 0, "sx": 1.07, "sy": 1.07},
+          {"t": 0.86, "x": 0, "y": 0, "rot": 0, "sx": 1, "sy": 1},
+          {"t": 1, "x": 0, "y": 0, "rot": 0, "sx": 1, "sy": 1}
+        ]
+      },
+      "face_swaps": null,
+      "fx": [
+        {
+          "name": "burst",
+          "duration_ms": 2800,
+          "direction": "normal",
+          "easing": "ease-out",
+          "origin": [50, 50],
+          "keyframes": [
+            {"t": 0, "opacity": 0, "sx": 0.8, "sy": 0.8},
+            {"t": 0.55, "opacity": 0, "sx": 0.8, "sy": 0.8},
+            {"t": 0.6, "opacity": 1, "sx": 1.12, "sy": 1.12},
+            {"t": 0.86, "opacity": 1, "sx": 1, "sy": 1},
+            {"t": 0.96, "opacity": 0, "sx": 1, "sy": 1},
+            {"t": 1, "opacity": 0, "sx": 1, "sy": 1}
+          ]
+        }
+      ]
+    },
+    {
+      "index": 6,
+      "id": "sleepy",
+      "intent": "Terangguk pelan ke depan lalu tersentak bangun; huruf z muncul satu per satu dari bawah dan melayang naik.",
+      "assets": {"head": "mascot_sleepy.png", "fx": "mascot_sleepy_fx.png"},
+      "body": {
+        "duration_ms": 4500,
+        "direction": "normal",
+        "easing": "ease-in-out",
+        "origin": [50, 96],
+        "keyframes": [
+          {"t": 0, "x": 0, "y": 0, "rot": 0, "sx": 1, "sy": 1},
+          {"t": 0.48, "x": 0, "y": 4, "rot": 14, "sx": 1, "sy": 1},
+          {"t": 0.57, "x": 0, "y": 4, "rot": 14, "sx": 1, "sy": 1},
+          {"t": 0.63, "x": 0, "y": 0, "rot": -3, "sx": 1, "sy": 1},
+          {"t": 0.72, "x": 0, "y": 0, "rot": 0, "sx": 1, "sy": 1},
+          {"t": 1, "x": 0, "y": 0, "rot": 0, "sx": 1, "sy": 1}
+        ]
+      },
+      "face_swaps": null,
+      "fx": [
+        {
+          "name": "reveal",
+          "duration_ms": 3000,
+          "direction": "normal",
+          "easing": "steps(3,end)",
+          "reveal_from": "bottom",
+          "keyframes": [
+            {"t": 0, "reveal": 0},
+            {"t": 0.35, "reveal": 1},
+            {"t": 1, "reveal": 1}
+          ]
+        },
+        {
+          "name": "float_move",
+          "duration_ms": 3000,
+          "direction": "normal",
+          "easing": "ease-in-out",
+          "origin": [50, 50],
+          "keyframes": [
+            {"t": 0, "x": 0, "y": 8},
+            {"t": 1, "x": 7, "y": -12}
+          ]
+        },
+        {
+          "name": "float_fade",
+          "duration_ms": 3000,
+          "direction": "normal",
+          "easing": "ease-in-out",
+          "keyframes": [
+            {"t": 0, "opacity": 0},
+            {"t": 0.25, "opacity": 1},
+            {"t": 0.7, "opacity": 1},
+            {"t": 1, "opacity": 0}
+          ]
+        }
+      ]
+    },
+    {
+      "index": 7,
+      "id": "confused",
+      "intent": "Kepala miring kiri-kanan pelan; tanda tanya bergoyang sendiri.",
+      "assets": {"head": "mascot_confused.png", "fx": "mascot_confused_fx.png"},
+      "body": {
+        "duration_ms": 3600,
+        "direction": "normal",
+        "easing": "ease-in-out",
+        "origin": [50, 88],
+        "keyframes": [
+          {"t": 0, "x": 0, "y": 0, "rot": -7, "sx": 1, "sy": 1},
+          {"t": 0.5, "x": 2, "y": 0, "rot": 7, "sx": 1, "sy": 1},
+          {"t": 1, "x": 0, "y": 0, "rot": -7, "sx": 1, "sy": 1}
+        ]
+      },
+      "face_swaps": null,
+      "fx": [
+        {
+          "name": "question_mark",
+          "duration_ms": 1800,
+          "direction": "normal",
+          "easing": "ease-in-out",
+          "origin": [50, 50],
+          "keyframes": [
+            {"t": 0, "x": 0, "y": 0, "rot": 0, "sx": 1, "sy": 1},
+            {"t": 0.5, "x": 0, "y": -8, "rot": 14, "sx": 1.1, "sy": 1.1},
+            {"t": 1, "x": 0, "y": 0, "rot": 0, "sx": 1, "sy": 1}
+          ]
+        }
+      ]
+    },
+    {
+      "index": 8,
+      "id": "laughing",
+      "intent": "Tertawa terbahak: tiga lompatan cepat sambil mendongak, lalu jeda.",
+      "assets": {"head": "mascot_laughing.png", "fx": null},
+      "body": {
+        "duration_ms": 1800,
+        "direction": "normal",
+        "easing": "ease-in-out",
+        "origin": [50, 88],
+        "keyframes": [
+          {"t": 0, "x": 0, "y": 0, "rot": 0, "sx": 1, "sy": 1},
+          {"t": 0.06, "x": 0, "y": -7, "rot": -7, "sx": 1, "sy": 1},
+          {"t": 0.14, "x": 0, "y": 1, "rot": -5, "sx": 1.03, "sy": 0.97},
+          {"t": 0.22, "x": 0, "y": -7, "rot": -7, "sx": 1, "sy": 1},
+          {"t": 0.3, "x": 0, "y": 1, "rot": -5, "sx": 1.03, "sy": 0.97},
+          {"t": 0.38, "x": 0, "y": -7, "rot": -7, "sx": 1, "sy": 1},
+          {"t": 0.46, "x": 0, "y": 1, "rot": -5, "sx": 1.03, "sy": 0.97},
+          {"t": 0.56, "x": 0, "y": 0, "rot": 0, "sx": 1, "sy": 1},
+          {"t": 1, "x": 0, "y": 0, "rot": 0, "sx": 1, "sy": 1}
+        ]
+      },
+      "face_swaps": null,
+      "fx": null
+    },
+    {
+      "index": 9,
+      "id": "shy",
+      "intent": "Menciut ke pojok kiri-bawah, bergoyang gugup, lalu mengintip kembali.",
+      "assets": {"head": "mascot_shy.png", "fx": null},
+      "body": {
+        "duration_ms": 4200,
+        "direction": "normal",
+        "easing": "ease-in-out",
+        "origin": [50, 88],
+        "keyframes": [
+          {"t": 0, "x": 0, "y": 0, "rot": 0, "sx": 1, "sy": 1},
+          {"t": 0.25, "x": -7, "y": 5, "rot": 7, "sx": 0.92, "sy": 0.92},
+          {"t": 0.32, "x": -9, "y": 5, "rot": 4, "sx": 0.92, "sy": 0.92},
+          {"t": 0.39, "x": -6, "y": 5, "rot": 9, "sx": 0.92, "sy": 0.92},
+          {"t": 0.6, "x": -7, "y": 5, "rot": 7, "sx": 0.92, "sy": 0.92},
+          {"t": 0.76, "x": 1, "y": 0, "rot": -2, "sx": 1.03, "sy": 1.03},
+          {"t": 1, "x": 0, "y": 0, "rot": 0, "sx": 1, "sy": 1}
+        ]
+      },
+      "face_swaps": null,
+      "fx": null
+    },
+    {
+      "index": 10,
+      "id": "thinking",
+      "intent": "Kepala miring merenung; titik muncul satu per satu dari kiri ke kanan.",
+      "assets": {"head": "mascot_thinking.png", "fx": "mascot_thinking_fx.png"},
+      "body": {
+        "duration_ms": 5000,
+        "direction": "normal",
+        "easing": "ease-in-out",
+        "origin": [50, 88],
+        "keyframes": [
+          {"t": 0, "x": 0, "y": 0, "rot": 0, "sx": 1, "sy": 1},
+          {"t": 0.3, "x": -2, "y": 0, "rot": -6, "sx": 1, "sy": 1},
+          {"t": 0.7, "x": -2, "y": 0, "rot": -6, "sx": 1, "sy": 1},
+          {"t": 1, "x": 0, "y": 0, "rot": 0, "sx": 1, "sy": 1}
+        ]
+      },
+      "face_swaps": null,
+      "fx": [
+        {
+          "name": "dots",
+          "duration_ms": 2400,
+          "direction": "normal",
+          "easing": "steps(3,end)",
+          "reveal_from": "left",
+          "keyframes": [
+            {"t": 0, "reveal": 0},
+            {"t": 0.8, "reveal": 1},
+            {"t": 1, "reveal": 1}
+          ]
+        }
+      ]
+    },
+    {
+      "index": 11,
+      "id": "wink",
+      "intent": "Kedipan genit: melonjak dan miring tepat saat satu mata menutup, lalu kembali.",
+      "assets": {"head": "mascot_wink.png", "fx": null},
+      "body": {
+        "duration_ms": 2600,
+        "direction": "normal",
+        "easing": "ease-in-out",
+        "origin": [50, 88],
+        "keyframes": [
+          {"t": 0, "x": 0, "y": 0, "rot": 0, "sx": 1, "sy": 1},
+          {"t": 0.25, "x": 0, "y": 0, "rot": 0, "sx": 1, "sy": 1},
+          {"t": 0.32, "x": 0, "y": -6, "rot": -5, "sx": 1.08, "sy": 1.08},
+          {"t": 0.45, "x": 0, "y": 0, "rot": -4, "sx": 1.05, "sy": 1.05},
+          {"t": 0.68, "x": 0, "y": 0, "rot": -4, "sx": 1.05, "sy": 1.05},
+          {"t": 0.78, "x": 0, "y": 0, "rot": 0, "sx": 1, "sy": 1},
+          {"t": 1, "x": 0, "y": 0, "rot": 0, "sx": 1, "sy": 1}
+        ]
+      },
+      "face_swaps": {
+        "duration_ms": 2600,
+        "swaps": [
+          {
+            "face": "neutral",
+            "show_during": [
+              [0, 0.28],
+              [0.72, 1]
+            ]
+          }
+        ]
+      },
+      "fx": null
+    },
+    {
+      "index": 12,
+      "id": "talking",
+      "intent": "Mulut buka-tutup mengikuti ritme bicara; kepala mengangguk kecil.",
+      "assets": {"head": "mascot_talking.png", "fx": null},
+      "body": {
+        "duration_ms": 500,
+        "direction": "alternate",
+        "easing": "ease-in-out",
+        "origin": [50, 88],
+        "keyframes": [
+          {"t": 0, "x": 0, "y": 0, "rot": 0, "sx": 1, "sy": 1},
+          {"t": 1, "x": 0, "y": -2.5, "rot": 0, "sx": 1, "sy": 1}
+        ]
+      },
+      "face_swaps": {
+        "duration_ms": 2000,
+        "swaps": [
+          {
+            "face": "neutral",
+            "show_during": [
+              [0.1, 0.18],
+              [0.34, 0.42],
+              [0.52, 0.6],
+              [0.78, 1.0]
+            ]
+          }
+        ]
+      },
+      "fx": null
+    }
+  ]
+}

@@ -96,6 +96,7 @@ fun SettingsScreen(
     val categories by viewModel.categories.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+    var showMascotShowcase by remember { mutableStateOf(false) }
 
     // Re-check OS permission state whenever we return to this screen (FR-S1, docs 08 Â§2 flow).
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -128,7 +129,6 @@ fun SettingsScreen(
         val isIndo = settings.locale.startsWith("id", ignoreCase = true) || settings.locale.startsWith("in", ignoreCase = true)
 
         NemoScreenHeader(
-            eyebrow = stringResource(R.string.settings_eyebrow),
             title = stringResource(R.string.settings_title),
             onBack = onBack,
             action = {
@@ -542,15 +542,19 @@ fun SettingsScreen(
                 .clip(RoundedCornerShape(Radius.card))
                 .background(Nemo.colors.surface)
                 .border(1.dp, Nemo.colors.line, RoundedCornerShape(Radius.card))
+                .pressable(shape = RoundedCornerShape(Radius.card), onClick = { showMascotShowcase = true })
                 .padding(horizontal = Spacing.x4, vertical = Spacing.x3),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Spacing.x3),
         ) {
             com.anchor.app.core.design.components.NemoMascot(
-                expression = com.anchor.app.core.design.components.MascotExpression.SHY,
+                expression = com.anchor.app.core.design.components.MascotExpression.HAPPY,
                 size = 40.dp,
             )
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
                 Text(
                     text = stringResource(R.string.settings_version_title),
                     fontFamily = GeistFamily,
@@ -566,6 +570,19 @@ fun SettingsScreen(
                     color = Nemo.colors.mute,
                 )
             }
+            Text(
+                text = "Showcase ↗",
+                fontFamily = GeistMonoFamily,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Nemo.colors.inkSecondary,
+            )
+        }
+
+        if (showMascotShowcase) {
+            com.anchor.app.core.design.components.NemoMascotShowcaseDialog(
+                onDismiss = { showMascotShowcase = false },
+            )
         }
     }
 }

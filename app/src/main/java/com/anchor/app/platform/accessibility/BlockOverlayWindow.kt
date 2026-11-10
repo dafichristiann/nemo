@@ -83,8 +83,7 @@ internal class BlockOverlayWindow(private val context: Context) {
             setPadding(0, dp(12), 0, 0)
         }
         val mascot = ImageView(context).apply {
-            // nemo_mascot_sleepy.png has the angry expression with vein mark
-            setImageResource(R.drawable.nemo_mascot_sleepy)
+            setImageResource(R.drawable.mascot_angry)
             layoutParams = LinearLayout.LayoutParams(dp(72), dp(72)).apply {
                 gravity = Gravity.CENTER_HORIZONTAL
                 bottomMargin = dp(12)

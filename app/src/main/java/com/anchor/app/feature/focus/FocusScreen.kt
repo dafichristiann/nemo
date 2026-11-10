@@ -1,11 +1,24 @@
 package com.anchor.app.feature.focus
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,10 +49,12 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -161,13 +176,17 @@ private fun FocusSetupContent(
         verticalArrangement = Arrangement.spacedBy(Spacing.x4),
     ) {
         // --- Header Block ---
+        val setupMascotExp = if (state.selectedTask == null && state.taskOptions.isEmpty()) {
+            MascotExpression.THINKING
+        } else {
+            MascotExpression.NEUTRAL
+        }
         NemoScreenHeader(
-            eyebrow = stringResource(R.string.focus_setup_eyebrow),
             title = stringResource(R.string.focus_setup_title_header),
             subtitle = stringResource(R.string.focus_setup_subtitle_header),
             action = {
                 NemoMascot(
-                    expression = MascotExpression.NEUTRAL,
+                    expression = setupMascotExp,
                     size = 32.dp,
                 )
             },
@@ -657,7 +676,7 @@ private fun FocusActiveContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Spacing.x4),
     ) {
-        // --- Session Header Row: Back Button (Left) + Soundscape & Mode Pills (Right) ---
+        // --- Session Header Row: Back Button (Left) + Mode Pill (Right) ---
         val isSoundActive = state.soundscapeEnabled && !active.paused
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -681,68 +700,30 @@ private fun FocusActiveContent(
                 )
             }
 
+            // Mode pill
             Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(cardBg)
+                    .border(1.dp, borderCol, RoundedCornerShape(14.dp))
+                    .padding(horizontal = 10.dp, vertical = 5.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                // Soundscape quick toggle pill in header
-                Row(
+                Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(if (isSoundActive) Color(0xFF1C1C26) else cardBg)
-                        .border(
-                            1.dp,
-                            if (isSoundActive) Color(0xFF38384C) else borderCol,
-                            RoundedCornerShape(14.dp),
-                        )
-                        .clickable { viewModel.onToggleActiveSoundscape() }
-                        .padding(horizontal = 10.dp, vertical = 5.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(5.dp),
-                ) {
-                    Text(
-                        text = if (isSoundActive) "🔊" else "🔇",
-                        fontSize = 11.sp,
-                    )
-                    Text(
-                        text = if (isSoundActive) {
-                            stringResource(R.string.focus_soundscape_playing)
-                        } else {
-                            stringResource(R.string.focus_soundscape_muted)
-                        },
-                        fontFamily = GeistMonoFamily,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 10.sp,
-                        letterSpacing = 0.4.sp,
-                        color = if (isSoundActive) textPrimary else textMute,
-                    )
-                }
-
-                // Mode pill
-                Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(cardBg)
-                        .border(1.dp, borderCol, RoundedCornerShape(14.dp))
-                        .padding(horizontal = 10.dp, vertical = 5.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(6.dp)
-                            .clip(CircleShape)
-                            .background(Color.White),
-                    )
-                    Text(
-                        text = if (active.mode == FocusMode.STRICT) stringResource(R.string.focus_active_strict_pill) else stringResource(R.string.focus_active_mode_gentle),
-                        fontFamily = GeistFamily,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 11.sp,
-                        letterSpacing = 0.6.sp,
-                        color = textPrimary,
-                    )
-                }
+                        .size(6.dp)
+                        .clip(CircleShape)
+                        .background(Color.White),
+                )
+                Text(
+                    text = if (active.mode == FocusMode.STRICT) stringResource(R.string.focus_active_strict_pill) else stringResource(R.string.focus_active_mode_gentle),
+                    fontFamily = GeistFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp,
+                    letterSpacing = 0.6.sp,
+                    color = textPrimary,
+                )
             }
         }
 
@@ -781,7 +762,12 @@ private fun FocusActiveContent(
             ActiveTimerRing(
                 progress = active.progressFraction,
                 time = timeString,
-                caption = stringResource(R.string.focus_active_remaining_label),
+                caption = if (active.paused) {
+                    stringResource(R.string.focus_active_paused_label)
+                } else {
+                    stringResource(R.string.focus_active_remaining_label)
+                },
+                isPaused = active.paused,
                 diameter = 220.dp,
             )
 
@@ -1128,13 +1114,22 @@ private fun FocusActiveContent(
             onDismissRequest = { showExitConfirm = false },
             containerColor = Color(0xFF141414),
             title = {
-                Text(
-                    text = stringResource(R.string.focus_exit_dialog_title),
-                    fontFamily = GeistFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = Color.White,
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    NemoMascot(
+                        expression = MascotExpression.SAD,
+                        size = 32.dp,
+                    )
+                    Text(
+                        text = stringResource(R.string.focus_exit_dialog_title),
+                        fontFamily = GeistFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = Color.White,
+                    )
+                }
             },
             text = {
                 Text(
@@ -1240,12 +1235,13 @@ private fun FocusActiveContent(
     }
 }
 
-/** Custom monochrome glowing countdown timer ring for Active mode. */
+/** Custom monochrome glowing countdown timer ring for Active mode with periodic mascot encouragement. */
 @Composable
 private fun ActiveTimerRing(
     progress: Float,
     time: String,
     caption: String,
+    isPaused: Boolean = false,
     diameter: Dp = 220.dp,
     strokeWidth: Dp = 6.dp,
 ) {
@@ -1256,8 +1252,61 @@ private fun ActiveTimerRing(
         label = "active-timer-ring-progress",
     )
 
+    data class MascotCheer(
+        val expression: MascotExpression,
+        val message: String,
+    )
+
+    val cheers = remember {
+        listOf(
+            MascotCheer(MascotExpression.HAPPY, "Tetap fokus, kamu hebat! ✨"),
+            MascotCheer(MascotExpression.WINK, "Satu tugas dalam satu waktu 😉"),
+            MascotCheer(MascotExpression.THINKING, "Fokus adalah kekuatanmu 💡"),
+            MascotCheer(MascotExpression.TALKING, "Tarik napas, lanjut pelan-pelan 🌿"),
+            MascotCheer(MascotExpression.LAUGHING, "Sedikit lagi selesai! Semangat 🚀"),
+            MascotCheer(MascotExpression.NEUTRAL, "Nemo nemenin kamu fokus 🧘"),
+        )
+    }
+
+    var cheerIndex by remember { mutableIntStateOf(0) }
+    var mascotShownUntilMs by remember { mutableLongStateOf(0L) }
+    var isMascotVisible by remember { mutableStateOf(false) }
+
+    // Periodic encouragement: triggers every 45s for 6s (calm and not too frequent)
+    LaunchedEffect(isPaused) {
+        if (isPaused) {
+            mascotShownUntilMs = 0L
+            return@LaunchedEffect
+        }
+        while (isActive) {
+            delay(45_000L)
+            cheerIndex = (cheerIndex + 1) % cheers.size
+            mascotShownUntilMs = System.currentTimeMillis() + 6_000L
+            delay(6_500L)
+        }
+    }
+
+    LaunchedEffect(mascotShownUntilMs) {
+        val remaining = mascotShownUntilMs - System.currentTimeMillis()
+        if (remaining > 0) {
+            isMascotVisible = true
+            delay(remaining)
+            isMascotVisible = false
+        } else {
+            isMascotVisible = false
+        }
+    }
+
     Box(
-        modifier = Modifier.size(diameter),
+        modifier = Modifier
+            .size(diameter)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+            ) {
+                cheerIndex = (cheerIndex + 1) % cheers.size
+                mascotShownUntilMs = System.currentTimeMillis() + 6_000L
+            },
         contentAlignment = Alignment.Center,
     ) {
         Canvas(modifier = Modifier.size(diameter)) {
@@ -1290,27 +1339,115 @@ private fun ActiveTimerRing(
             }
         }
 
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
-            Text(
-                text = time,
-                fontFamily = GeistMonoFamily,
-                fontWeight = FontWeight.Medium,
-                fontSize = 44.sp,
-                color = Color.White,
-                textAlign = TextAlign.Center,
-            )
-            Text(
-                text = caption,
-                fontFamily = GeistFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 11.sp,
-                letterSpacing = 0.5.sp,
-                color = Color(0xFF8A8A8A),
-                textAlign = TextAlign.Center,
-            )
+        AnimatedContent(
+            targetState = isMascotVisible,
+            transitionSpec = {
+                if (targetState) {
+                    // Soft, organic spring entrance (not stiff)
+                    (fadeIn(animationSpec = tween(400, easing = FastOutSlowInEasing)) +
+                        scaleIn(
+                            initialScale = 0.82f,
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessLow,
+                            ),
+                        ) +
+                        slideInVertically(
+                            initialOffsetY = { (it * 0.08f).toInt() },
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessLow,
+                            ),
+                        )).togetherWith(
+                        fadeOut(animationSpec = tween(220, easing = FastOutLinearInEasing)) +
+                            scaleOut(targetScale = 0.92f, animationSpec = tween(220)),
+                    )
+                } else {
+                    // Calm exit back to clock countdown
+                    (fadeIn(animationSpec = tween(350, easing = FastOutSlowInEasing)) +
+                        scaleIn(initialScale = 0.94f, animationSpec = tween(350))).togetherWith(
+                        fadeOut(animationSpec = tween(250, easing = FastOutLinearInEasing)) +
+                            scaleOut(
+                                targetScale = 0.85f,
+                                animationSpec = tween(250),
+                            ),
+                    )
+                }
+            },
+            label = "timer-mascot-transition",
+        ) { showMascot ->
+            if (showMascot) {
+                val circleSize = diameter - (strokeWidth * 2) - 4.dp
+                val activeCheer = if (isPaused) {
+                    MascotCheer(MascotExpression.SLEEPY, "Sesi dijeda • Istirahat sejenak ☕")
+                } else {
+                    cheers[cheerIndex % cheers.size]
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(circleSize)
+                        .clip(CircleShape)
+                        .background(Color.White),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.padding(horizontal = 14.dp),
+                    ) {
+                        NemoMascot(
+                            expression = activeCheer.expression,
+                            size = 96.dp,
+                            paused = isPaused,
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = activeCheer.message,
+                            fontFamily = GeistFamily,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp,
+                            color = Color(0xFF141414),
+                            textAlign = TextAlign.Center,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "$time • $caption",
+                            fontFamily = GeistMonoFamily,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 10.sp,
+                            letterSpacing = 0.5.sp,
+                            color = Color(0xFF707070),
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
+            } else {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    Text(
+                        text = time,
+                        fontFamily = GeistMonoFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 44.sp,
+                        color = Color.White,
+                        textAlign = TextAlign.Center,
+                    )
+                    Text(
+                        text = caption,
+                        fontFamily = GeistFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 11.sp,
+                        letterSpacing = 0.5.sp,
+                        color = Color(0xFF8A8A8A),
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            }
         }
     }
 }

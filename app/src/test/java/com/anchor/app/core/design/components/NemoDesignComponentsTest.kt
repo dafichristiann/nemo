@@ -25,6 +25,16 @@ class NemoDesignComponentsTest {
     }
 
     @Test
+    fun mascotExpression_namesMatchSpecification() {
+        val expected = setOf(
+            "NEUTRAL", "HAPPY", "SAD", "ANGRY", "SURPRISED", "SLEEPY",
+            "CONFUSED", "LAUGHING", "SHY", "THINKING", "WINK", "TALKING",
+        )
+        val actual = MascotExpression.entries.map { it.name }.toSet()
+        assertEquals(expected, actual)
+    }
+
+    @Test
     fun buttonStyle_hasExpectedVariants() {
         val styles = NemoButtonStyle.entries
         assertEquals(5, styles.size)

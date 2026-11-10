@@ -60,10 +60,7 @@ import kotlinx.coroutines.launch
 
 private val Ease = CubicBezierEasing(0.2f, 0.8f, 0.2f, 1f)
 private const val NAME = "Nemo"
-private const val GroupDp = 156f
-private const val InsetDp = 14f
-private const val FaceRatio = (GroupDp - 2 * InsetDp) / GroupDp
-private const val SPLASH_MAX_MS = 4_000L
+private const val SPLASH_MAX_MS = 5_000L
 
 private fun Modifier.focusIn(
     progress: () -> Float,
@@ -93,7 +90,6 @@ fun NemoSplash(
     val isDark = Nemo.colors.background == com.anchor.app.core.design.theme.NemoNight.background
 
     val avatarProgress = remember { Animatable(0f) }
-    val ringProgress = remember { Animatable(0f) }
     val charProgress = remember { List(NAME.length) { Animatable(0f) } }
     val taglineProgress = remember { Animatable(0f) }
     val handoff = remember { Animatable(0f) }
@@ -130,14 +126,7 @@ fun NemoSplash(
 
     // Animation timeline
     LaunchedEffect(Unit) {
-        coroutineScope {
-            launch {
-                avatarProgress.animateTo(1f, tween(durationMillis = 500, easing = Ease))
-            }
-            launch {
-                ringProgress.animateTo(1f, tween(durationMillis = 650, easing = Ease))
-            }
-        }
+        avatarProgress.animateTo(1f, tween(durationMillis = 600, easing = Ease))
 
         charProgress.forEachIndexed { index, anim ->
             launch {
@@ -150,11 +139,12 @@ fun NemoSplash(
 
         taglineProgress.animateTo(1f, tween(durationMillis = 400, easing = Ease))
 
-        delay(450L)
+        // Relaxed pause: mascot breathes and blinks in NEUTRAL
+        delay(1600L)
 
         snapshotFlow { isReady }.first { it }
 
-        handoff.animateTo(1f, tween(durationMillis = 350, easing = FastOutSlowInEasing))
+        handoff.animateTo(1f, tween(durationMillis = 400, easing = FastOutSlowInEasing))
 
         currentOnFinished()
     }
@@ -204,54 +194,21 @@ fun NemoSplash(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            // Mascot & Ring Group
+            // Mascot Avatar (clean, relaxed, without surrounding ring)
+            val mascotSize = 136.dp
             Box(
                 modifier = avatarModifier
-                    .size(GroupDp.dp)
+                    .size(mascotSize)
+                    .focusIn({ avatarProgress.value })
                     .onGloballyPositioned { coordinates ->
                         avatarRootBounds = coordinates.boundsInRoot()
                     },
                 contentAlignment = Alignment.Center,
             ) {
-                // Circular Ring
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    val strokeWidth = 2.5.dp.toPx()
-                    val halfStroke = strokeWidth / 2f
-                    drawArc(
-                        color = inkColor,
-                        startAngle = -90f,
-                        sweepAngle = 360f * ringProgress.value,
-                        useCenter = false,
-                        topLeft = Offset(halfStroke, halfStroke),
-                        size = Size(size.width - strokeWidth, size.height - strokeWidth),
-                        style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
-                    )
-                }
-
-                // Mascot Avatar
-                val faceSize = (GroupDp * FaceRatio).dp
-                Box(
-                    modifier = Modifier
-                        .size(faceSize)
-                        .focusIn({ avatarProgress.value })
-                        .then(
-                            if (isDark) {
-                                Modifier
-                                    .clip(CircleShape)
-                                    .background(Color.White)
-                                    .padding(8.dp)
-                            } else {
-                                Modifier
-                            },
-                        ),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.nemo_mascot),
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                }
+                com.anchor.app.core.design.components.NemoMascot(
+                    expression = com.anchor.app.core.design.components.MascotExpression.NEUTRAL,
+                    size = mascotSize,
+                )
             }
 
             // App Name & Tagline

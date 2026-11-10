@@ -222,4 +222,30 @@ class CircadianCurveTest {
         val evaluatedNow = curve.evaluate(expectedHours)
         assertEquals(curve.currentCapacity, evaluatedNow, 0.001f)
     }
+
+    @Test
+    fun tc08_dynamicPeakWindow_andSecondaryWindow_computedCorrectly() = runTest {
+        val settingsRepo = FakeSettingsRepository()
+        val usageRepo = FakeUsageRepository()
+        val focusRepo = FakeFocusRepository()
+        val detectWakeTime = DetectWakeTimeUseCase(settingsRepo, usageRepo, timeProvider)
+        val computeCurve = ComputeCircadianCurveUseCase(detectWakeTime, focusRepo, timeProvider)
+
+        // Set wake time to 06:30 (390 minutes)
+        val todayEpoch = LocalDate.of(2026, 11, 3).toEpochDay()
+        settingsRepo.setManualWakeTime(todayEpoch, 6 * 60 + 30)
+
+        val curve = computeCurve(nowBase, zoneId)
+        // Peak Start = 06:30 + 2h = 08:30
+        assertEquals(LocalTime.of(8, 30), curve.peakStart)
+        // Peak End = 06:30 + 4.5h = 11:00
+        assertEquals(LocalTime.of(11, 0), curve.peakEnd)
+        assertEquals("08:30 - 11:00", curve.peakWindowFormatted())
+
+        // Secondary Peak Start = 06:30 + 8h = 14:30
+        assertEquals(LocalTime.of(14, 30), curve.secondaryPeakStart)
+        // Secondary Peak End = 06:30 + 10.5h = 17:00
+        assertEquals(LocalTime.of(17, 0), curve.secondaryPeakEnd)
+        assertEquals("14:30 - 17:00", curve.secondaryPeakWindowFormatted())
+    }
 }

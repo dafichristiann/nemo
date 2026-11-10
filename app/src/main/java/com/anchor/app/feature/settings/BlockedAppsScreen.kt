@@ -88,7 +88,6 @@ fun BlockedAppsScreen(
         verticalArrangement = Arrangement.spacedBy(Spacing.x4),
     ) {
         BackHeader(
-            eyebrow = stringResource(R.string.blocked_apps_eyebrow),
             title = stringResource(R.string.blocked_title),
             onBack = onBack,
         )

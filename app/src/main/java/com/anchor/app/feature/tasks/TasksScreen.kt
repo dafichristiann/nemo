@@ -126,7 +126,7 @@ fun TasksScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(Spacing.listGap),
         ) {
-            item { HomeHeader(onOpenSettings = onOpenSettings) }
+            item { HomeHeader(nickname = state.nickname, onOpenSettings = onOpenSettings) }
 
             if (state.overdueCount > 0 && !bannerDismissed) {
                 item {
@@ -308,15 +308,37 @@ fun TasksScreen(
     }
 }
 
+@Composable
+private fun rememberGreeting(nickname: String, hour: Int): String {
+    val name = nickname.trim()
+    return if (name.isNotBlank()) {
+        when (hour) {
+            in 4..10 -> stringResource(R.string.home_greeting_morning_named, name)
+            in 11..14 -> stringResource(R.string.home_greeting_afternoon_named, name)
+            in 15..17 -> stringResource(R.string.home_greeting_sore_named, name)
+            else -> stringResource(R.string.home_greeting_evening_named, name)
+        }
+    } else {
+        when (hour) {
+            in 4..10 -> stringResource(R.string.home_greeting_morning)
+            in 11..14 -> stringResource(R.string.home_greeting_afternoon)
+            in 15..17 -> stringResource(R.string.home_greeting_sore)
+            else -> stringResource(R.string.home_greeting_evening)
+        }
+    }
+}
+
 /**
  * Clean screen header matching canvas ghQ1F (NHIyO, dHjZg):
- * "Today's Focus" title + tune circle button. No week strip / date micro per user spec.
+ * Personalized greeting title + tune circle button. No week strip / date micro per user spec.
  */
 @Composable
-private fun HomeHeader(onOpenSettings: () -> Unit) {
+private fun HomeHeader(nickname: String, onOpenSettings: () -> Unit) {
+    val currentHour = remember { java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY) }
+    val greeting = rememberGreeting(nickname, currentHour)
+
     NemoScreenHeader(
-        eyebrow = "DAILY INTENTION",
-        title = stringResource(R.string.tasks_screen_title),
+        title = greeting,
         subtitle = stringResource(R.string.home_subtitle_plan),
         action = {
             Box(
@@ -346,6 +368,7 @@ private fun HomeHeader(onOpenSettings: () -> Unit) {
 private fun SummaryCard(completed: Int, total: Int) {
     val fraction = if (total == 0) 0f else completed.toFloat() / total
     val percent = Math.round(fraction * 100f)
+    val isAllComplete = completed == total && total > 0
 
     Column(
         modifier = Modifier
@@ -353,13 +376,24 @@ private fun SummaryCard(completed: Int, total: Int) {
             .padding(vertical = Spacing.x1),
         verticalArrangement = Arrangement.spacedBy(Spacing.x2),
     ) {
-        Text(
-            text = stringResource(R.string.tasks_summary_progress, completed, total, percent),
-            fontFamily = GeistMonoFamily,
-            fontWeight = FontWeight.Medium,
-            fontSize = 12.sp,
-            color = Nemo.colors.mute,
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            if (isAllComplete) {
+                NemoMascot(
+                    expression = MascotExpression.LAUGHING,
+                    size = 20.dp,
+                )
+            }
+            Text(
+                text = stringResource(R.string.tasks_summary_progress, completed, total, percent),
+                fontFamily = GeistMonoFamily,
+                fontWeight = FontWeight.Medium,
+                fontSize = 12.sp,
+                color = Nemo.colors.mute,
+            )
+        }
         ProgressTrack(
             progress = fraction,
             trackHeight = 3.dp,
@@ -678,31 +712,43 @@ private fun PriorityPill(priority: TaskPriority) {
 private fun OverdueBanner(count: Int, onReview: () -> Unit, onDismiss: () -> Unit) {
     val title = pluralStringResource(R.plurals.overdue_banner_title, count, count)
     Banner {
-        Text(
-            text = title,
-            fontFamily = GeistFamily,
-            fontWeight = FontWeight.Medium,
-            fontSize = 14.sp,
-            color = Nemo.colors.inkSecondary,
-        )
-        Spacer(modifier = Modifier.height(Spacing.x3))
-        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.x2)) {
-            Box(
-                modifier = Modifier
-                    .clip(PillShape)
-                    .border(1.dp, Nemo.colors.line, PillShape)
-                    .pressable(shape = PillShape, onClick = onReview)
-                    .padding(horizontal = Spacing.x4, vertical = Spacing.x2),
-            ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.x3),
+        ) {
+            NemoMascot(
+                expression = MascotExpression.SAD,
+                size = 36.dp,
+            )
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = stringResource(R.string.overdue_banner_review),
+                    text = title,
                     fontFamily = GeistFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 13.sp,
-                    color = Nemo.colors.ink,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp,
+                    color = Nemo.colors.inkSecondary,
                 )
+                Spacer(modifier = Modifier.height(Spacing.x2))
+                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.x2)) {
+                    Box(
+                        modifier = Modifier
+                            .clip(PillShape)
+                            .border(1.dp, Nemo.colors.line, PillShape)
+                            .pressable(shape = PillShape, onClick = onReview)
+                            .padding(horizontal = Spacing.x4, vertical = Spacing.x2),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.overdue_banner_review),
+                            fontFamily = GeistFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.sp,
+                            color = Nemo.colors.ink,
+                        )
+                    }
+                    SmallAction(stringResource(R.string.overdue_action_dismiss), onDismiss)
+                }
             }
-            SmallAction(stringResource(R.string.overdue_action_dismiss), onDismiss)
         }
     }
 }
@@ -765,7 +811,7 @@ private fun EmptyState() {
         verticalArrangement = Arrangement.spacedBy(Spacing.x3),
     ) {
         NemoMascot(
-            expression = MascotExpression.TALKING,
+            expression = MascotExpression.CONFUSED,
             size = 96.dp,
             contentDescription = stringResource(R.string.home_empty_title),
         )

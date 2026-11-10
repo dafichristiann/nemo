@@ -93,7 +93,6 @@ fun InsightsScreen(
         // 1. Header
         Box(modifier = Modifier.padding(horizontal = Spacing.screenHorizontal)) {
             NemoScreenHeader(
-                eyebrow = stringResource(R.string.insights_header_eyebrow),
                 title = stringResource(R.string.insights_title),
                 subtitle = state.dateLabel?.let {
                     "${it.format(JAVA_DATE)} — ${stringResource(R.string.insights_day_label)}"

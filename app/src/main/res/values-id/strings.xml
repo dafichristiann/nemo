@@ -39,10 +39,12 @@
     <!-- 01 Home · Smart Todo -->
     <string name="home_greeting_morning">Pagi!</string>
     <string name="home_greeting_afternoon">Siang!</string>
+    <string name="home_greeting_sore">Sore!</string>
     <string name="home_greeting_evening">Malem!</string>
     <!-- Varian personal -->
     <string name="home_greeting_morning_named">Pagi, %1$s!</string>
     <string name="home_greeting_afternoon_named">Siang, %1$s!</string>
+    <string name="home_greeting_sore_named">Sore, %1$s!</string>
     <string name="home_greeting_evening_named">Malem, %1$s!</string>
     <string name="home_subtitle_plan">Ini kilasan harimu, yuk santai tapi beres.</string>
     <string name="home_progress_title">Progres hari ini</string>
@@ -508,9 +510,22 @@
     <string name="focus_rating_thank_you">Terima kasih atas penilaiannya!</string>
     <string name="wellbeing_peak_window_title">JAM FOKUS PALING GACOR</string>
     <string name="wellbeing_peak_window_desc">Waktu terbaik buat to-do berat (Penting/Urgent). Otak lagi 40%% lebih encer.</string>
+    <string name="wellbeing_peak_status_active">SEDANG AKTIF</string>
+    <string name="wellbeing_peak_status_upcoming">AKAN DATANG</string>
+    <string name="wellbeing_peak_status_secondary">PUNCAK KEDUA</string>
+    <string name="wellbeing_peak_status_ended">SELESAI HARI INI</string>
+    <string name="wellbeing_peak_desc_active">Kamu sedang berada di puncak energi kognitif. Waktu terbaik untuk deep work &amp; tugas prioritas tinggi.</string>
+    <string name="wellbeing_peak_desc_secondary">Gelombang fokus kedua aktif. Waktu yang pas buat beresin sisa tugas penting sebelum malam.</string>
+    <string name="wellbeing_peak_desc_ended">Puncak fokus hari ini sudah selesai. Istirahatkan pikiran untuk menyongsong esok hari.</string>
     <string name="wellbeing_insight_tag">INSIGHT NEMO</string>
     <string name="wellbeing_on_device_pill">LOKAL DI HP</string>
     <string name="wellbeing_rec_quote_morning">“Ritme kognisi optimal tercapai pagi ini. Alokasikan to-do high-focus sebelum energi menurun.”</string>
+    <string name="wellbeing_rec_peak_active">“Jam fokus paling gacor lagi aktif nih! Jauhkan HP dan fokus selesaikan satu tugas penting.”</string>
+    <string name="wellbeing_rec_dip">“Penurunan ritme sirkadian (post-lunch dip). Jangan dipaksa kerja berat, ambil jeda santai 10 menit.”</string>
+    <string name="wellbeing_rec_afternoon">“Gelombang energi kedua datang. Waktu yang pas buat beresin sisa to-do sebelum hari berakhir.”</string>
+    <string name="wellbeing_rec_evening">“Waktunya istirahat dan pemulihan kognitif. Kurangi screen time malam biar besok bangun lebih segar.”</string>
+    <string name="wellbeing_rec_distraction">“Porsi scrolling mencapai %1$d%% hari ini. Yuk pasang mode Fokus Ketat biar nggak kebablasan!”</string>
+    <string name="wellbeing_rec_improvement">“Mantap! Waktu layarmu lebih hemat hari ini dibanding kemarin. Ritme fokusmu makin keren!”</string>
     <string name="wellbeing_action_schedule_tomorrow">Jadwalkan to-do tersisa ke esok pagi →</string>
     <string name="wellbeing_stat_screentime_lbl">WAKTU LAYAR</string>
     <string name="wellbeing_stat_efficiency_lbl">EFISIENSI FOKUS</string>

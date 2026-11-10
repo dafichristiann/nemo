@@ -114,7 +114,6 @@ fun WellbeingScreen(
     ) {
         // --- 1. Header Block ---
         NemoScreenHeader(
-            eyebrow = stringResource(R.string.wellbeing_header_eyebrow),
             title = stringResource(R.string.wellbeing_header_title),
             subtitle = stringResource(R.string.wellbeing_header_subtitle),
         )
@@ -146,7 +145,7 @@ fun WellbeingScreen(
             )
 
             // --- 3. Peak Focus Window Card ---
-            PeakFocusWindowCard()
+            PeakFocusWindowCard(curve = state.circadianCurve)
 
             // --- 4. Nemo Recommendation Card ---
             NemoRecommendationCard(state = state)
@@ -431,7 +430,76 @@ private fun AdaptiveCircadianCurveCard(
 }
 
 @Composable
-private fun PeakFocusWindowCard() {
+private fun PeakFocusWindowCard(
+    curve: CircadianCurveData?,
+) {
+    val wakeTime = curve?.wakeResult?.time ?: LocalTime.of(7, 0)
+    val peakStart = curve?.peakStart ?: wakeTime.plusMinutes(120)
+    val peakEnd = curve?.peakEnd ?: wakeTime.plusMinutes(270)
+    val secondaryStart = curve?.secondaryPeakStart ?: wakeTime.plusMinutes(480)
+    val secondaryEnd = curve?.secondaryPeakEnd ?: wakeTime.plusMinutes(630)
+
+    var now by remember { mutableStateOf(LocalTime.now()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(30_000L)
+            now = LocalTime.now()
+        }
+    }
+
+    val nowMin = now.hour * 60 + now.minute
+    val peakStartMin = peakStart.hour * 60 + peakStart.minute
+    val peakEndMin = peakEnd.hour * 60 + peakEnd.minute
+    val secStartMin = secondaryStart.hour * 60 + secondaryStart.minute
+    val secEndMin = secondaryEnd.hour * 60 + secondaryEnd.minute
+
+    val isPeakActive = if (peakEndMin >= peakStartMin) {
+        nowMin in peakStartMin..peakEndMin
+    } else {
+        nowMin >= peakStartMin || nowMin <= peakEndMin
+    }
+
+    val isSecondaryActive = if (secEndMin >= secStartMin) {
+        nowMin in secStartMin..secEndMin
+    } else {
+        nowMin >= secStartMin || nowMin <= secEndMin
+    }
+
+    val isUpcoming = !isPeakActive && !isSecondaryActive && (
+        if (peakStartMin >= nowMin) nowMin < peakStartMin else false
+    )
+
+    val (badgeText, badgeColor, descText) = when {
+        isPeakActive -> Triple(
+            stringResource(R.string.wellbeing_peak_status_active),
+            Color(0xFF4CAF50),
+            stringResource(R.string.wellbeing_peak_desc_active),
+        )
+        isSecondaryActive -> Triple(
+            stringResource(R.string.wellbeing_peak_status_secondary),
+            Nemo.colors.ink,
+            stringResource(R.string.wellbeing_peak_desc_secondary),
+        )
+        isUpcoming -> Triple(
+            stringResource(R.string.wellbeing_peak_status_upcoming),
+            Nemo.colors.mute,
+            stringResource(R.string.wellbeing_peak_window_desc),
+        )
+        else -> Triple(
+            stringResource(R.string.wellbeing_peak_status_ended),
+            Nemo.colors.mute,
+            stringResource(R.string.wellbeing_peak_desc_ended),
+        )
+    }
+
+    val timeDisplay = if (isSecondaryActive) {
+        curve?.secondaryPeakWindowFormatted()
+            ?: String.format("%02d:%02d - %02d:%02d", secondaryStart.hour, secondaryStart.minute, secondaryEnd.hour, secondaryEnd.minute)
+    } else {
+        curve?.peakWindowFormatted()
+            ?: String.format("%02d:%02d - %02d:%02d", peakStart.hour, peakStart.minute, peakEnd.hour, peakEnd.minute)
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -439,35 +507,124 @@ private fun PeakFocusWindowCard() {
             .background(Nemo.colors.surface)
             .border(1.dp, Nemo.colors.line, RoundedCornerShape(14.dp))
             .padding(14.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.wellbeing_peak_window_title),
+                fontFamily = GeistFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 11.sp,
+                letterSpacing = 0.8.sp,
+                color = Nemo.colors.mute,
+            )
+
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(Nemo.colors.fog)
+                    .padding(horizontal = 7.dp, vertical = 3.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(5.dp)
+                        .clip(CircleShape)
+                        .background(badgeColor),
+                )
+                Text(
+                    text = badgeText,
+                    fontFamily = GeistMonoFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 10.sp,
+                    color = Nemo.colors.ink,
+                )
+            }
+        }
+
         Text(
-            text = stringResource(R.string.wellbeing_peak_window_title),
-            fontFamily = GeistFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize = 11.sp,
-            letterSpacing = 0.8.sp,
-            color = Nemo.colors.mute,
-        )
-        Text(
-            text = "09:00 - 11:30",
+            text = timeDisplay,
             fontFamily = GeistMonoFamily,
             fontWeight = FontWeight.Bold,
-            fontSize = 16.sp,
+            fontSize = 18.sp,
             color = Nemo.colors.ink,
         )
+
         Text(
-            text = stringResource(R.string.wellbeing_peak_window_desc),
+            text = descText,
             fontFamily = GeistFamily,
             fontWeight = FontWeight.Normal,
             fontSize = 12.sp,
             color = Nemo.colors.mute,
+            lineHeight = 16.sp,
         )
     }
 }
 
 @Composable
 private fun NemoRecommendationCard(state: WellbeingUiState) {
+    val wakeTime = state.circadianCurve?.wakeResult?.time ?: LocalTime.of(7, 0)
+    val peakStart = state.circadianCurve?.peakStart ?: wakeTime.plusMinutes(120)
+    val peakEnd = state.circadianCurve?.peakEnd ?: wakeTime.plusMinutes(270)
+
+    var now by remember { mutableStateOf(LocalTime.now()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(30_000L)
+            now = LocalTime.now()
+        }
+    }
+
+    val nowMin = now.hour * 60 + now.minute
+    val peakStartMin = peakStart.hour * 60 + peakStart.minute
+    val peakEndMin = peakEnd.hour * 60 + peakEnd.minute
+    val isPeakActive = if (peakEndMin >= peakStartMin) {
+        nowMin in peakStartMin..peakEndMin
+    } else {
+        nowMin >= peakStartMin || nowMin <= peakEndMin
+    }
+
+    val isPostLunchDip = now.hour in 13..14
+    val isLateNight = now.hour >= 21 || now.hour < 5
+    val isMorning = now.hour in 5..11
+    val hasHighDistraction = (state.distractionRatio ?: 0f) >= 0.40f
+
+    val (expression, quote) = when {
+        state.availability != WellbeingAvailability.AVAILABLE || state.totalMs == 0L ->
+            MascotExpression.SHY to stringResource(R.string.wellbeing_nodata_body)
+
+        isPeakActive ->
+            MascotExpression.HAPPY to stringResource(R.string.wellbeing_rec_peak_active)
+
+        hasHighDistraction -> {
+            val pct = ((state.distractionRatio ?: 0f) * 100).toInt()
+            MascotExpression.THINKING to stringResource(R.string.wellbeing_rec_distraction, pct)
+        }
+
+        state.vsYesterday != null && state.vsYesterday.direction == TrendDirection.DOWN ->
+            MascotExpression.LAUGHING to stringResource(R.string.wellbeing_rec_improvement)
+
+        isPostLunchDip ->
+            MascotExpression.SLEEPY to stringResource(R.string.wellbeing_rec_dip)
+
+        now.hour in 15..18 ->
+            MascotExpression.WINK to stringResource(R.string.wellbeing_rec_afternoon)
+
+        isLateNight ->
+            MascotExpression.SLEEPY to stringResource(R.string.wellbeing_rec_evening)
+
+        isMorning ->
+            MascotExpression.TALKING to stringResource(R.string.wellbeing_rec_quote_morning)
+
+        else ->
+            MascotExpression.TALKING to stringResource(R.string.wellbeing_rec_quote)
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -477,7 +634,7 @@ private fun NemoRecommendationCard(state: WellbeingUiState) {
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        // Header: Tag "NEMO INSIGHT", Avatar NemoMascot(MascotExpression.SLEEPY, size = 32.dp), Pill "ON-DEVICE"
+        // Header: Tag "NEMO INSIGHT", Avatar NemoMascot with dynamic expression, Pill "ON-DEVICE"
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -488,7 +645,7 @@ private fun NemoRecommendationCard(state: WellbeingUiState) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 NemoMascot(
-                    expression = MascotExpression.SLEEPY,
+                    expression = expression,
                     size = 32.dp,
                 )
                 Text(
@@ -515,16 +672,6 @@ private fun NemoRecommendationCard(state: WellbeingUiState) {
                     color = Nemo.colors.mute,
                 )
             }
-        }
-
-        // Quote rekomendasi cerdas kontekstual dari data/state
-        val quote = when {
-            state.availability != WellbeingAvailability.AVAILABLE || state.totalMs == 0L ->
-                stringResource(R.string.wellbeing_nodata_body)
-            state.totalMs > 3 * 3600_000L ->
-                stringResource(R.string.wellbeing_rec_quote)
-            else ->
-                stringResource(R.string.wellbeing_rec_quote_morning)
         }
 
         Text(
@@ -662,21 +809,21 @@ private fun PermissionCard(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_wellbeing),
-                contentDescription = null,
-                tint = Nemo.colors.ink,
-                modifier = Modifier.size(20.dp),
+            NemoMascot(
+                expression = MascotExpression.SHY,
+                size = 44.dp,
             )
-            Text(
-                text = stringResource(R.string.wellbeing_perm_title),
-                fontFamily = GeistFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp,
-                color = Nemo.colors.ink,
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.wellbeing_perm_title),
+                    fontFamily = GeistFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    color = Nemo.colors.ink,
+                )
+            }
         }
         Text(
             text = stringResource(R.string.wellbeing_perm_body),

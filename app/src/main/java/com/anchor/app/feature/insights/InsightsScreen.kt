@@ -504,12 +504,12 @@ private fun NemosObservationCard(state: InsightsUiState) {
 
         // Center Mascot with Breathing Aura
         Box(
-            modifier = Modifier.size(110.dp),
+            modifier = Modifier.size(140.dp),
             contentAlignment = Alignment.Center,
         ) {
             Box(
                 modifier = Modifier
-                    .size(96.dp)
+                    .size(124.dp)
                     .graphicsLayer {
                         scaleX = auraScale
                         scaleY = auraScale
@@ -520,7 +520,7 @@ private fun NemosObservationCard(state: InsightsUiState) {
             )
             NemoMascot(
                 expression = MascotExpression.TALKING,
-                size = 70.dp,
+                size = 108.dp,
             )
         }
 

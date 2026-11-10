@@ -166,12 +166,18 @@ class DoomscrollOverlayWindow(private val context: Context) {
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
-            0,
+            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
             PixelFormat.TRANSLUCENT,
         ).apply { gravity = Gravity.CENTER }
 
         return runCatching { windowManager.addView(root, params) }
-            .onSuccess { view = root }
+            .onSuccess {
+                view = root
+                android.util.Log.i("DoomscrollOverlay", "Overlay window added successfully")
+            }
+            .onFailure {
+                android.util.Log.e("DoomscrollOverlay", "Failed to add overlay window", it)
+            }
             .isSuccess
     }
 

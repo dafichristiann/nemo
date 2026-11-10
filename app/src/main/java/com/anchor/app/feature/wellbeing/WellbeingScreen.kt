@@ -113,9 +113,27 @@ fun WellbeingScreen(
         verticalArrangement = Arrangement.spacedBy(Spacing.x4),
     ) {
         // --- 1. Header Block ---
+        val headerMascotExp = remember(state.availability, state.totalMs) {
+            val hour = LocalTime.now().hour
+            when {
+                hour >= 22 || hour < 5 ->
+                    MascotExpression.SLEEPY
+                (state.distractionRatio ?: 0f) >= 0.40f ->
+                    MascotExpression.CONFUSED
+                else ->
+                    MascotExpression.WINK
+            }
+        }
         NemoScreenHeader(
             title = stringResource(R.string.wellbeing_header_title),
             subtitle = stringResource(R.string.wellbeing_header_subtitle),
+            action = {
+                NemoMascot(
+                    expression = headerMascotExp,
+                    size = 48.dp,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+            },
         )
 
         if (state.loading) {
@@ -244,12 +262,8 @@ private fun AdaptiveCircadianCurveCard(
                 fontWeight = FontWeight.Normal,
                 fontSize = 11.sp,
                 color = Nemo.colors.mute,
-            )
-
-            Box(
                 modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
+                    .clip(RoundedCornerShape(4.dp))
                     .pressable(
                         onClick = {
                             android.app.TimePickerDialog(
@@ -261,15 +275,7 @@ private fun AdaptiveCircadianCurveCard(
                             ).show()
                         },
                     ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_stat_nemo),
-                    contentDescription = stringResource(R.string.wellbeing_edit_wake_time),
-                    tint = Nemo.colors.ink,
-                    modifier = Modifier.size(14.dp),
-                )
-            }
+            )
         }
 
         // Tooltip feedback when touching/dragging
@@ -642,11 +648,11 @@ private fun NemoRecommendationCard(state: WellbeingUiState) {
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 NemoMascot(
                     expression = expression,
-                    size = 32.dp,
+                    size = 42.dp,
                 )
                 Text(
                     text = stringResource(R.string.wellbeing_insight_tag),

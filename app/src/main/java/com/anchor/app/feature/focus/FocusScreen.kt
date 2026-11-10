@@ -12,6 +12,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -59,6 +61,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -74,6 +77,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.anchor.app.R
+import com.anchor.app.platform.audio.LofiGenre
 import com.anchor.app.core.design.components.MascotExpression
 import com.anchor.app.core.design.components.NemoMascot
 import com.anchor.app.core.design.components.NemoScreenHeader
@@ -172,18 +176,15 @@ private fun FocusSetupContent(
         verticalArrangement = Arrangement.spacedBy(Spacing.x4),
     ) {
         // --- Header Block ---
-        val setupMascotExp = if (state.selectedTask == null && state.taskOptions.isEmpty()) {
-            MascotExpression.THINKING
-        } else {
-            MascotExpression.NEUTRAL
-        }
+        val setupMascotExp = MascotExpression.NEUTRAL
         NemoScreenHeader(
             title = stringResource(R.string.focus_setup_title_header),
             subtitle = stringResource(R.string.focus_setup_subtitle_header),
             action = {
                 NemoMascot(
                     expression = setupMascotExp,
-                    size = 32.dp,
+                    size = 48.dp,
+                    modifier = Modifier.padding(top = 8.dp),
                 )
             },
         )
@@ -411,47 +412,71 @@ private fun FocusSetupContent(
             }
         }
 
-        // --- Soundscape Card ---
+        // --- Soundscape Card (Minimalist) ---
+        var showGenreDialog by remember { mutableStateOf(false) }
+
+        if (showGenreDialog) {
+            LofiGenreSelectionDialog(
+                selectedGenre = state.selectedLofiGenre,
+                onSelectGenre = { genre ->
+                    viewModel.onSelectLofiGenre(genre)
+                    showGenreDialog = false
+                },
+                onDismiss = { showGenreDialog = false },
+            )
+        }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(14.dp))
                 .background(Nemo.colors.surface)
                 .border(1.dp, Nemo.colors.line, RoundedCornerShape(14.dp))
-                .padding(horizontal = 14.dp, vertical = 10.dp),
+                .padding(horizontal = 14.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(
+            Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(end = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    .clip(RoundedCornerShape(8.dp))
+                    .pointerInput(state.selectedLofiGenre) {
+                        var totalDragX = 0f
+                        detectHorizontalDragGestures(
+                            onDragStart = { totalDragX = 0f },
+                            onHorizontalDrag = { change, dragAmount ->
+                                change.consume()
+                                totalDragX += dragAmount
+                            },
+                            onDragEnd = {
+                                val genres = LofiGenre.ALL
+                                val currentIndex = genres.indexOf(state.selectedLofiGenre).coerceAtLeast(0)
+                                if (totalDragX > 30f) {
+                                    val nextGenre = genres[(currentIndex + 1) % genres.size]
+                                    viewModel.onSelectLofiGenre(nextGenre)
+                                } else if (totalDragX < -30f) {
+                                    val prevIndex = if (currentIndex - 1 < 0) genres.size - 1 else currentIndex - 1
+                                    viewModel.onSelectLofiGenre(genres[prevIndex])
+                                }
+                            },
+                        )
+                    }
+                    .clickable { showGenreDialog = true },
+                verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_focus),
-                    contentDescription = null,
-                    tint = if (state.soundscapeEnabled) Nemo.colors.ink else Nemo.colors.inkSecondary,
-                    modifier = Modifier.size(18.dp),
+                Text(
+                    text = stringResource(R.string.focus_soundscape_lofi_title),
+                    fontFamily = GeistFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                    color = Nemo.colors.ink,
                 )
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        text = stringResource(R.string.focus_soundscape_lofi_title),
-                        fontFamily = GeistFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 13.sp,
-                        color = Nemo.colors.ink,
-                    )
-                    Text(
-                        text = stringResource(R.string.focus_soundscape_lofi_desc),
-                        fontFamily = GeistFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 11.sp,
-                        color = Nemo.colors.mute,
-                        lineHeight = 15.sp,
-                    )
-                }
+                Text(
+                    text = stringResource(state.selectedLofiGenre.titleRes),
+                    fontFamily = GeistFamily,
+                    fontSize = 12.sp,
+                    color = Nemo.colors.mute,
+                )
             }
             NemoSwitch(
                 checked = state.soundscapeEnabled,
@@ -649,6 +674,18 @@ private fun FocusActiveContent(
     var showFinishConfirm by remember { mutableStateOf(false) }
     var showExitConfirm by remember { mutableStateOf(false) }
     var finishCountdown by remember { mutableIntStateOf(5) }
+    var showActiveGenreDialog by remember { mutableStateOf(false) }
+
+    if (showActiveGenreDialog) {
+        LofiGenreSelectionDialog(
+            selectedGenre = state.selectedLofiGenre,
+            onSelectGenre = { genre ->
+                viewModel.onSelectLofiGenre(genre)
+                showActiveGenreDialog = false
+            },
+            onDismiss = { showActiveGenreDialog = false },
+        )
+    }
 
     BackHandler(enabled = true) {
         showExitConfirm = true
@@ -776,7 +813,7 @@ private fun FocusActiveContent(
                 diameter = 220.dp,
             )
 
-            // Sound Waveform Dots & Quick Mute Controller
+            // Sound Waveform Dots & Quick Mute / Switch Controller
             Row(
                 modifier = Modifier
                     .clip(RoundedCornerShape(20.dp))
@@ -786,7 +823,33 @@ private fun FocusActiveContent(
                         if (isSoundActive) Color(0xFF2C2C3E) else borderCol,
                         RoundedCornerShape(20.dp),
                     )
-                    .clickable { viewModel.onToggleActiveSoundscape() }
+                    .pointerInput(state.selectedLofiGenre) {
+                        var totalDragX = 0f
+                        detectHorizontalDragGestures(
+                            onDragStart = { totalDragX = 0f },
+                            onHorizontalDrag = { change, dragAmount ->
+                                change.consume()
+                                totalDragX += dragAmount
+                            },
+                            onDragEnd = {
+                                val genres = LofiGenre.ALL
+                                val currentIndex = genres.indexOf(state.selectedLofiGenre).coerceAtLeast(0)
+                                if (totalDragX > 30f) {
+                                    val nextGenre = genres[(currentIndex + 1) % genres.size]
+                                    viewModel.onSelectLofiGenre(nextGenre)
+                                } else if (totalDragX < -30f) {
+                                    val prevIndex = if (currentIndex - 1 < 0) genres.size - 1 else currentIndex - 1
+                                    viewModel.onSelectLofiGenre(genres[prevIndex])
+                                }
+                            },
+                        )
+                    }
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onTap = { viewModel.onToggleActiveSoundscape() },
+                            onLongPress = { showActiveGenreDialog = true },
+                        )
+                    }
                     .padding(horizontal = 14.dp, vertical = 6.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -832,7 +895,7 @@ private fun FocusActiveContent(
 
                 Text(
                     text = if (isSoundActive) {
-                        stringResource(R.string.focus_soundscape_playing)
+                        stringResource(state.selectedLofiGenre.titleRes)
                     } else {
                         stringResource(R.string.focus_soundscape_muted)
                     },
@@ -1445,8 +1508,8 @@ private fun FocusCompletionCard(
             }
         }
 
-        // Rating row for sessions >= 15 minutes (Spec 2026-11-03 §4.2)
-        if (completion.focusMinutes >= 15) {
+        // Rating row for verified sessions or sessions >= 15 minutes (Spec 2026-11-03 §4.2)
+        if (completion.verified || completion.focusMinutes >= 15) {
             if (completion.rating == null) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -1490,4 +1553,92 @@ private fun FocusCompletionCard(
             }
         }
     }
+}
+
+@Composable
+private fun LofiGenreSelectionDialog(
+    selectedGenre: LofiGenre,
+    onSelectGenre: (LofiGenre) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = stringResource(R.string.focus_lofi_dialog_title),
+                fontFamily = GeistFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 17.sp,
+                color = Nemo.colors.ink,
+            )
+        },
+        text = {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 380.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                items(LofiGenre.ALL, key = { it.id }) { genre ->
+                    val isSelected = genre == selectedGenre
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (isSelected) Nemo.colors.fog else Color.Transparent)
+                            .border(
+                                width = if (isSelected) 1.dp else 0.dp,
+                                color = if (isSelected) Nemo.colors.ink else Color.Transparent,
+                                shape = RoundedCornerShape(10.dp),
+                            )
+                            .clickable { onSelectGenre(genre) }
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text(
+                            text = stringResource(genre.titleRes),
+                            fontFamily = GeistFamily,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                            fontSize = 13.sp,
+                            color = Nemo.colors.ink,
+                        )
+                        Box(
+                            modifier = Modifier
+                                .size(18.dp)
+                                .clip(CircleShape)
+                                .background(if (isSelected) Nemo.colors.ink else Color.Transparent)
+                                .border(
+                                    1.5.dp,
+                                    if (isSelected) Nemo.colors.ink else Nemo.colors.line,
+                                    CircleShape,
+                                ),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            if (isSelected) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .clip(CircleShape)
+                                        .background(Nemo.colors.onInk),
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(
+                    text = stringResource(R.string.focus_picker_close),
+                    fontFamily = GeistFamily,
+                    fontWeight = FontWeight.Medium,
+                    color = Nemo.colors.ink,
+                )
+            }
+        },
+        containerColor = Nemo.colors.surface,
+        shape = RoundedCornerShape(16.dp),
+    )
 }

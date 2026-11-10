@@ -44,4 +44,14 @@ class NemoDesignComponentsTest {
         assertNotNull(NemoButtonStyle.valueOf("Danger"))
         assertNotNull(NemoButtonStyle.valueOf("Text"))
     }
+
+    @Test
+    fun talkingMascot_drawablesExist() {
+        assert(com.anchor.app.R.drawable.mascot_talking != 0)
+        assert(com.anchor.app.R.drawable.mascot_talking_base != 0)
+        assert(com.anchor.app.R.drawable.mascot_mouth_closed != 0)
+        assert(com.anchor.app.R.drawable.mascot_mouth_oval != 0)
+        assert(com.anchor.app.R.drawable.mascot_mouth_o != 0)
+        assert(com.anchor.app.R.drawable.mascot_mouth_wide != 0)
+    }
 }

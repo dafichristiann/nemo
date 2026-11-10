@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="night">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Nemo Opening — Circular Expansion Transition</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300&family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Studio Header -->
+  <header class="studio-header">
+    <div class="brand-group">
+      <div class="brand-mark">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M12 3v4M12 17v4M3 12h4M17 12h4"/>
+          <circle cx="12" cy="12" r="3" fill="currentColor"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="brand-title">Nemo Iris Reveal Studio</h1>
+        <p class="brand-subtitle">Animasi Maskot Selesai &rarr; Lingkaran Membesar Memenuhi Layar</p>
+      </div>
+    </div>
+
+    <!-- Header Actions -->
+    <div class="header-actions">
+      <!-- Device View Toggle -->
+      <button class="icon-btn" id="btnToggleViewport" title="Ganti Tampilan (Phone Frame / Full Stage)">
+        <svg class="icon-phone" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="3"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+        <span class="btn-text">Phone Frame</span>
+      </button>
+
+      <!-- Audio Chime Toggle -->
+      <button class="icon-btn active" id="btnAudioToggle" title="Audio Chime 432Hz">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        <span class="btn-text">Chime On</span>
+      </button>
+
+      <!-- Theme Switcher -->
+      <button class="theme-toggle" id="btnThemeToggle" title="Toggle Day / Night">
+        <span class="theme-icon sun">☀️</span>
+        <span class="theme-icon moon">🌙</span>
+        <span class="theme-label">Night Mode</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Studio Workspace -->
+  <main class="studio-workspace">
+    <!-- Viewport Stage (Center) -->
+    <section class="stage-container" id="stageContainer">
+      <div class="stage-ambient-backdrop"></div>
+
+      <!-- Live Stage Sequence Status Pill -->
+      <div class="sequence-status-pill" id="sequenceStatusPill">
+        <span class="status-pulse-dot"></span>
+        <span class="status-text" id="statusPillText">Fase 1: Maskot Beranimasi & Berkedip...</span>
+      </div>
+
+      <!-- Phone Simulator Frame -->
+      <div class="phone-wrapper" id="phoneWrapper">
+        <div class="phone-frame" id="phoneFrame">
+          <!-- Dynamic Island / Speaker Pill -->
+          <div class="phone-speaker-pill">
+            <div class="speaker-lens"></div>
+          </div>
+
+          <!-- Phone Status Bar -->
+          <div class="phone-status-bar">
+            <span class="status-time" id="statusClock">09:41</span>
+            <div class="status-icons">
+              <svg width="14" height="12" viewBox="0 0 16 12" fill="currentColor"><path d="M0 2C3 0 13 0 16 2L8 12L0 2Z"/></svg>
+              <svg width="14" height="12" viewBox="0 0 16 12" fill="currentColor"><rect x="1" y="2" width="12" height="8" rx="2" stroke="currentColor" fill="none" stroke-width="1.2"/><rect x="2.5" y="3.5" width="8" height="5" rx="1" fill="currentColor"/><rect x="14" y="5" width="1.5" height="2" rx="0.5"/></svg>
+            </div>
+          </div>
+
+          <!-- Phone Screen -->
+          <div class="phone-screen" id="phoneScreen">
+            <!-- 1. BASE BACKGROUND LAYER (Initial mood before burst) -->
+            <div class="opening-base-backdrop" id="openingBaseBackdrop"></div>
+
+            <!-- 2. THE EXPANDING HERO CIRCLE (The core visual requested by user) -->
+            <!-- This circle surrounds the mascot and expands to fill the entire viewport -->
+            <div class="expanding-circle-layer" id="expandingCircleLayer">
+              <div class="expanding-circle" id="expandingCircle">
+                <!-- Inner content of the expanding world (reveals Home Dashboard) -->
+                <div class="revealed-dashboard" id="revealedDashboard">
+                  <!-- Home Dashboard Header -->
+                  <div class="dash-header">
+                    <div class="dash-user-row">
+                      <div class="dash-avatar-target" id="dashAvatarTarget">
+                        <!-- Target where mascot lands if fly mode is on -->
+                        <img src="assets/mascot_neutral.png" alt="Mini Mascot" class="dash-mini-avatar" id="dashMiniAvatar">
+                      </div>
+                      <div class="dash-greeting">
+                        <span class="dash-greeting-sub">Rabu, 10 Nov</span>
+                        <h2 class="dash-greeting-name">Halo, Dafi</h2>
+                      </div>
+                    </div>
+                    <div class="dash-header-action">
+                      <span class="dash-mode-pill">Fokus Tenang</span>
+                    </div>
+                  </div>
+
+                  <!-- Today's Primary Focus Card -->
+                  <div class="dash-focus-card">
+                    <div class="focus-card-top">
+                      <span class="focus-badge">FOKUS UTAMA HARI INI</span>
+                      <span class="focus-time">45 MENIT</span>
+                    </div>
+                    <h3 class="focus-task-title">Riset & Implementasi Animasi Opening</h3>
+                    <p class="focus-task-sub">Selesaikan transisi iris ekspansi lingkaran maskot</p>
+                    <div class="focus-progress-track">
+                      <div class="focus-progress-bar"></div>
+                    </div>
+                  </div>
+
+                  <!-- Task Timeline List -->
+                  <div class="dash-section-title">
+                    <span>TIMELINE HARI INI</span>
+                    <span class="dash-task-count">3 Tugas</span>
+                  </div>
+
+                  <div class="dash-task-list">
+                    <div class="dash-task-item done">
+                      <div class="task-node">✓</div>
+                      <div class="task-info">
+                        <span class="task-title">Review skenario ekspansi lingkaran</span>
+                        <span class="task-time">09:00</span>
+                      </div>
+                    </div>
+
+                    <div class="dash-task-item current">
+                      <div class="task-node pulse"></div>
+                      <div class="task-info">
+                        <span class="task-title">Eksplorasi kurva easing transisi</span>
+                        <span class="task-time">10:00 — Sedang Berjalan</span>
+                      </div>
+                    </div>
+
+                    <div class="dash-task-item future">
+                      <div class="task-node"></div>
+                      <div class="task-info">
+                        <span class="task-title">Integrasi ke Jetpack Compose</span>
+                        <span class="task-time">13:30</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. FOREGROUND OPENING STAGE (Mascot and Splash Typography) -->
+            <div class="opening-fg-stage" id="openingFgStage">
+              <!-- Center Mascot Housing -->
+              <div class="mascot-housing" id="mascotHousing">
+                <!-- Dynamic Mascot Head & Face Swap -->
+                <div class="mascot-badge-backing" id="mascotBadgeBacking">
+                  <img id="mascotImg" src="assets/mascot_neutral.png" alt="Nemo Mascot" class="mascot-graphic">
+                  <!-- Face swap layer for smooth blink / wink -->
+                  <img id="mascotFaceSwap" src="assets/mascot_wink.png" alt="Nemo Wink" class="mascot-face-swap">
+                </div>
+              </div>
+
+              <!-- Animated Splash Typography -->
+              <div class="splash-typography" id="splashTypography">
+                <div class="name-row" id="staggerName">
+                  <span class="letter">N</span>
+                  <span class="letter">e</span>
+                  <span class="letter">m</span>
+                  <span class="letter">o</span>
+                </div>
+                <p class="tagline" id="splashTagline">Fokus tenang, satu hal pada satu waktu.</p>
+              </div>
+            </div>
+
+            <!-- Home Indicator -->
+            <div class="phone-home-indicator"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stage Bottom Action Bar -->
+      <div class="stage-action-strip">
+        <button class="stage-btn primary" id="btnPlaySequence">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Putar Animasi Penuh
+        </button>
+        <button class="stage-btn" id="btnInstantBurst">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
+          Uji Ekspansi Lingkaran Saja
+        </button>
+        <button class="stage-btn" id="btnResetSequence">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+          Reset ke Awal
+        </button>
+      </div>
+    </section>
+
+    <!-- Sidebar Studio Controls (Right) -->
+    <aside class="studio-sidebar">
+      <div class="sidebar-header">
+        <h2 class="sidebar-title">Kendali Animasi & Easing</h2>
+        <span class="version-badge">IRIS EXPAND</span>
+      </div>
+
+      <div class="sidebar-scrollable">
+        <!-- SCRUBBER / PROGRESS TIMELINE -->
+        <div class="section-group">
+          <div class="row-meta">
+            <label class="section-label" style="margin-bottom:0;">TIMELINE SCRUBBER</label>
+            <span class="row-val" id="valTimeline">0%</span>
+          </div>
+          <input type="range" id="timelineScrubber" min="0" max="100" value="0" class="studio-slider">
+          <div class="timeline-ticks">
+            <span class="tick active" id="tick1">01. Animasi Maskot (Blink/Wink)</span>
+            <span class="tick" id="tick2">02. Lingkaran Membesar</span>
+            <span class="tick" id="tick3">03. Layar Penuh</span>
+          </div>
+        </div>
+
+        <!-- TRANSITION PRESET OPTIONS -->
+        <div class="section-group">
+          <label class="section-label">GAYA EKSPANSI LINGKARAN</label>
+          <div class="preset-cards">
+            <!-- Preset 1 -->
+            <div class="preset-card active" data-preset="smooth-iris">
+              <div class="preset-top">
+                <span class="preset-title">1. Buttery Smooth Iris</span>
+                <span class="preset-badge recommended">Rekomendasi</span>
+              </div>
+              <p class="preset-desc">Lingkaran mengembang dengan akselerasi halus lalu melambat sangat elegan (Cubic 0.2, 0.9, 0.1, 1). Sangat tenang dan nyaman di mata.</p>
+            </div>
+
+            <!-- Preset 2 -->
+            <div class="preset-card" data-preset="anticipation-burst">
+              <div class="preset-top">
+                <span class="preset-title">2. Inhale & Expand</span>
+                <span class="preset-badge">Dinamis</span>
+              </div>
+              <p class="preset-desc">Lingkaran sedikit mengecil 5% (seperti menarik nafas/antisipasi) lalu meledak halus memenuhi seluruh layar.</p>
+            </div>
+
+            <!-- Preset 3 -->
+            <div class="preset-card" data-preset="mascot-fly">
+              <div class="preset-top">
+                <span class="preset-title">3. Expand + Mascot Handoff</span>
+                <span class="preset-badge">Seamless</span>
+              </div>
+              <p class="preset-desc">Lingkaran putih memenuhi layar, sementara maskot Nemo mengecil dan melayang mulus ke pojok atas dashboard.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- PARAMETER TUNING -->
+        <div class="section-group">
+          <label class="section-label">PARAMETER PENYESUAIAN</label>
+          <div class="control-box">
+            <!-- Expansion Duration Slider -->
+            <div class="form-row">
+              <div class="row-meta">
+                <span class="row-label">Durasi Ekspansi Lingkaran</span>
+                <span class="row-val" id="valDuration">750ms</span>
+              </div>
+              <input type="range" id="sliderDuration" min="400" max="1400" step="50" value="750" class="studio-slider">
+            </div>
+
+            <!-- Mascot Animation Duration -->
+            <div class="form-row">
+              <div class="row-meta">
+                <span class="row-label">Durasi Awal Animasi Maskot</span>
+                <span class="row-val" id="valMascotDuration">3.0s</span>
+              </div>
+              <input type="range" id="sliderMascotDuration" min="1500" max="4000" step="100" value="3000" class="studio-slider">
+            </div>
+
+            <!-- Invert Theme Behavior -->
+            <div class="form-row switch-row">
+              <span class="row-label">Warna Lingkaran Mengikuti Tema</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="toggleThemeAdapt" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- JETPACK COMPOSE CODE -->
+        <div class="section-group">
+          <div class="code-header">
+            <label class="section-label" style="margin-bottom: 0;">KODE JETPACK COMPOSE (KOTLIN)</label>
+            <button class="btn-copy" id="btnCopyCompose">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span id="copyLabel">Salin Kode</span>
+            </button>
+          </div>
+          <div class="code-container">
+            <pre><code class="language-kotlin" id="codeBlockCompose"></code></pre>
+          </div>
+          <p class="code-footnote">
+            Implementasi di Android menggunakan <code>Animatable</code> dan <code>Modifier.clip(CircleShape)</code> atau <code>drawBehind { drawCircle(...) }</code> native, menjamin 60fps tanpa re-layout.
+          </p>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

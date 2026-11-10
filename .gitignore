@@ -31,4 +31,7 @@ keystore.properties
 qa-live-evidence/
 qa-screenshots/
 qa-parser.js
+*.zip
+/screenshot.png
+/popup_screenshot.png
 

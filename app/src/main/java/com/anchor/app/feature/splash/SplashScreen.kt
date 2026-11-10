@@ -52,15 +52,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.anchor.app.R
+import com.anchor.app.core.design.components.MascotExpression
 import com.anchor.app.core.design.theme.Nemo
+import kotlin.math.hypot
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 private val Ease = CubicBezierEasing(0.2f, 0.8f, 0.2f, 1f)
+// Buttery Smooth Iris Easing (smooth acceleration, buttery soft deceleration)
+private val ButterySmoothIrisEase = CubicBezierEasing(0.2f, 0.9f, 0.1f, 1f)
 private const val NAME = "Nemo"
-private const val SPLASH_MAX_MS = 5_000L
+private const val SPLASH_MAX_MS = 6_000L
 
 private fun Modifier.focusIn(
     progress: () -> Float,
@@ -92,6 +96,8 @@ fun NemoSplash(
     val avatarProgress = remember { Animatable(0f) }
     val charProgress = remember { List(NAME.length) { Animatable(0f) } }
     val taglineProgress = remember { Animatable(0f) }
+    var mascotExpression by remember { mutableStateOf(MascotExpression.NEUTRAL) }
+    val irisProgress = remember { Animatable(0f) }
     val handoff = remember { Animatable(0f) }
 
     var avatarRootBounds by remember { mutableStateOf<Rect?>(null) }
@@ -126,7 +132,10 @@ fun NemoSplash(
 
     // Animation timeline
     LaunchedEffect(Unit) {
-        avatarProgress.animateTo(1f, tween(durationMillis = 600, easing = Ease))
+        // Entrance choreography: avatar & letters stagger in (0 - 800ms)
+        launch {
+            avatarProgress.animateTo(1f, tween(durationMillis = 600, easing = Ease))
+        }
 
         charProgress.forEachIndexed { index, anim ->
             launch {
@@ -136,15 +145,31 @@ fun NemoSplash(
         }
 
         delay(NAME.length * 60L + 120L)
-
         taglineProgress.animateTo(1f, tween(durationMillis = 400, easing = Ease))
 
-        // Relaxed pause: mascot breathes and blinks in NEUTRAL
-        delay(1600L)
+        // Mascot breathes and blinks naturally through its internal spec without conflicting state swaps
+        delay(2200L) // Completes exactly 3.0s total initial showcase
 
         snapshotFlow { isReady }.first { it }
 
-        handoff.animateTo(1f, tween(durationMillis = 400, easing = FastOutSlowInEasing))
+        // BUTTERY SMOOTH IRIS EXPANSION (750ms)
+        // Lingkaran membesar memenuhi layar dengan kurva CubicBezier(0.2, 0.9, 0.1, 1)
+        coroutineScope {
+            launch {
+                irisProgress.animateTo(
+                    targetValue = 1f,
+                    animationSpec = tween(durationMillis = 750, easing = ButterySmoothIrisEase),
+                )
+            }
+            if (targetBounds != null) {
+                launch {
+                    handoff.animateTo(
+                        targetValue = 1f,
+                        animationSpec = tween(durationMillis = 750, easing = ButterySmoothIrisEase),
+                    )
+                }
+            }
+        }
 
         currentOnFinished()
     }
@@ -160,10 +185,41 @@ fun NemoSplash(
                 }
             }
             .drawBehind {
-                drawRect(
+                // 1. Base backdrop before expansion (charcoal slate in Dark Mode, soft pewter in Day Mode)
+                val baseBackdrop = if (isDark) Color(0xFF161920) else Color(0xFFE8EBEF)
+                drawRect(color = baseBackdrop)
+
+                // 2. Exact center of the mascot
+                val circleCenter = avatarRootBounds?.center ?: center
+                val p = irisProgress.value
+                val baseRadius = 76.dp.toPx()
+
+                // Calculate distance to all 4 screen corners to guarantee full-screen coverage
+                val dTopLeft = hypot(circleCenter.x, circleCenter.y)
+                val dTopRight = hypot(size.width - circleCenter.x, circleCenter.y)
+                val dBottomLeft = hypot(circleCenter.x, size.height - circleCenter.y)
+                val dBottomRight = hypot(size.width - circleCenter.x, size.height - circleCenter.y)
+                val maxRadius = maxOf(dTopLeft, dTopRight, dBottomLeft, dBottomRight) + 24.dp.toPx()
+
+                val currentRadius = baseRadius + (maxRadius - baseRadius) * p
+
+                // 3. Buttery Smooth Expanding Circle (Iris) centered precisely on the mascot
+                drawCircle(
                     color = bgColor,
-                    alpha = (1f - handoff.value).coerceIn(0f, 1f),
+                    radius = currentRadius,
+                    center = circleCenter,
                 )
+
+                // 4. Subtle defining rim around the initial circle (fades away as expansion begins)
+                if (p < 0.25f) {
+                    val rimAlpha = ((1f - p * 4f) * (if (isDark) 0.22f else 0.12f)).coerceIn(0f, 1f)
+                    drawCircle(
+                        color = inkColor.copy(alpha = rimAlpha),
+                        radius = baseRadius,
+                        center = circleCenter,
+                        style = Stroke(width = 1.dp.toPx()),
+                    )
+                }
             },
         contentAlignment = Alignment.Center,
     ) {
@@ -185,7 +241,10 @@ fun NemoSplash(
             }
         } else {
             Modifier.graphicsLayer {
-                alpha = (1f - handoff.value).coerceIn(0f, 1f)
+                val ip = irisProgress.value
+                alpha = (1f - ip * 1.8f).coerceIn(0f, 1f)
+                scaleX = 1f + ip * 0.15f
+                scaleY = 1f + ip * 0.15f
             }
         }
 
@@ -194,7 +253,7 @@ fun NemoSplash(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            // Mascot Avatar (clean, relaxed, without surrounding ring)
+            // Mascot Avatar (clean, relaxed, dynamic expression)
             val mascotSize = 136.dp
             Box(
                 modifier = avatarModifier
@@ -206,7 +265,7 @@ fun NemoSplash(
                 contentAlignment = Alignment.Center,
             ) {
                 com.anchor.app.core.design.components.NemoMascot(
-                    expression = com.anchor.app.core.design.components.MascotExpression.NEUTRAL,
+                    expression = mascotExpression,
                     size = mascotSize,
                 )
             }
@@ -216,7 +275,9 @@ fun NemoSplash(
                 modifier = Modifier
                     .padding(top = 24.dp)
                     .graphicsLayer {
-                        alpha = (1f - handoff.value * 2f).coerceIn(0f, 1f)
+                        val ip = irisProgress.value
+                        alpha = (1f - ip * 2.5f).coerceIn(0f, 1f)
+                        translationY = ip * 30f
                     },
                 contentAlignment = Alignment.Center,
             ) {

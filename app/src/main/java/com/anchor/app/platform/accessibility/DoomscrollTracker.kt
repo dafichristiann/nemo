@@ -21,7 +21,7 @@ class DoomscrollTracker(
             System.currentTimeMillis()
         }
     },
-    private val debounceDelayMs: Long = 10_000L,
+    val debounceDelayMs: Long = 15_000L,
     private val snoozeDurationMs: Long = 5 * 60 * 1000L,
     var onThresholdReached: (packageName: String, thresholdMinutes: Int) -> Unit = { _, _ -> },
 ) {
@@ -46,6 +46,7 @@ class DoomscrollTracker(
     var targetRemainingMs: Long = 0L
         private set
 
+    private var sessionStartRealtimeMs: Long = 0L
     private var segmentStartRealtimeMs: Long = 0L
     private var thresholdJob: Job? = null
     private var debounceJob: Job? = null
@@ -72,20 +73,20 @@ class DoomscrollTracker(
             return
         }
 
-        val effectiveTargets = DoomscrollTargets.DEFAULT_TARGETS + blockedApps
-        val isTarget = pkg in effectiveTargets
+        val isTarget = DoomscrollTargets.isTarget(pkg, blockedApps)
 
         if (isTarget) {
             debounceJob?.cancel()
             debounceJob = null
 
+            val now = clock()
             if (currentPackage == null) {
                 // Sesi baru
                 startNewSession(pkg, thresholdMinutes * 60 * 1000L)
             } else if (currentPackage == pkg) {
                 // Kembali ke aplikasi target yang sama
                 if (isPaused) {
-                    val pausedDuration = maxOf(0L, clock() - segmentStartRealtimeMs)
+                    val pausedDuration = maxOf(0L, now - segmentStartRealtimeMs)
                     if (pausedDuration >= debounceDelayMs) {
                         reset()
                         startNewSession(pkg, thresholdMinutes * 60 * 1000L)
@@ -94,13 +95,35 @@ class DoomscrollTracker(
                     }
                 }
             } else {
-                // Berpindah langsung ke aplikasi target yang berbeda
-                reset()
-                startNewSession(pkg, thresholdMinutes * 60 * 1000L)
+                // Berpindah antar aplikasi target (misal Instagram -> TikTok / YouTube)
+                if (isPaused) {
+                    val pausedDuration = maxOf(0L, now - segmentStartRealtimeMs)
+                    if (pausedDuration >= debounceDelayMs) {
+                        reset()
+                        startNewSession(pkg, thresholdMinutes * 60 * 1000L)
+                    } else {
+                        currentPackage = pkg
+                        resumeSession()
+                    }
+                } else {
+                    // Sesi kontinu antar medsos berlanjut, akumulasi waktu dipertahankan
+                    val elapsedInSegment = maxOf(0L, now - segmentStartRealtimeMs)
+                    targetRemainingMs = maxOf(0L, targetRemainingMs - elapsedInSegment)
+                    currentPackage = pkg
+                    segmentStartRealtimeMs = now
+                    scheduleThresholdJob(targetRemainingMs)
+                }
             }
         } else {
             // Berpindah ke luar aplikasi target (home, launcher, app lain)
             if (currentPackage != null) {
+                // Abaikan event non-target sementara (<800ms) setelah membuka target app
+                // (misal animasi keluar launcher OEM atau redrawing widget).
+                val elapsedSinceLaunch = clock() - sessionStartRealtimeMs
+                if (elapsedSinceLaunch < 800L && !isPaused) {
+                    return
+                }
+
                 if (!isPaused) {
                     pauseSession()
                 } else if (clock() - segmentStartRealtimeMs >= debounceDelayMs) {
@@ -116,6 +139,7 @@ class DoomscrollTracker(
         isOverlayShowing = false
         targetRemainingMs = durationMs
         segmentStartRealtimeMs = clock()
+        sessionStartRealtimeMs = segmentStartRealtimeMs
         scheduleThresholdJob(targetRemainingMs)
     }
 
@@ -198,5 +222,6 @@ class DoomscrollTracker(
         isOverlayShowing = false
         targetRemainingMs = 0L
         segmentStartRealtimeMs = 0L
+        sessionStartRealtimeMs = 0L
     }
 }

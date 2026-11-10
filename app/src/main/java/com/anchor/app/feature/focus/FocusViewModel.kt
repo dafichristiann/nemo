@@ -24,6 +24,7 @@ import com.anchor.app.core.domain.usecase.focus.StartFocusUseCase
 import com.anchor.app.core.domain.usecase.focus.isFocusVerified
 import com.anchor.app.core.domain.usecase.task.ManageSubtasksUseCase
 import com.anchor.app.BuildConfig
+import com.anchor.app.R
 import com.anchor.app.platform.accessibility.AccessibilityStatus
 import com.anchor.app.platform.audio.LofiGenre
 import com.anchor.app.platform.service.FocusService
@@ -202,10 +203,12 @@ class FocusViewModel @Inject constructor(
             SetupSelection(taskId, mode, duration, service, soundscape, genre)
         },
         elapsedMs,
-        settingsRepository.observe(),
-    ) { tasks, currentPair, selection, elapsed, settings ->
+        combine(settingsRepository.observe(), lastCompletion, fallbackReason) { settings, completion, fallback ->
+            Triple(settings, completion, fallback)
+        },
+    ) { tasks, currentPair, selection, elapsed, (settings, completion, fallback) ->
         val (current, subtasks) = currentPair
-        buildState(tasks, current, subtasks, selection, elapsed, settings)
+        buildState(tasks, current, subtasks, selection, elapsed, settings, completion, fallback)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -285,12 +288,13 @@ class FocusViewModel @Inject constructor(
                     if (lastId != null && lastCompletion.value == null) {
                         val finished = focusRepository.getById(lastId)
                         if (finished != null && finished.status == FocusStatus.FINISHED) {
-                            val title = finished.taskId?.let { taskRepository.getById(it)?.title } ?: ""
+                            val title = finished.taskId?.let { taskRepository.getById(it)?.title }
+                                ?: context.getString(R.string.focus_task_default)
                             lastCompletion.value = CompletionResult(
                                 sessionId = finished.id,
                                 taskTitle = title,
                                 verified = isFocusVerified(finished.actualDurationMs, finished.plannedDurationSec),
-                                focusMinutes = (finished.actualDurationMs / 60_000L).toInt(),
+                                focusMinutes = if (finished.actualDurationMs > 0L) (finished.actualDurationMs / 60_000L).toInt().coerceAtLeast(1) else 0,
                                 rating = finished.rating,
                             )
                         }
@@ -316,6 +320,8 @@ class FocusViewModel @Inject constructor(
         selection: SetupSelection,
         elapsed: Long,
         settings: AppSettings,
+        completion: CompletionResult?,
+        fallback: String?,
     ): FocusUiState {
         val options = tasks
             .filter { it.status == TaskStatus.TODO || it.status == TaskStatus.IN_PROGRESS }
@@ -343,9 +349,10 @@ class FocusViewModel @Inject constructor(
             selectedMode = selection.mode,
             selectedDurationSec = selection.durationSec,
             soundscapeEnabled = selection.soundscapeEnabled,
+            selectedLofiGenre = selection.lofiGenre,
             active = active,
-            lastFallbackReason = fallbackReason.value,
-            lastCompletion = lastCompletion.value,
+            lastFallbackReason = fallback,
+            lastCompletion = completion,
             blockedApps = settings.blockedApps,
             blockingReady = BuildConfig.FOCUS_BLOCKING_ENABLED &&
                 settings.focusBlockingEnabled &&
@@ -370,6 +377,15 @@ class FocusViewModel @Inject constructor(
         soundscapeEnabled.value = enabled
     }
 
+    /** Selects a lofi genre and switches playback dynamically if active. */
+    fun onSelectLofiGenre(genre: LofiGenre) {
+        selectedLofiGenre.value = genre
+        val currentActive = uiState.value.active
+        if (currentActive != null && !currentActive.paused && soundscapeEnabled.value) {
+            FocusService.changeSound(context, genre.soundResId, soundscapeEnabled = true)
+        }
+    }
+
     /** Quick toggle for soundscape (mute/unmute) during an active focus session. */
     fun onToggleActiveSoundscape() {
         val newValue = !soundscapeEnabled.value
@@ -377,7 +393,7 @@ class FocusViewModel @Inject constructor(
         val currentActive = uiState.value.active
         if (currentActive != null && !currentActive.paused) {
             if (newValue) {
-                FocusService.resume(context)
+                FocusService.changeSound(context, selectedLofiGenre.value.soundResId, soundscapeEnabled = true)
             } else {
                 FocusService.pause(context)
             }
@@ -395,7 +411,11 @@ class FocusViewModel @Inject constructor(
         )
         fallbackReason.value = result.fallbackReason
         lastCompletion.value = null
-        FocusService.start(context, soundscapeEnabled = soundscapeEnabled.value)
+        FocusService.start(
+            context,
+            soundscapeEnabled = soundscapeEnabled.value,
+            soundResId = selectedLofiGenre.value.soundResId,
+        )
         startTicking()
     }
 
@@ -494,16 +514,19 @@ class FocusViewModel @Inject constructor(
     }
 
     private suspend fun FinishFocusResult.toCompletionResult(): CompletionResult? {
-        if (!completedTask) return null
-        val taskId = taskId ?: return null
-        val title = taskRepository.getById(taskId)?.title ?: return null
+        if (aborted) return null
+        val title = if (taskId != null) {
+            taskRepository.getById(taskId)?.title ?: context.getString(R.string.focus_task_default)
+        } else {
+            context.getString(R.string.focus_task_default)
+        }
         return CompletionResult(
             sessionId = sessionId,
             taskTitle = title,
             // `verified` reflects whether the session ran its full duration (effort signal),
             // shown as a softer/stronger feedback line — the task is completed either way.
             verified = verified,
-            focusMinutes = (totalMs / 60_000L).toInt(),
+            focusMinutes = if (totalMs > 0L) (totalMs / 60_000L).toInt().coerceAtLeast(1) else 0,
             rating = null,
         )
     }

@@ -1,15 +1,21 @@
 package com.anchor.app.platform.accessibility
 
 import android.accessibilityservice.AccessibilityService
+import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.view.accessibility.AccessibilityEvent
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
+import com.anchor.app.R
 import com.anchor.app.core.di.BlockingEntryPoint
 import com.anchor.app.core.di.DoomscrollEntryPoint
 import com.anchor.app.core.domain.model.FocusMode
 import com.anchor.app.platform.blocking.BlockingState
+import com.anchor.app.platform.notification.NotificationChannels
 import dagger.hilt.EntryPoints
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +28,7 @@ import kotlinx.coroutines.launch
  * Subscribes to `TYPE_WINDOW_STATE_CHANGED` only. When the foreground app changes to one the
  * current session is blocking, it draws the [BlockOverlayWindow].
  * When continuous scrolling on entertainment/social media exceeds the configured threshold,
- * it presents [DoomscrollOverlayWindow] as a mindful intervention.
+ * it presents [DoomscrollOverlayWindow] as a mindful intervention and posts a companion alert notification.
  */
 class NemoAccessibilityService : AccessibilityService() {
 
@@ -48,21 +54,42 @@ class NemoAccessibilityService : AccessibilityService() {
 
     private val doomscrollTracker: DoomscrollTracker by lazy {
         DoomscrollTracker(scope = serviceScope).apply {
-            onThresholdReached = { _, thresholdMinutes ->
+            onThresholdReached = { pkg, thresholdMinutes ->
+                android.util.Log.i(
+                    "NemoAccessibilityService",
+                    "Doomscroll threshold reached for $pkg ($thresholdMinutes min)! Showing overlay & alert.",
+                )
                 doomscrollOverlay.show(
                     thresholdMinutes = thresholdMinutes,
-                    onStop = { reset() },
-                    onSnooze = { snooze() },
+                    onStop = {
+                        dismissDoomscrollNotification()
+                        reset()
+                    },
+                    onSnooze = {
+                        dismissDoomscrollNotification()
+                        snooze()
+                    },
                 )
+                showDoomscrollNotification(thresholdMinutes)
             }
         }
     }
 
-    private val screenReceiver = object : BroadcastReceiver() {
+    private val systemReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
                 Intent.ACTION_SCREEN_OFF -> doomscrollTracker.onScreenOff()
                 Intent.ACTION_USER_PRESENT, Intent.ACTION_SCREEN_ON -> doomscrollTracker.onScreenOn()
+                ACTION_DOOMSCROLL_STOP -> {
+                    dismissDoomscrollNotification()
+                    doomscrollOverlay.hide()
+                    doomscrollTracker.reset()
+                }
+                ACTION_DOOMSCROLL_SNOOZE -> {
+                    dismissDoomscrollNotification()
+                    doomscrollOverlay.hide()
+                    doomscrollTracker.snooze()
+                }
             }
         }
     }
@@ -71,6 +98,10 @@ class NemoAccessibilityService : AccessibilityService() {
     private var lastBlockedPackage: String? = null
 
     companion object {
+        const val DOOMSCROLL_NOTIFICATION_ID = 8842
+        const val ACTION_DOOMSCROLL_STOP = "com.anchor.app.ACTION_DOOMSCROLL_STOP"
+        const val ACTION_DOOMSCROLL_SNOOZE = "com.anchor.app.ACTION_DOOMSCROLL_SNOOZE"
+
         private val SYSTEM_IMMUNE_PACKAGES = setOf(
             "android",
             "com.android.settings",
@@ -80,6 +111,13 @@ class NemoAccessibilityService : AccessibilityService() {
             "com.android.systemui",
             "com.google.android.packageinstaller",
             "com.android.packageinstaller",
+            "com.google.android.permissioncontroller",
+            "com.android.permissioncontroller",
+            "com.google.android.gms",
+            "com.google.android.googlequicksearchbox",
+            "com.samsung.android.app.cocktailbarservice",
+            "com.transsion.smartpanel",
+            "com.transsion.floating",
             // Keyboards / IMEs: input events must not reset or interrupt doomscroll tracking
             "com.google.android.inputmethod.latin",
             "com.samsung.android.honeyboard",
@@ -99,15 +137,29 @@ class NemoAccessibilityService : AccessibilityService() {
 
     override fun onServiceConnected() {
         super.onServiceConnected()
+        android.util.Log.i("NemoAccessibilityService", "onServiceConnected successfully called and active!")
         val filter = IntentFilter().apply {
             addAction(Intent.ACTION_SCREEN_OFF)
             addAction(Intent.ACTION_SCREEN_ON)
             addAction(Intent.ACTION_USER_PRESENT)
+            addAction(ACTION_DOOMSCROLL_STOP)
+            addAction(ACTION_DOOMSCROLL_SNOOZE)
         }
-        runCatching { registerReceiver(screenReceiver, filter) }
+        runCatching {
+            ContextCompat.registerReceiver(
+                this,
+                systemReceiver,
+                filter,
+                ContextCompat.RECEIVER_NOT_EXPORTED,
+            )
+        }
 
         serviceScope.launch {
             settingsRepository.observe().collect { settings ->
+                android.util.Log.i(
+                    "NemoAccessibilityService",
+                    "Config update: doomscrollEnabled=${settings.doomscrollAlertEnabled}, threshold=${settings.doomscrollThresholdMinutes}m, blockedApps=${settings.blockedApps.size}",
+                )
                 doomscrollTracker.updateConfiguration(
                     enabled = settings.doomscrollAlertEnabled,
                     thresholdMinutes = settings.doomscrollThresholdMinutes,
@@ -120,13 +172,31 @@ class NemoAccessibilityService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         val pkg = event?.packageName?.toString() ?: return
 
+        android.util.Log.i(
+            "NemoAccessibilityService",
+            "RAW EVENT: pkg=$pkg class=${event?.className} isFullScreen=${event?.isFullScreen} eventType=${event?.eventType}",
+        )
+
         if (isImmunePackage(pkg)) return
+
+        // Non-fullscreen sub-windows or overlays from other packages (e.g. launcher exit animations,
+        // floating helpers, volume bars) should not disrupt an active doomscroll tracking session.
+        val isTarget = DoomscrollTargets.isTarget(pkg, doomscrollTracker.blockedApps)
+        if (!isTarget && event?.isFullScreen == false && doomscrollTracker.isTracking) {
+            return
+        }
+
+        android.util.Log.i(
+            "NemoAccessibilityService",
+            "onAccessibilityEvent pkg=$pkg isEnabled=${doomscrollTracker.isEnabled} threshold=${doomscrollTracker.thresholdMinutes} tracking=${doomscrollTracker.isTracking}",
+        )
 
         val snapshot = blockingState.snapshot()
         val isBlocked = snapshot.sessionActive && pkg in snapshot.blockedApps
 
         if (isBlocked) {
             // Priority 1: Focus session active and app is blocked
+            dismissDoomscrollNotification()
             doomscrollOverlay.hide()
             doomscrollTracker.reset()
 
@@ -142,18 +212,77 @@ class NemoAccessibilityService : AccessibilityService() {
 
             if (doomscrollTracker.isEnabled && !snapshot.sessionActive) {
                 doomscrollTracker.onPackageEvent(pkg)
-                if (pkg != doomscrollTracker.currentPackage) {
+                // Only dismiss overlay if tracking has fully stopped (e.g. user stayed away past debounce)
+                if (!doomscrollTracker.isTracking) {
+                    dismissDoomscrollNotification()
                     doomscrollOverlay.hide()
                 }
             } else {
+                dismissDoomscrollNotification()
                 doomscrollTracker.reset()
                 doomscrollOverlay.hide()
             }
         }
     }
 
+    private fun showDoomscrollNotification(thresholdMinutes: Int) {
+        val manager = NotificationManagerCompat.from(this)
+        if (!manager.areNotificationsEnabled()) return
+
+        val homePendingIntent = PendingIntent.getActivity(
+            this,
+            9001,
+            Intent(Intent.ACTION_MAIN).apply {
+                addCategory(Intent.CATEGORY_HOME)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        val snoozeIntent = Intent(ACTION_DOOMSCROLL_SNOOZE).apply {
+            `package` = packageName
+        }
+        val snoozePendingIntent = PendingIntent.getBroadcast(
+            this,
+            9002,
+            snoozeIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        val notification = NotificationCompat.Builder(this, NotificationChannels.INTERVENTION)
+            .setSmallIcon(R.drawable.ic_stat_nemo)
+            .setContentTitle(getString(R.string.doomscroll_overlay_title, thresholdMinutes))
+            .setContentText(getString(R.string.doomscroll_overlay_body))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setAutoCancel(true)
+            .setContentIntent(homePendingIntent)
+            .addAction(
+                0,
+                getString(R.string.doomscroll_overlay_stop),
+                homePendingIntent,
+            )
+            .addAction(
+                0,
+                getString(R.string.doomscroll_overlay_snooze),
+                snoozePendingIntent,
+            )
+            .build()
+
+        runCatching {
+            manager.notify(DOOMSCROLL_NOTIFICATION_ID, notification)
+        }
+    }
+
+    private fun dismissDoomscrollNotification() {
+        runCatching {
+            NotificationManagerCompat.from(this).cancel(DOOMSCROLL_NOTIFICATION_ID)
+        }
+    }
+
     /** OS disabled or interrupted the service: release blocking so no app stays paused. */
     override fun onInterrupt() {
+        dismissDoomscrollNotification()
         overlay.hide()
         doomscrollOverlay.hide()
         doomscrollTracker.reset()
@@ -161,6 +290,7 @@ class NemoAccessibilityService : AccessibilityService() {
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
+        dismissDoomscrollNotification()
         overlay.hide()
         doomscrollOverlay.hide()
         doomscrollTracker.reset()
@@ -169,7 +299,8 @@ class NemoAccessibilityService : AccessibilityService() {
     }
 
     override fun onDestroy() {
-        runCatching { unregisterReceiver(screenReceiver) }
+        runCatching { unregisterReceiver(systemReceiver) }
+        dismissDoomscrollNotification()
         overlay.hide()
         doomscrollOverlay.hide()
         doomscrollTracker.reset()

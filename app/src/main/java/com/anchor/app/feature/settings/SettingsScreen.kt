@@ -323,7 +323,12 @@ fun SettingsScreen(
             title = stringResource(R.string.settings_doomscroll_title),
             subtitle = stringResource(R.string.settings_doomscroll_subtitle),
             checked = settings.doomscrollAlertEnabled,
-            onCheckedChange = viewModel::setDoomscrollAlertEnabled,
+            onCheckedChange = { enabled ->
+                viewModel.setDoomscrollAlertEnabled(enabled)
+                if (enabled && !permissions.focusBlockingGranted) {
+                    viewModel.onOpenAccessibilitySettings()
+                }
+            },
         )
         if (settings.doomscrollAlertEnabled) {
             if (!permissions.focusBlockingGranted) {
@@ -370,6 +375,15 @@ fun SettingsScreen(
                     }
                 }
             }
+
+            ManageRow(
+                summary = if (settings.blockedApps.isEmpty()) {
+                    stringResource(R.string.settings_doomscroll_apps_summary_none)
+                } else {
+                    stringResource(R.string.settings_doomscroll_apps_summary, settings.blockedApps.size)
+                },
+                onManage = onManageBlocked,
+            )
 
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.x2)) {
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.x1)) {

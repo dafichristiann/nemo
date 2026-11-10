@@ -71,6 +71,19 @@ private data class FaceSwapSpec(
     val durationMs: Int,
 )
 
+private data class MouthFrame(
+    val drawableRes: Int,
+    val start: Float,
+    val end: Float,
+)
+
+private data class MouthAnimationSpec(
+    val durationMs: Int,
+    val frames: List<MouthFrame>,
+) {
+    val distinctDrawables: List<Int> = frames.map { it.drawableRes }.distinct()
+}
+
 private data class FxKeyframe(
     val t: Float,
     val opacity: Float = 1f,
@@ -101,6 +114,7 @@ private enum class RevealDirection {
 
 private data class MascotAnimationSpec(
     val headDrawableRes: Int,
+    val staticDrawableRes: Int = headDrawableRes,
     val durationMs: Int,
     val easing: Easing = EaseInOut,
     val originX: Float = 0.5f,
@@ -108,6 +122,7 @@ private data class MascotAnimationSpec(
     val keyframes: List<BodyKeyframe>,
     val alternate: Boolean = false,
     val faceSwap: FaceSwapSpec? = null,
+    val mouthAnimation: MouthAnimationSpec? = null,
     val fx: FxSpec? = null,
 )
 
@@ -371,7 +386,8 @@ private fun getSpecForExpression(expression: MascotExpression): MascotAnimationS
         )
 
         MascotExpression.TALKING -> MascotAnimationSpec(
-            headDrawableRes = R.drawable.mascot_talking,
+            headDrawableRes = R.drawable.mascot_talking_base,
+            staticDrawableRes = R.drawable.mascot_talking,
             durationMs = 1000,
             easing = EaseInOut,
             originX = 0.5f,
@@ -382,15 +398,20 @@ private fun getSpecForExpression(expression: MascotExpression): MascotAnimationS
                 BodyKeyframe(0.5f, 0f, -2.5f, 0f, 1f, 1f),
                 BodyKeyframe(1f, 0f, 0f, 0f, 1f, 1f),
             ),
-            faceSwap = FaceSwapSpec(
-                faceDrawableRes = R.drawable.mascot_neutral,
-                showDuring = listOf(
-                    0.10f to 0.18f,
-                    0.34f to 0.42f,
-                    0.52f to 0.60f,
-                    0.78f to 1.00f,
-                ),
+            mouthAnimation = MouthAnimationSpec(
                 durationMs = 2000,
+                frames = listOf(
+                    MouthFrame(R.drawable.mascot_mouth_closed, 0.00f, 0.10f),
+                    MouthFrame(R.drawable.mascot_mouth_oval, 0.10f, 0.20f),
+                    MouthFrame(R.drawable.mascot_mouth_wide, 0.20f, 0.32f),
+                    MouthFrame(R.drawable.mascot_mouth_o, 0.32f, 0.42f),
+                    MouthFrame(R.drawable.mascot_mouth_oval, 0.42f, 0.52f),
+                    MouthFrame(R.drawable.mascot_mouth_closed, 0.52f, 0.62f),
+                    MouthFrame(R.drawable.mascot_mouth_oval, 0.62f, 0.72f),
+                    MouthFrame(R.drawable.mascot_mouth_wide, 0.72f, 0.84f),
+                    MouthFrame(R.drawable.mascot_mouth_o, 0.84f, 0.92f),
+                    MouthFrame(R.drawable.mascot_mouth_closed, 0.92f, 1.00f),
+                ),
             ),
         )
     }
@@ -491,7 +512,7 @@ fun NemoMascot(
             if (isStatic) {
                 // Static render for accessibility / paused state
                 Image(
-                    painter = painterResource(id = spec.headDrawableRes),
+                    painter = painterResource(id = spec.staticDrawableRes),
                     contentDescription = contentDescription,
                     modifier = Modifier.fillMaxSize(),
                 )
@@ -557,12 +578,44 @@ private fun MascotAnimatedLayers(
                     .fillMaxSize()
                     .graphicsLayer {
                         val swapPos = (elapsedMs % swap.durationMs).toFloat() / swap.durationMs
-                        val isVisible = swap.showDuring.any { (start, end) ->
-                            swapPos in start..end
+                        // Smooth sub-frame crossfade for blink (35ms soft ramp in/out instead of hard binary snap)
+                        val ramp = 35f / swap.durationMs
+                        var maxAlpha = 0f
+                        for ((start, end) in swap.showDuring) {
+                            if (swapPos in (start - ramp)..(end + ramp)) {
+                                val a = when {
+                                    swapPos < start -> ((swapPos - (start - ramp)) / ramp).coerceIn(0f, 1f)
+                                    swapPos > end -> (1f - (swapPos - end) / ramp).coerceIn(0f, 1f)
+                                    else -> 1f
+                                }
+                                if (a > maxAlpha) maxAlpha = a
+                            }
                         }
-                        alpha = if (isVisible) 1f else 0f
+                        alpha = maxAlpha
                     },
             )
+        }
+
+        // Layer 2b: Mouth Animation (talking lip sync)
+        if (spec.mouthAnimation != null) {
+            val mouth = spec.mouthAnimation
+            for (resId in mouth.distinctDrawables) {
+                Image(
+                    painter = painterResource(id = resId),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            val mouthPos = (elapsedMs % mouth.durationMs).toFloat() / mouth.durationMs
+                            val isCurrent = mouth.frames.any { frameSpec ->
+                                frameSpec.drawableRes == resId &&
+                                    mouthPos >= frameSpec.start &&
+                                    (mouthPos < frameSpec.end || frameSpec.end == 1f)
+                            }
+                            alpha = if (isCurrent) 1f else 0f
+                        },
+                )
+            }
         }
 
         // Layer 3: FX Symbols (garis kejut, zzz, tanda tanya, titik elipsis)

@@ -185,7 +185,7 @@ class DoomscrollTrackerTest {
     }
 
     @Test
-    fun test_switch_to_different_target_resets_and_starts_fresh() = runTest {
+    fun test_switch_to_different_target_maintains_continuous_tracking() = runTest {
         var triggeredPkg: String? = null
 
         val tracker = DoomscrollTracker(
@@ -209,12 +209,45 @@ class DoomscrollTrackerTest {
         tracker.onPackageEvent("com.zhiliaoapp.musically")
         assertEquals("com.zhiliaoapp.musically", tracker.currentPackage)
 
-        // 10 more minutes: Instagram had 10, TikTok now 10 (not 20)
+        // 10 more minutes on TikTok: continuous doomscroll hits 20 minutes
+        advanceTimeBy(10 * 60 * 1000L)
+        runCurrent()
+        assertEquals("com.zhiliaoapp.musically", triggeredPkg)
+    }
+
+    @Test
+    fun test_switch_to_different_target_after_debounce_expired_starts_fresh() = runTest {
+        var triggeredPkg: String? = null
+
+        val tracker = DoomscrollTracker(
+            scope = this,
+            clock = { testScheduler.currentTime },
+            debounceDelayMs = 15_000L,
+            onThresholdReached = { pkg, _ -> triggeredPkg = pkg },
+        ).apply {
+            updateConfiguration(
+                enabled = true,
+                thresholdMinutes = 20,
+                blockedApps = targetApps,
+            )
+        }
+
+        // 10 minutes on Instagram
+        tracker.onPackageEvent("com.instagram.android")
+        advanceTimeBy(10 * 60 * 1000L)
+        runCurrent()
+
+        // Switch to launcher for 20 seconds (> 15s debounce)
+        tracker.onPackageEvent("com.android.launcher")
+        advanceTimeBy(20_000L)
+        runCurrent()
+
+        // Open TikTok: starts a fresh 20-minute session
+        tracker.onPackageEvent("com.zhiliaoapp.musically")
         advanceTimeBy(10 * 60 * 1000L)
         runCurrent()
         assertNull(triggeredPkg)
 
-        // 10 more minutes on TikTok (total 20 min on TikTok)
         advanceTimeBy(10 * 60 * 1000L)
         runCurrent()
         assertEquals("com.zhiliaoapp.musically", triggeredPkg)
@@ -347,5 +380,35 @@ class DoomscrollTrackerTest {
         advanceTimeBy(10 * 60 * 1000L)
         runCurrent()
         assertEquals(1, triggerCount)
+    }
+
+    @Test
+    fun test_transient_launcher_exit_animation_does_not_pause_session() = runTest {
+        val tracker = DoomscrollTracker(
+            scope = this,
+            clock = { testScheduler.currentTime },
+        ).apply {
+            updateConfiguration(
+                enabled = true,
+                thresholdMinutes = 20,
+                blockedApps = targetApps,
+            )
+        }
+
+        tracker.onPackageEvent("com.instagram.android")
+        assertTrue(tracker.isTracking)
+        assertFalse(tracker.isPaused)
+
+        // 200ms later, OEM launcher exit animation event fires (<800ms)
+        advanceTimeBy(200L)
+        tracker.onPackageEvent("com.transsion.launcher3")
+        // Must NOT pause the session!
+        assertFalse(tracker.isPaused)
+        assertEquals("com.instagram.android", tracker.currentPackage)
+
+        // Normal exit after 5 seconds (>800ms) should pause
+        advanceTimeBy(5_000L)
+        tracker.onPackageEvent("com.transsion.launcher3")
+        assertTrue(tracker.isPaused)
     }
 }

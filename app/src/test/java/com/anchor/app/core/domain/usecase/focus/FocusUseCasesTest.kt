@@ -142,6 +142,42 @@ class FocusUseCasesTest {
         assertEquals(FocusStatus.PAUSED, repo.current()!!.status)
     }
 
+    @Test
+    fun resume_withAnchoredStartedAt_calculatesAccurateTotalElapsed() = runTest {
+        val repo = FakeFocusRepository()
+        val timer = FakeTimeProvider(fixedNow, ZoneOffset.UTC)
+        val start = StartFocusUseCase(repo, FakeBlockingStrategy(), timer, FakeIdProvider())
+        val id = start("t1", FocusMode.GENTLE, 25 * 60).sessionId
+
+        // Focus for 10 minutes (fixedNow + 10m)
+        timer.advanceBy(10 * 60_000L)
+        PauseFocusUseCase(repo, timer)(id, elapsedMs = 10 * 60_000L)
+
+        // Paused for 5 minutes (fixedNow + 15m)
+        timer.advanceBy(5 * 60_000L)
+
+        // Resume: anchor startedAt = now - actualDurationMs
+        val pausedSession = repo.getById(id)!!
+        val anchor = timer.nowMillis() - pausedSession.actualDurationMs
+        repo.updateState(
+            id = id,
+            status = FocusStatus.ACTIVE,
+            actualDurationMs = pausedSession.actualDurationMs,
+            endedAt = null,
+            fallbackReason = pausedSession.fallbackReason,
+            startedAt = anchor,
+        )
+
+        // Focus for another 15 minutes (fixedNow + 30m)
+        timer.advanceBy(15 * 60_000L)
+        val activeSession = repo.getById(id)!!
+        val totalElapsed = (timer.nowMillis() - activeSession.startedAt).coerceAtLeast(activeSession.actualDurationMs)
+
+        // Total active focus is 10m + 15m = 25m, excluding the 5m pause
+        assertEquals(25 * 60_000L, totalElapsed)
+        assertTrue(isFocusVerified(totalElapsed, activeSession.plannedDurationSec))
+    }
+
     // --- FinishFocusUseCase ---
 
     @Test

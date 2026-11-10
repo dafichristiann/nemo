@@ -25,6 +25,7 @@ import com.anchor.app.core.domain.usecase.focus.isFocusVerified
 import com.anchor.app.core.domain.usecase.task.ManageSubtasksUseCase
 import com.anchor.app.BuildConfig
 import com.anchor.app.platform.accessibility.AccessibilityStatus
+import com.anchor.app.platform.audio.LofiGenre
 import com.anchor.app.platform.service.FocusService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -74,6 +75,7 @@ private data class SetupSelection(
     val durationSec: Int,
     val serviceEnabled: Boolean,
     val soundscapeEnabled: Boolean,
+    val lofiGenre: LofiGenre,
 )
 
 /** Result of the last finished session, for post-session feedback (PRD v0.5 §10.1). */
@@ -94,6 +96,7 @@ data class FocusUiState(
     val selectedMode: FocusMode = FocusMode.GENTLE,
     val selectedDurationSec: Int = FOCUS_DEFAULT_DURATION_SEC,
     val soundscapeEnabled: Boolean = true,
+    val selectedLofiGenre: LofiGenre = LofiGenre.DEFAULT,
     val active: ActiveFocus? = null,
     val lastFallbackReason: String? = null,
     /** Outcome shown after a session ends (PRD v0.5 §10.1). Null once acknowledged/cleared. */
@@ -164,6 +167,7 @@ class FocusViewModel @Inject constructor(
     private val selectedMode = MutableStateFlow(FocusMode.GENTLE)
     private val selectedDurationSec = MutableStateFlow(FOCUS_DEFAULT_DURATION_SEC)
     val soundscapeEnabled: MutableStateFlow<Boolean> = MutableStateFlow(true)
+    val selectedLofiGenre: MutableStateFlow<LofiGenre> = MutableStateFlow(LofiGenre.DEFAULT)
     private val elapsedMs = MutableStateFlow(0L)
     private val fallbackReason = MutableStateFlow<String?>(null)
     private val lastCompletion = MutableStateFlow<CompletionResult?>(null)
@@ -191,10 +195,11 @@ class FocusViewModel @Inject constructor(
             selectedTaskId,
             selectedMode,
             selectedDurationSec,
-            serviceEnabled,
-            soundscapeEnabled,
-        ) { taskId, mode, duration, service, soundscape ->
-            SetupSelection(taskId, mode, duration, service, soundscape)
+            combine(serviceEnabled, soundscapeEnabled, selectedLofiGenre) { service, soundscape, genre ->
+                Triple(service, soundscape, genre)
+            },
+        ) { taskId, mode, duration, (service, soundscape, genre) ->
+            SetupSelection(taskId, mode, duration, service, soundscape, genre)
         },
         elapsedMs,
         settingsRepository.observe(),

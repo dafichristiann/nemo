@@ -497,7 +497,7 @@
     <string name="future_buffer_tag">buffer %1$s</string>
 
     <string name="wellbeing_header_eyebrow">RITME FOKUS</string>
-    <string name="wellbeing_header_title">Kebugaran Ritme Tubuh</string>
+    <string name="wellbeing_header_title">Ritme Tubuh</string>
     <string name="wellbeing_header_subtitle">Siklus energi mental harian</string>
     <string name="wellbeing_capacity_title">Kapasitas Fokus Harian</string>
     <string name="wellbeing_status_optimal">OPTIMAL</string>
@@ -558,6 +558,22 @@
     <string name="focus_soundscape_binaural">Binaural Brown Noise (40Hz)</string>
     <string name="focus_soundscape_lofi_title">Lofi Focus Beats</string>
     <string name="focus_soundscape_lofi_desc">Musik latar lofi yang tenang untuk meningkatkan fokus dan konsentrasi kerja mendalam.</string>
+    <string name="focus_lofi_chill_title">Classic Chillhop</string>
+    <string name="focus_lofi_chill_desc">Irama boom-bap hangat dan tuts Rhodes lembut untuk fokus santai.</string>
+    <string name="focus_lofi_jazz_title">Midnight Jazzhop</string>
+    <string name="focus_lofi_jazz_desc">Akord jazz modal, gesekan snare drum halus, dan saksofon lembut.</string>
+    <string name="focus_lofi_christian_title">Worship Lofi</string>
+    <string name="focus_lofi_christian_desc">Musik pujian dan kidung kontemplatif bernuansa lofi.</string>
+    <string name="focus_lofi_study_title">Deep Study &amp; Coding</string>
+    <string name="focus_lofi_study_desc">Irama minimalis dan denyut elektronik stabil untuk konsentrasi belajar.</string>
+    <string name="focus_lofi_rain_title">Rainy &amp; Cozy</string>
+    <string name="focus_lofi_rain_desc">Suasana gemercik hujan lembut, kresek vinyl, dan melodi hangat.</string>
+    <string name="focus_lofi_synthwave_title">Retro Synthwave</string>
+    <string name="focus_lofi_synthwave_desc">Synth analog bernuansa nostalgia dan ketukan chillwave retro.</string>
+    <string name="focus_lofi_acoustic_title">Acoustic Piano</string>
+    <string name="focus_lofi_acoustic_desc">Sentuhan tuts piano lembut dan kehangatan instrumen akustik.</string>
+    <string name="focus_lofi_dialog_title">Pilih Genre Lofi</string>
+    <string name="focus_lofi_swipe_hint">Geser kiri/kanan atau tahan untuk pilih genre</string>
     <string name="focus_soundscape_playing">Lofi Focus • Memutar</string>
     <string name="focus_soundscape_muted">Lofi Dibisukan</string>
     <string name="focus_soundscape_toggle_desc">Beralih soundscape lofi</string>

@@ -1386,3 +1386,108 @@ private fun formatClock(ms: Long): String {
     val seconds = totalSeconds % 60
     return "%02d:%02d".format(minutes, seconds)
 }
+
+@Composable
+private fun FocusCompletionCard(
+    completion: CompletionResult,
+    onRate: (Int) -> Unit,
+    onDismiss: () -> Unit,
+    darkTheme: Boolean = false,
+    modifier: Modifier = Modifier,
+) {
+    val cardBg = if (darkTheme) Color(0xFF141414) else Nemo.colors.surface
+    val borderCol = if (darkTheme) Color(0xFF26262E) else Nemo.colors.line
+    val textPrimary = if (darkTheme) Color.White else Nemo.colors.ink
+    val textMute = if (darkTheme) Color.White.copy(alpha = 0.65f) else Nemo.colors.mute
+    val rateItemBg = if (darkTheme) Color(0xFF262626) else Nemo.colors.fog
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(cardBg)
+            .border(1.dp, borderCol, RoundedCornerShape(14.dp))
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            NemoMascot(
+                expression = if (completion.verified) MascotExpression.LAUGHING else MascotExpression.SAD,
+                size = 32.dp,
+            )
+            Text(
+                text = if (completion.verified) {
+                    stringResource(R.string.focus_finished_verified, completion.focusMinutes, completion.taskTitle)
+                } else {
+                    stringResource(R.string.focus_finished_not_verified, completion.focusMinutes)
+                },
+                fontFamily = GeistFamily,
+                fontSize = 13.sp,
+                color = textPrimary,
+                modifier = Modifier.weight(1f),
+            )
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .clip(CircleShape)
+                    .pressable(onClick = onDismiss),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "✕",
+                    fontSize = 12.sp,
+                    color = textMute,
+                )
+            }
+        }
+
+        // Rating row for sessions >= 15 minutes (Spec 2026-11-03 §4.2)
+        if (completion.focusMinutes >= 15) {
+            if (completion.rating == null) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(
+                        text = stringResource(R.string.focus_rating_prompt),
+                        fontFamily = GeistFamily,
+                        fontSize = 11.sp,
+                        color = textMute,
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        (1..5).forEach { r ->
+                            Box(
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .clip(CircleShape)
+                                    .background(rateItemBg)
+                                    .pressable(onClick = { onRate(r) }),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    text = r.toString(),
+                                    fontFamily = GeistMonoFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 11.sp,
+                                    color = textPrimary,
+                                )
+                            }
+                        }
+                    }
+                }
+            } else {
+                Text(
+                    text = stringResource(R.string.focus_rating_thank_you),
+                    fontFamily = GeistMonoFamily,
+                    fontSize = 11.sp,
+                    color = Color(0xFF4CAF50),
+                )
+            }
+        }
+    }
+}

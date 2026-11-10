@@ -107,6 +107,17 @@ class FocusService : Service() {
                 }
                 return START_NOT_STICKY
             }
+            ACTION_CHANGE_SOUND -> {
+                val soundResId = intent?.getIntExtra(EXTRA_SOUND_RES_ID, R.raw.nemo_lofi_chill)
+                    ?: R.raw.nemo_lofi_chill
+                val isEnabled = intent?.getBooleanExtra(EXTRA_SOUNDSCAPE_ENABLED, true) ?: true
+                if (isEnabled) {
+                    soundscapePlayer.play(soundResId)
+                } else {
+                    soundscapePlayer.pause()
+                }
+                return START_NOT_STICKY
+            }
             ACTION_START_FOCUS, ACTION_START, null -> {
                 startForegroundCompat()
                 serviceScope.launch {
@@ -302,6 +313,7 @@ class FocusService : Service() {
         const val ACTION_STOP = ACTION_STOP_FOCUS
         const val ACTION_PAUSE_FOCUS = "com.anchor.app.action.FOCUS_PAUSE"
         const val ACTION_RESUME_FOCUS = "com.anchor.app.action.FOCUS_RESUME"
+        const val ACTION_CHANGE_SOUND = "com.anchor.app.action.FOCUS_CHANGE_SOUND"
         const val EXTRA_SOUNDSCAPE_ENABLED = "extra_soundscape_enabled"
         const val EXTRA_SOUND_RES_ID = "extra_sound_res_id"
         private const val CHANNEL_ID = NotificationChannels.FOCUS
@@ -340,6 +352,22 @@ class FocusService : Service() {
             runCatching {
                 val intent = Intent(context, FocusService::class.java).apply {
                     action = ACTION_RESUME_FOCUS
+                }
+                context.startService(intent)
+            }
+        }
+
+        /** Changes background soundscape track dynamically while running. */
+        fun changeSound(
+            context: Context,
+            @RawRes soundResId: Int,
+            soundscapeEnabled: Boolean = true,
+        ) {
+            runCatching {
+                val intent = Intent(context, FocusService::class.java).apply {
+                    action = ACTION_CHANGE_SOUND
+                    putExtra(EXTRA_SOUND_RES_ID, soundResId)
+                    putExtra(EXTRA_SOUNDSCAPE_ENABLED, soundscapeEnabled)
                 }
                 context.startService(intent)
             }

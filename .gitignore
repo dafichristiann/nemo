@@ -31,6 +31,8 @@ keystore.properties
 qa-live-evidence/
 qa-screenshots/
 qa-parser.js
+test_runner.py
+__pycache__/
 *.zip
 /screenshot.png
 /popup_screenshot.png

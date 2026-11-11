@@ -122,7 +122,7 @@ fun TasksScreen(
                 start = Spacing.screenHorizontal,
                 end = Spacing.screenHorizontal,
                 top = Spacing.x5,
-                bottom = 76.dp,
+                bottom = 100.dp,
             ),
             verticalArrangement = Arrangement.spacedBy(Spacing.listGap),
         ) {
@@ -149,14 +149,6 @@ fun TasksScreen(
                         onOpen = { onOpenTask(row.task.id) },
                         onKeep = { viewModel.onKeepForToday(row.task.id) },
                         onReschedule = { rescheduling = row },
-                        onToggleDone = {
-                            viewModel.onToggleTaskDone(
-                                taskId = row.task.id,
-                                currentStatus = row.task.status,
-                                doneMessage = taskDoneMessage,
-                                undoLabel = taskUndoLabel,
-                            )
-                        },
                     )
                 }
             }
@@ -185,7 +177,13 @@ fun TasksScreen(
                     NemoSkeletonRow()
                 }
             } else if (state.rows.isEmpty()) {
-                item { EmptyState() }
+                item {
+                    EmptyState(
+                        filter = state.filter,
+                        todayCompletedCount = state.todayCompletedCount,
+                        onViewDone = { viewModel.setFilter(TaskFilter.COMPLETED) },
+                    )
+                }
             } else {
                 items(
                     items = state.rows,
@@ -367,7 +365,7 @@ private fun HomeHeader(nickname: String, onOpenSettings: () -> Unit) {
 
 /**
  * Refined progress summary matching canvas ghQ1F (VvWsG, F74OQ3, N9NRlq):
- * 12sp stat label + 3dp hairline track.
+ * Editorial progress block with label, count, big percent, and 3dp hairline track.
  */
 @Composable
 private fun SummaryCard(completed: Int, total: Int) {
@@ -382,22 +380,45 @@ private fun SummaryCard(completed: Int, total: Int) {
         verticalArrangement = Arrangement.spacedBy(Spacing.x2),
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom,
         ) {
-            if (isAllComplete) {
-                NemoMascot(
-                    expression = MascotExpression.LAUGHING,
-                    size = 20.dp,
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = stringResource(R.string.home_progress_title),
+                    fontFamily = GeistFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 11.sp,
+                    letterSpacing = 0.5.sp,
+                    color = Nemo.colors.mute,
+                )
+                Text(
+                    text = stringResource(R.string.home_progress_count, completed, total),
+                    fontFamily = GeistFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 13.sp,
+                    color = Nemo.colors.inkSecondary,
                 )
             }
-            Text(
-                text = stringResource(R.string.tasks_summary_progress, completed, total, percent),
-                fontFamily = GeistMonoFamily,
-                fontWeight = FontWeight.Medium,
-                fontSize = 12.sp,
-                color = Nemo.colors.mute,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                if (isAllComplete) {
+                    NemoMascot(
+                        expression = MascotExpression.LAUGHING,
+                        size = 20.dp,
+                    )
+                }
+                Text(
+                    text = stringResource(R.string.home_progress_percent, percent),
+                    fontFamily = GeistMonoFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 20.sp,
+                    color = Nemo.colors.ink,
+                )
+            }
         }
         ProgressTrack(
             progress = fraction,
@@ -408,7 +429,7 @@ private fun SummaryCard(completed: Int, total: Int) {
 
 /**
  * Filter control matching canvas ghQ1F (aLfgJ):
- * Segmented pill container: Today (3) | Upcoming (7) | Domino Chains | Completed
+ * Segmented pill container: Today | Upcoming | Chains | Done
  */
 @Composable
 private fun FilterSegmented(
@@ -419,7 +440,7 @@ private fun FilterSegmented(
         TaskFilter.TODAY to stringResource(R.string.task_filter_today),
         TaskFilter.UPCOMING to stringResource(R.string.task_filter_upcoming),
         TaskFilter.OVERDUE to stringResource(R.string.tasks_tab_domino),
-        TaskFilter.COMPLETED to stringResource(R.string.task_filter_completed),
+        TaskFilter.COMPLETED to stringResource(R.string.task_filter_done),
     )
     val selectedIndex = tabs.indexOfFirst { it.first == selected }.coerceAtLeast(0)
 
@@ -429,9 +450,9 @@ private fun FilterSegmented(
             .clip(RoundedCornerShape(12.dp))
             .background(Nemo.colors.surface)
             .border(1.dp, Nemo.colors.line, RoundedCornerShape(12.dp))
-            .padding(4.dp),
+            .padding(3.dp),
     ) {
-        val spacing = 4.dp
+        val spacing = 3.dp
         val tabWidth = (maxWidth - spacing * (tabs.size - 1)) / tabs.size
         val indicatorOffset by animateDpAsState(
             targetValue = (tabWidth + spacing) * selectedIndex,
@@ -475,17 +496,18 @@ private fun FilterSegmented(
                                 }
                             },
                         )
-                        .padding(horizontal = 4.dp),
+                        .padding(horizontal = 2.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = labelText,
                         fontFamily = GeistFamily,
                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                        fontSize = 13.sp,
+                        fontSize = 12.sp,
                         color = fg,
                         textAlign = TextAlign.Center,
                         maxLines = 1,
+                        softWrap = false,
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
@@ -525,9 +547,10 @@ private fun TaskCardRow(
         subtitle = subtitle,
         meta = meta,
         done = isDone,
+        showNode = isDone,
         highlighted = isDomino && !isDone,
         onClick = onClick,
-        onToggleDone = onToggleDone,
+        onToggleDone = if (isDone) onToggleDone else null,
         modifier = modifier,
         trailing = {
             if (!isDone) {
@@ -536,6 +559,8 @@ private fun TaskCardRow(
                 } else if (isDomino) {
                     NemoPill(text = stringResource(R.string.tasks_badge_domino), filled = true)
                 }
+            } else {
+                NemoPill(text = stringResource(R.string.detail_status_completed), filled = false)
             }
         },
         content = {
@@ -607,6 +632,7 @@ private fun TaskCardRow(
                         )
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             val filledDots = when {
+                                row.task.progressPercent >= 100 -> 3
                                 row.task.progressPercent >= 66 -> 2
                                 row.task.progressPercent >= 33 -> 1
                                 else -> 0
@@ -629,7 +655,7 @@ private fun TaskCardRow(
 
 /**
  * Quick Add Bar matching canvas ghQ1F (NcI1r):
- * 48dp height, 12dp radius, Plus icon, "Add a new intention...", "⌘K" shortcut pill.
+ * 48dp height, 12dp radius, Plus icon, "Add a new intention...".
  */
 @Composable
 private fun QuickAddBar(onClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -745,7 +771,6 @@ private fun OverdueTaskRow(
     onOpen: () -> Unit,
     onKeep: () -> Unit,
     onReschedule: () -> Unit,
-    onToggleDone: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -754,10 +779,9 @@ private fun OverdueTaskRow(
         TaskCardRow(
             row = row,
             onClick = onOpen,
-            onToggleDone = onToggleDone,
         )
         Row(
-            modifier = Modifier.padding(start = 34.dp),
+            modifier = Modifier.padding(start = Spacing.x2),
             horizontalArrangement = Arrangement.spacedBy(Spacing.x2),
         ) {
             SmallAction(stringResource(R.string.overdue_action_reschedule), onReschedule)
@@ -788,7 +812,30 @@ private fun SmallAction(label: String, onClick: () -> Unit) {
 }
 
 @Composable
-private fun EmptyState() {
+private fun EmptyState(
+    filter: TaskFilter = TaskFilter.TODAY,
+    todayCompletedCount: Int = 0,
+    onViewDone: () -> Unit = {},
+) {
+    val isCompletedTab = filter == TaskFilter.COMPLETED
+    val isTodayAllCaughtUp = filter == TaskFilter.TODAY && todayCompletedCount > 0
+
+    val mascot = when {
+        isCompletedTab -> MascotExpression.SLEEPY
+        isTodayAllCaughtUp -> MascotExpression.HAPPY
+        else -> MascotExpression.CONFUSED
+    }
+    val title = when {
+        isCompletedTab -> stringResource(R.string.tasks_empty_completed_title)
+        isTodayAllCaughtUp -> stringResource(R.string.tasks_all_done_title)
+        else -> stringResource(R.string.home_empty_title)
+    }
+    val body = when {
+        isCompletedTab -> stringResource(R.string.tasks_empty_completed_body)
+        isTodayAllCaughtUp -> stringResource(R.string.tasks_all_done_body, todayCompletedCount)
+        else -> stringResource(R.string.home_empty_body)
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -797,12 +844,12 @@ private fun EmptyState() {
         verticalArrangement = Arrangement.spacedBy(Spacing.x3),
     ) {
         NemoMascot(
-            expression = MascotExpression.CONFUSED,
+            expression = mascot,
             size = 96.dp,
-            contentDescription = stringResource(R.string.home_empty_title),
+            contentDescription = title,
         )
         Text(
-            text = stringResource(R.string.home_empty_title),
+            text = title,
             fontFamily = GeistFamily,
             fontWeight = FontWeight.SemiBold,
             fontSize = 16.sp,
@@ -810,13 +857,45 @@ private fun EmptyState() {
             textAlign = TextAlign.Center,
         )
         Text(
-            text = stringResource(R.string.home_empty_body),
+            text = body,
             fontFamily = GeistFamily,
             fontWeight = FontWeight.Normal,
             fontSize = 13.sp,
             color = Nemo.colors.mute,
             textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = Spacing.x4),
         )
+
+        if (isTodayAllCaughtUp) {
+            Spacer(modifier = Modifier.height(Spacing.x2))
+            Box(
+                modifier = Modifier
+                    .clip(PillShape)
+                    .background(Nemo.colors.surface)
+                    .border(1.dp, Nemo.colors.line, PillShape)
+                    .pressable(shape = PillShape, onClick = onViewDone)
+                    .padding(horizontal = Spacing.x4, vertical = Spacing.x2),
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.x2),
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_tasks),
+                        contentDescription = null,
+                        tint = Nemo.colors.ink,
+                        modifier = Modifier.size(14.dp),
+                    )
+                    Text(
+                        text = stringResource(R.string.tasks_all_done_action),
+                        fontFamily = GeistFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 13.sp,
+                        color = Nemo.colors.ink,
+                    )
+                }
+            }
+        }
     }
 }
 

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imeNestedScroll
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -20,6 +21,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -35,10 +38,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.anchor.app.R
@@ -86,7 +91,7 @@ private val DEADLINE_HOUR_OPTIONS: List<Int> = (0..23).toList()
  * UX). Empty titles cannot be saved (FR Â§10.1 Edge Cases). Calls [onSave] with the draft
  * and a completion callback that receives the create result.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun AddTaskSheet(
     today: java.time.LocalDate = java.time.LocalDate.now(),
@@ -107,37 +112,46 @@ fun AddTaskSheet(
     var error by remember { mutableStateOf<CreateTaskResult?>(null) }
     // "More" disclosure (design-spec.md §7 #5): repeat, category and subtasks live behind it.
     var moreExpanded by remember { mutableStateOf(false) }
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     NemoBottomSheet(onDismissRequest = { if (!isSubmitting) onDismiss() }) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .imePadding()
                 .navigationBarsPadding()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = Spacing.screenHorizontal)
-                .padding(bottom = Spacing.x8),
-            verticalArrangement = Arrangement.spacedBy(Spacing.x4),
+                .imePadding(),
         ) {
-            // Header: title + close
-            NemoSheetHeader(
-                title = stringResource(R.string.add_task_title),
-                onClose = onDismiss,
-                isClosingEnabled = !isSubmitting,
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f, fill = false)
+                    .imeNestedScroll()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = Spacing.screenHorizontal),
+                verticalArrangement = Arrangement.spacedBy(Spacing.x4),
+            ) {
+                // Header: title + close
+                NemoSheetHeader(
+                    title = stringResource(R.string.add_task_title),
+                    onClose = onDismiss,
+                    isClosingEnabled = !isSubmitting,
+                )
 
-            Field(
-                value = title,
-                onValueChange = { title = it },
-                hint = stringResource(R.string.add_task_field_title_hint),
-                enabled = !isSubmitting,
-            )
-            Field(
-                value = description,
-                onValueChange = { description = it },
-                hint = stringResource(R.string.add_task_field_description_hint),
-                enabled = !isSubmitting,
-            )
+                Field(
+                    value = title,
+                    onValueChange = { title = it },
+                    hint = stringResource(R.string.add_task_field_title_hint),
+                    enabled = !isSubmitting,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                )
+                Field(
+                    value = description,
+                    onValueChange = { description = it },
+                    hint = stringResource(R.string.add_task_field_description_hint),
+                    enabled = !isSubmitting,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() }),
+                )
 
             LabeledSection(stringResource(R.string.add_task_priority_label)) {
                 val labels = listOf(
@@ -184,7 +198,10 @@ fun AddTaskSheet(
                             .pressable(
                                 shape = RoundedCornerShape(Radius.field),
                                 enabled = !isSubmitting,
-                                onClick = { if (!isSubmitting) dialogOpen = true },
+                                onClick = {
+                                    keyboardController?.hide()
+                                    if (!isSubmitting) dialogOpen = true
+                                },
                             )
                             .padding(horizontal = Spacing.x3),
                         verticalAlignment = Alignment.CenterVertically,
@@ -248,7 +265,10 @@ fun AddTaskSheet(
                             .pressable(
                                 shape = RoundedCornerShape(Radius.field),
                                 enabled = !isSubmitting,
-                                onClick = { if (!isSubmitting) dialogOpen = true },
+                                onClick = {
+                                    keyboardController?.hide()
+                                    if (!isSubmitting) dialogOpen = true
+                                },
                             )
                             .padding(horizontal = Spacing.x3),
                         verticalAlignment = Alignment.CenterVertically,
@@ -315,24 +335,27 @@ fun AddTaskSheet(
                         }
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
+                        val addSubtaskAction = {
+                            val clean = subtaskInput.trim()
+                            if (clean.isNotEmpty()) {
+                                subtasks.add(clean)
+                                subtaskInput = ""
+                            }
+                        }
                         Box(modifier = Modifier.weight(1f)) {
                             Field(
                                 value = subtaskInput,
                                 onValueChange = { subtaskInput = it },
                                 hint = stringResource(R.string.add_task_subtask_hint),
                                 enabled = !isSubmitting,
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                                keyboardActions = KeyboardActions(onDone = { addSubtaskAction() }),
                             )
                         }
                         Spacer(modifier = Modifier.width(Spacing.x2))
                         TextButton(
                             enabled = !isSubmitting,
-                            onClick = {
-                                val clean = subtaskInput.trim()
-                                if (clean.isNotEmpty()) {
-                                    subtasks.add(clean)
-                                    subtaskInput = ""
-                                }
-                            },
+                            onClick = addSubtaskAction,
                         ) {
                             Text(
                                 text = stringResource(R.string.add_task_subtask_add),
@@ -381,13 +404,22 @@ fun AddTaskSheet(
                     color = Nemo.colors.danger,
                 )
             }
+            Spacer(modifier = Modifier.height(Spacing.x2))
+        }
 
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Spacing.screenHorizontal)
+                .padding(top = Spacing.x2, bottom = Spacing.x4),
+        ) {
             PrimaryButton(
                 label = stringResource(R.string.add_task_save),
                 enabled = title.isNotBlank() && !isSubmitting,
                 loading = isSubmitting,
                 loadingText = stringResource(R.string.add_task_saving),
                 onClick = {
+                    keyboardController?.hide()
                     if (isSubmitting) return@PrimaryButton
                     isSubmitting = true
                     val draft = TaskDraft(
@@ -421,6 +453,7 @@ fun AddTaskSheet(
             )
         }
     }
+}
 }
 
 /**
@@ -482,6 +515,8 @@ private fun Field(
     hint: String,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
 ) {
     Box(
         modifier = modifier
@@ -510,6 +545,8 @@ private fun Field(
                 fontSize = 14.sp,
                 color = if (enabled) Nemo.colors.ink else Nemo.colors.mute,
             ),
+            keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
             modifier = Modifier.fillMaxWidth(),
         )
     }

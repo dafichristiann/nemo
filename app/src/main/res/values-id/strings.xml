@@ -55,10 +55,11 @@
     <string name="task_filter_upcoming">Nanti</string>
     <string name="task_filter_overdue">Keliwatan</string>
     <string name="task_filter_completed">Beres</string>
+    <string name="task_filter_done">Beres</string>
     <string name="task_completed_badge">Beres</string>
 
     <string name="home_empty_title">Belum ada to-do nih — yuk rencanain harimu!</string>
-    <string name="home_empty_body">Tap + buat nambahin to-do pertama kamu.</string>
+    <string name="home_empty_body">Ketuk di bawah untuk menambahkan tugas pertamamu.</string>
 
     <string name="task_priority_low">SANTAI</string>
     <string name="task_priority_medium">SEDANG</string>
@@ -100,9 +101,14 @@
     <string name="add_task_save">Simpen To-Do</string>
     <string name="add_task_saving">Nyimpen…</string>
     <string name="add_task_error_empty_title">Judul to-do tidak boleh kosong</string>
-    <string name="task_toast_done">Mantap, to-do beres!</string>
+    <string name="task_toast_done">Mantap, to-do beres! Dipindah ke tab Selesai</string>
     <string name="task_toast_created">To-Do berhasil ditambah!</string>
     <string name="task_toast_undo">Undo</string>
+    <string name="tasks_all_done_title">Semua to-do hari ini selesai!</string>
+    <string name="tasks_all_done_body">Kamu sudah menyelesaikan %1$d tugas hari ini. Cek progresmu di tab Selesai.</string>
+    <string name="tasks_all_done_action">Lihat Tab Selesai</string>
+    <string name="onboarding_perm_accessibility_restricted_help">Di Android 13+, jika muncul \"Setelan dibatasi\": buka Info Aplikasi > titik tiga kanan atas > \"Izinkan setelan dibatasi\".</string>
+    <string name="onboarding_perm_accessibility_open_app_info">Buka Info Aplikasi</string>
     <string name="cd_close_sheet">Tutup</string>
     <string name="cd_selected">Terpilih</string>
 
@@ -130,6 +136,11 @@
     <string name="detail_action_complete">Tandai Beres</string>
     <string name="detail_action_todo">Jadikan To-Do</string>
     <string name="detail_action_complete_via_focus">Gaskeun Fokus Biar Beres</string>
+    <string name="detail_action_reopen">Buka Kembali To-Do</string>
+    <string name="detail_completed_callout_title">Tugas ini sudah selesai!</string>
+    <string name="detail_completed_callout_body">Kerja bagus! Satu beban pikiran berhasil diselesaikan.</string>
+    <string name="tasks_empty_completed_title">Belum ada to-do yang selesai</string>
+    <string name="tasks_empty_completed_body">Selesaikan sesi fokus untuk menuntaskan to-do kamu.</string>
     <string name="detail_action_delete">Hapus To-Do</string>
     <string name="task_delete_confirm_title">Hapus to-do?</string>
     <string name="task_delete_confirm_body">Yakin ingin menghapus to-do ini? Tindakan ini tidak dapat dibatalkan.</string>
@@ -522,7 +533,7 @@
     <string name="focus_rating_prompt">Seberapa fokus tadi?</string>
     <string name="focus_rating_thank_you">Terima kasih atas penilaiannya!</string>
     <string name="wellbeing_peak_window_title">JAM FOKUS PALING GACOR</string>
-    <string name="wellbeing_peak_window_desc">Waktu terbaik buat to-do berat (Penting/Urgent). Otak lagi 40%% lebih encer.</string>
+    <string name="wellbeing_peak_window_desc">Waktu terbaik buat to-do berat (Penting/Urgent). Otak lagi 40% lebih encer.</string>
     <string name="wellbeing_peak_status_active">SEDANG AKTIF</string>
     <string name="wellbeing_peak_status_upcoming">AKAN DATANG</string>
     <string name="wellbeing_peak_status_secondary">PUNCAK KEDUA</string>

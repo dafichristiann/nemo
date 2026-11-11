@@ -54,10 +54,11 @@
     <string name="task_filter_upcoming">Upcoming</string>
     <string name="task_filter_overdue">Overdue</string>
     <string name="task_filter_completed">Completed</string>
+    <string name="task_filter_done">Done</string>
     <string name="task_completed_badge">Completed</string>
 
     <string name="home_empty_title">No tasks yet — plan your day.</string>
-    <string name="home_empty_body">Tap + to add your first task.</string>
+    <string name="home_empty_body">Tap below to add your first task.</string>
 
     <string name="task_priority_low">LOW</string>
     <string name="task_priority_medium">MEDIUM</string>
@@ -98,9 +99,14 @@
     <string name="add_task_save">Save Task</string>
     <string name="add_task_saving">Saving…</string>
     <string name="add_task_error_empty_title">Task title cannot be empty</string>
-    <string name="task_toast_done">Task completed</string>
+    <string name="task_toast_done">Task completed · Moved to Done</string>
     <string name="task_toast_created">Task created</string>
     <string name="task_toast_undo">Undo</string>
+    <string name="tasks_all_done_title">All done for today!</string>
+    <string name="tasks_all_done_body">You completed %1$d tasks today. View them anytime in the Done tab.</string>
+    <string name="tasks_all_done_action">View Done Tasks</string>
+    <string name="onboarding_perm_accessibility_restricted_help">On Android 13+, if \"Restricted setting\" appears: open App Info > 3 dots top right > \"Allow restricted settings\".</string>
+    <string name="onboarding_perm_accessibility_open_app_info">Open App Info</string>
     <string name="cd_close_sheet">Close</string>
     <string name="cd_selected">Selected</string>
 
@@ -128,6 +134,11 @@
     <string name="detail_action_complete">Mark as Done</string>
     <string name="detail_action_todo">Mark as Todo</string>
     <string name="detail_action_complete_via_focus">Start Focus to Complete</string>
+    <string name="detail_action_reopen">Reopen Task</string>
+    <string name="detail_completed_callout_title">Task is completed!</string>
+    <string name="detail_completed_callout_body">Great job! One less mental load off your mind.</string>
+    <string name="tasks_empty_completed_title">No completed tasks yet</string>
+    <string name="tasks_empty_completed_body">Finish a focus session to clear tasks off your list.</string>
     <string name="detail_action_delete">Delete Task</string>
     <string name="task_delete_confirm_title">Delete task?</string>
     <string name="task_delete_confirm_body">Are you sure you want to delete this task? This action cannot be undone.</string>
@@ -521,7 +532,7 @@
     <string name="focus_rating_prompt">How focused were you?</string>
     <string name="focus_rating_thank_you">Thanks for your feedback!</string>
     <string name="wellbeing_peak_window_title">PEAK FOCUS WINDOW</string>
-    <string name="wellbeing_peak_window_desc">Best window for high-focus tasks. Cognition up to 40%% sharper.</string>
+    <string name="wellbeing_peak_window_desc">Best window for high-focus tasks. Cognition up to 40% sharper.</string>
     <string name="wellbeing_peak_status_active">ACTIVE NOW</string>
     <string name="wellbeing_peak_status_upcoming">UPCOMING</string>
     <string name="wellbeing_peak_status_secondary">SECONDARY PEAK</string>

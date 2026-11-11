@@ -337,103 +337,138 @@ fun TaskDetailScreen(
             }
         }
 
-        // Quick add subtask (integrated modern input pill)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp)
-                .clip(RoundedCornerShape(Radius.field))
-                .background(Nemo.colors.fog)
-                .border(1.dp, Nemo.colors.line, RoundedCornerShape(Radius.field))
-                .padding(start = Spacing.x3, end = Spacing.x1),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(
+        // Quick add subtask (integrated modern input pill) - only for active tasks
+        if (!task.isDone) {
+            Row(
                 modifier = Modifier
-                    .weight(1f)
-                    .padding(vertical = Spacing.x1),
-                contentAlignment = Alignment.CenterStart,
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .clip(RoundedCornerShape(Radius.field))
+                    .background(Nemo.colors.fog)
+                    .border(1.dp, Nemo.colors.line, RoundedCornerShape(Radius.field))
+                    .padding(start = Spacing.x3, end = Spacing.x1),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (newSubtask.isEmpty()) {
-                    Text(
-                        text = stringResource(R.string.add_task_subtask_hint),
-                        fontFamily = GeistFamily,
-                        fontSize = 13.sp,
-                        color = Nemo.colors.placeholder,
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(vertical = Spacing.x1),
+                    contentAlignment = Alignment.CenterStart,
+                ) {
+                    if (newSubtask.isEmpty()) {
+                        Text(
+                            text = stringResource(R.string.add_task_subtask_hint),
+                            fontFamily = GeistFamily,
+                            fontSize = 13.sp,
+                            color = Nemo.colors.placeholder,
+                        )
+                    }
+                    BasicTextField(
+                        value = newSubtask,
+                        onValueChange = { newSubtask = it },
+                        singleLine = true,
+                        textStyle = TextStyle(
+                            fontFamily = GeistFamily,
+                            fontSize = 13.sp,
+                            color = Nemo.colors.ink,
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
-                BasicTextField(
-                    value = newSubtask,
-                    onValueChange = { newSubtask = it },
-                    singleLine = true,
-                    textStyle = TextStyle(
+                Box(
+                    modifier = Modifier
+                        .clip(PillShape)
+                        .background(if (newSubtask.isNotBlank()) Nemo.colors.ink else Color.Transparent)
+                        .clickable(enabled = newSubtask.isNotBlank()) {
+                            viewModel.onAddSubtask(newSubtask)
+                            newSubtask = ""
+                        }
+                        .padding(horizontal = Spacing.x3, vertical = Spacing.x2),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = stringResource(R.string.detail_add_subtask),
                         fontFamily = GeistFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 12.sp,
+                        color = if (newSubtask.isNotBlank()) Nemo.colors.onInk else Nemo.colors.mute,
+                    )
+                }
+            }
+        }
+
+        // Callout: Future View for incomplete tasks, celebration banner for completed tasks
+        if (!task.isDone) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(Radius.card))
+                    .background(Nemo.colors.surface)
+                    .border(1.dp, Nemo.colors.line, RoundedCornerShape(Radius.card))
+                    .pressable(
+                        shape = RoundedCornerShape(Radius.card),
+                        pressedScale = 0.98f,
+                        onClick = { onOpenFutureView(task.id) },
+                    )
+                    .padding(horizontal = Spacing.x4, vertical = Spacing.x3),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.x3),
+            ) {
+                com.anchor.app.core.design.components.NemoMascot(
+                    expression = com.anchor.app.core.design.components.MascotExpression.THINKING,
+                    size = 34.dp,
+                )
+                Text(
+                    text = stringResource(R.string.detail_future_callout),
+                    fontFamily = GeistFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 13.sp,
+                    color = Nemo.colors.ink,
+                    modifier = Modifier.weight(1f),
+                )
+                Icon(
+                    painter = painterResource(R.drawable.ic_back),
+                    contentDescription = null,
+                    tint = Nemo.colors.mute,
+                    modifier = Modifier
+                        .size(16.dp)
+                        .graphicsLayer { rotationZ = 180f },
+                )
+            }
+        } else {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(Radius.card))
+                    .background(Nemo.colors.surface)
+                    .border(1.dp, Nemo.colors.line, RoundedCornerShape(Radius.card))
+                    .padding(horizontal = Spacing.x4, vertical = Spacing.x3),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.x3),
+            ) {
+                com.anchor.app.core.design.components.NemoMascot(
+                    expression = com.anchor.app.core.design.components.MascotExpression.LAUGHING,
+                    size = 36.dp,
+                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.detail_completed_callout_title),
+                        fontFamily = GeistFamily,
+                        fontWeight = FontWeight.SemiBold,
                         fontSize = 13.sp,
                         color = Nemo.colors.ink,
-                    ),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .clip(PillShape)
-                    .background(if (newSubtask.isNotBlank()) Nemo.colors.ink else Color.Transparent)
-                    .clickable(enabled = newSubtask.isNotBlank()) {
-                        viewModel.onAddSubtask(newSubtask)
-                        newSubtask = ""
-                    }
-                    .padding(horizontal = Spacing.x3, vertical = Spacing.x2),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = stringResource(R.string.detail_add_subtask),
-                    fontFamily = GeistFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 12.sp,
-                    color = if (newSubtask.isNotBlank()) Nemo.colors.onInk else Nemo.colors.mute,
-                )
+                    )
+                    Text(
+                        text = stringResource(R.string.detail_completed_callout_body),
+                        fontFamily = GeistFamily,
+                        fontSize = 12.sp,
+                        color = Nemo.colors.mute,
+                    )
+                }
             }
         }
 
-        // Future View callout (07-screens.md §2.14; opens screen 07)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(Radius.card))
-                .background(Nemo.colors.surface)
-                .border(1.dp, Nemo.colors.line, RoundedCornerShape(Radius.card))
-                .pressable(
-                    shape = RoundedCornerShape(Radius.card),
-                    pressedScale = 0.98f,
-                    onClick = { onOpenFutureView(task.id) },
-                )
-                .padding(horizontal = Spacing.x4, vertical = Spacing.x3),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Spacing.x3),
-        ) {
-            com.anchor.app.core.design.components.NemoMascot(
-                expression = com.anchor.app.core.design.components.MascotExpression.THINKING,
-                size = 34.dp,
-            )
-            Text(
-                text = stringResource(R.string.detail_future_callout),
-                fontFamily = GeistFamily,
-                fontWeight = FontWeight.Medium,
-                fontSize = 13.sp,
-                color = Nemo.colors.ink,
-                modifier = Modifier.weight(1f),
-            )
-            Icon(
-                painter = painterResource(R.drawable.ic_back),
-                contentDescription = null,
-                tint = Nemo.colors.mute,
-                modifier = Modifier
-                    .size(16.dp)
-                    .graphicsLayer { rotationZ = 180f },
-            )
-        }
-
-        // Actions: Primary Focus CTA, Secondary Mark Done, plus centered bottom actions
+        // Actions: adapted based on whether task is active or already completed
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -441,45 +476,71 @@ fun TaskDetailScreen(
             verticalArrangement = Arrangement.spacedBy(Spacing.x3),
         ) {
             val isDone = task.isDone
-            NemoButton(
-                text = stringResource(R.string.detail_action_complete_via_focus),
-                onClick = { onStartFocusToComplete(task.id) },
-                modifier = Modifier.fillMaxWidth(),
-                style = if (isDone) NemoButtonStyle.Secondary else NemoButtonStyle.Primary,
-            )
-
-            val doneLabel = if (isDone) {
-                stringResource(R.string.detail_action_todo)
-            } else {
-                stringResource(R.string.detail_action_complete)
-            }
-            NemoButton(
-                text = doneLabel,
-                onClick = { viewModel.onToggleDone() },
-                modifier = Modifier.fillMaxWidth(),
-                style = if (isDone) NemoButtonStyle.Primary else NemoButtonStyle.Secondary,
-            )
-
-            // Quiet secondary actions centered
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = Spacing.x1),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                SecondaryAction(stringResource(R.string.detail_action_reschedule)) {
-                    showReschedule = true
-                }
-                Box(
-                    modifier = Modifier
-                        .padding(horizontal = Spacing.x3)
-                        .size(3.dp)
-                        .clip(CircleShape)
-                        .background(Nemo.colors.mute),
+            if (!isDone) {
+                NemoButton(
+                    text = stringResource(R.string.detail_action_complete_via_focus),
+                    onClick = { onStartFocusToComplete(task.id) },
+                    modifier = Modifier.fillMaxWidth(),
+                    style = NemoButtonStyle.Primary,
                 )
-                SecondaryAction(stringResource(R.string.detail_action_delete), danger = true) {
-                    showDeleteConfirmDialog = true
+
+                NemoButton(
+                    text = stringResource(R.string.detail_action_complete),
+                    onClick = { viewModel.onToggleDone() },
+                    modifier = Modifier.fillMaxWidth(),
+                    style = NemoButtonStyle.Secondary,
+                )
+
+                // Quiet secondary actions centered
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = Spacing.x1),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    SecondaryAction(stringResource(R.string.detail_action_reschedule)) {
+                        showReschedule = true
+                    }
+                    Box(
+                        modifier = Modifier
+                            .padding(horizontal = Spacing.x3)
+                            .size(3.dp)
+                            .clip(CircleShape)
+                            .background(Nemo.colors.mute),
+                    )
+                    SecondaryAction(stringResource(R.string.detail_action_delete), danger = true) {
+                        showDeleteConfirmDialog = true
+                    }
+                }
+            } else {
+                // Completed: primary action is Reopen / Mark as Todo
+                NemoButton(
+                    text = stringResource(R.string.detail_action_reopen),
+                    onClick = { viewModel.onToggleDone() },
+                    modifier = Modifier.fillMaxWidth(),
+                    style = NemoButtonStyle.Primary,
+                )
+
+                // Secondary action: focus session if user wants extra focus
+                NemoButton(
+                    text = stringResource(R.string.detail_action_start_focus),
+                    onClick = { onStartFocusToComplete(task.id) },
+                    modifier = Modifier.fillMaxWidth(),
+                    style = NemoButtonStyle.Secondary,
+                )
+
+                // Quiet delete action centered (no reschedule for completed task)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = Spacing.x1),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    SecondaryAction(stringResource(R.string.detail_action_delete), danger = true) {
+                        showDeleteConfirmDialog = true
+                    }
                 }
             }
         }

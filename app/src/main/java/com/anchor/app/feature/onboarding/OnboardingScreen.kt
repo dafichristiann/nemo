@@ -17,11 +17,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imeNestedScroll
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -352,6 +356,21 @@ fun PermissionOnboardingScreen(
             granted = accessibilityGranted,
             iconRes = R.drawable.ic_focus,
             onEnable = { accessibilityStatus.open(context) },
+            helperText = if (!accessibilityGranted && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                stringResource(R.string.onboarding_perm_accessibility_restricted_help)
+            } else null,
+            actionSecondaryText = if (!accessibilityGranted && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                stringResource(R.string.onboarding_perm_accessibility_open_app_info)
+            } else null,
+            onActionSecondary = {
+                runCatching {
+                    context.startActivity(
+                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                            .setData(Uri.fromParts("package", context.packageName, null))
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                    )
+                }
+            },
         )
 
         val allPermissionsGranted = usageGranted && notificationsGranted && accessibilityGranted
@@ -404,6 +423,7 @@ fun PermissionOnboardingScreen(
  * length (25 / 45 / 60 min). Every field is optional and immediately persisted, so the user can
  * tap Continue/Skip at any point without losing what they typed.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ProfileSetupScreen(
     onContinue: () -> Unit,
@@ -482,6 +502,9 @@ fun ProfileSetupScreen(
         modifier = modifier
             .fillMaxSize()
             .background(Nemo.colors.background)
+            .navigationBarsPadding()
+            .imePadding()
+            .imeNestedScroll()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = Spacing.screenHorizontal)
             .padding(vertical = Spacing.x6),
@@ -816,6 +839,8 @@ private fun PermissionCard(
     onEnable: () -> Unit,
     iconRes: Int? = null,
     helperText: String? = null,
+    actionSecondaryText: String? = null,
+    onActionSecondary: (() -> Unit)? = null,
 ) {
     Column(
         modifier = Modifier
@@ -880,6 +905,19 @@ private fun PermissionCard(
                 fontSize = 12.sp,
                 lineHeight = 16.sp,
                 color = Nemo.colors.mute,
+            )
+        }
+        if (actionSecondaryText != null && onActionSecondary != null) {
+            Text(
+                text = actionSecondaryText,
+                fontFamily = GeistFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 12.sp,
+                color = Nemo.colors.ink,
+                modifier = Modifier
+                    .clip(PillShape)
+                    .clickable(onClick = onActionSecondary)
+                    .padding(vertical = Spacing.x1),
             )
         }
     }

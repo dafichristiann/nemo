@@ -69,6 +69,7 @@ fun NemoTaskRow(
     subtitle: String? = null,
     meta: String? = null,
     done: Boolean = false,
+    showNode: Boolean = done,
     highlighted: Boolean = false,
     onClick: (() -> Unit)? = null,
     onToggleDone: (() -> Unit)? = null,
@@ -115,30 +116,33 @@ fun NemoTaskRow(
         modifier = rowModifier,
         verticalAlignment = Alignment.Top,
     ) {
-        Box(
-            modifier = Modifier
-                .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
-                .semantics {
-                    role = Role.Checkbox
-                    this.contentDescription = title
-                    stateDescription = if (done) "Selesai" else "Belum selesai"
-                }
-                .then(
-                    if (onToggleDone != null) {
-                        Modifier.pressable(
-                            shape = CircleShape,
-                            pressedScale = 0.88f,
-                            onClick = onToggleDone,
-                        )
-                    } else {
-                        Modifier
-                    },
-                ),
-            contentAlignment = Alignment.Center,
-        ) {
-            NemoNode(done = done)
+        if (showNode) {
+            Box(
+                modifier = Modifier
+                    .padding(top = 1.dp)
+                    .size(24.dp)
+                    .semantics {
+                        role = Role.Checkbox
+                        this.contentDescription = title
+                        stateDescription = if (done) "Selesai" else "Belum selesai"
+                    }
+                    .then(
+                        if (onToggleDone != null) {
+                            Modifier.pressable(
+                                shape = CircleShape,
+                                pressedScale = 0.88f,
+                                onClick = onToggleDone,
+                            )
+                        } else {
+                            Modifier
+                        },
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                NemoNode(done = done)
+            }
+            Spacer(modifier = Modifier.width(Spacing.x3))
         }
-        Spacer(modifier = Modifier.width(Spacing.x3))
         Column(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(Spacing.x1),

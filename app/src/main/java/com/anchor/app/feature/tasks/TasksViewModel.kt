@@ -43,6 +43,7 @@ data class TaskRowUi(
 )
 
 /** Data for floating toast feedback on task actions. */
+@androidx.compose.runtime.Immutable
 data class TaskToast(
     val message: String,
     val actionLabel: String? = null,

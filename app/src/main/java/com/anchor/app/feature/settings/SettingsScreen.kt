@@ -97,6 +97,7 @@ fun SettingsScreen(
     val permissions by viewModel.permissions.collectAsStateWithLifecycle()
     val categories by viewModel.categories.collectAsStateWithLifecycle()
     val customApiKey by viewModel.customApiKey.collectAsStateWithLifecycle()
+    val apiKeyTestStatus by viewModel.apiKeyTestStatus.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
     var showMascotShowcase by remember { mutableStateOf(false) }
@@ -615,7 +616,10 @@ fun SettingsScreen(
         if (showApiKeyDialog) {
             var tempKey by rememberSaveable { mutableStateOf(customApiKey) }
             AlertDialog(
-                onDismissRequest = { showApiKeyDialog = false },
+                onDismissRequest = {
+                    viewModel.clearApiKeyTestStatus()
+                    showApiKeyDialog = false
+                },
                 containerColor = Nemo.colors.surface,
                 title = {
                     Text(
@@ -653,7 +657,10 @@ fun SettingsScreen(
                             }
                             BasicTextField(
                                 value = tempKey,
-                                onValueChange = { tempKey = it.trim() },
+                                onValueChange = {
+                                    tempKey = it.trim()
+                                    viewModel.clearApiKeyTestStatus()
+                                },
                                 singleLine = true,
                                 textStyle = TextStyle(
                                     fontFamily = GeistMonoFamily,
@@ -664,6 +671,50 @@ fun SettingsScreen(
                                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                                 modifier = Modifier.fillMaxWidth(),
                             )
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            TextButton(
+                                onClick = { viewModel.testApiKey(tempKey) },
+                                enabled = tempKey.isNotBlank() && apiKeyTestStatus !is ApiKeyTestStatus.Testing,
+                            ) {
+                                Text(
+                                    text = if (apiKeyTestStatus is ApiKeyTestStatus.Testing) {
+                                        stringResource(R.string.settings_ai_api_key_test_testing)
+                                    } else {
+                                        stringResource(R.string.settings_ai_api_key_test_action)
+                                    },
+                                    fontFamily = GeistFamily,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Nemo.colors.ink,
+                                )
+                            }
+
+                            when (val status = apiKeyTestStatus) {
+                                is ApiKeyTestStatus.Success -> {
+                                    Text(
+                                        text = stringResource(R.string.settings_ai_api_key_test_success),
+                                        fontFamily = GeistFamily,
+                                        fontSize = 12.sp,
+                                        color = Nemo.colors.ink,
+                                        fontWeight = FontWeight.Medium,
+                                    )
+                                }
+                                is ApiKeyTestStatus.Error -> {
+                                    Text(
+                                        text = stringResource(R.string.settings_ai_api_key_test_failed, status.message),
+                                        fontFamily = GeistFamily,
+                                        fontSize = 11.sp,
+                                        color = Nemo.colors.danger,
+                                    )
+                                }
+                                else -> Unit
+                            }
                         }
                     }
                 },
@@ -683,7 +734,12 @@ fun SettingsScreen(
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showApiKeyDialog = false }) {
+                    TextButton(
+                        onClick = {
+                            viewModel.clearApiKeyTestStatus()
+                            showApiKeyDialog = false
+                        },
+                    ) {
                         Text(
                             text = stringResource(R.string.dialog_cancel),
                             fontFamily = GeistFamily,

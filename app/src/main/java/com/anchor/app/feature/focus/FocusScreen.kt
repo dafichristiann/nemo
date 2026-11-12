@@ -40,6 +40,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -543,7 +544,11 @@ private fun FocusSetupContent(
                     )
                 } else {
                     LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(state.taskOptions) { option ->
+                        items(
+                            items = state.taskOptions,
+                            key = { it.id },
+                            contentType = { "focus_task_option" },
+                        ) { option ->
                             val isSelected = option.id == state.selectedTaskId
                             Row(
                                 modifier = Modifier
@@ -727,6 +732,7 @@ private fun FocusActiveContent(
         ) {
             Box(
                 modifier = Modifier
+                    .minimumInteractiveComponentSize()
                     .size(36.dp)
                     .clip(CircleShape)
                     .background(cardBg)
@@ -858,30 +864,8 @@ private fun FocusActiveContent(
                     horizontalArrangement = Arrangement.spacedBy(3.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    val waveHeights = if (isSoundActive) {
-                        listOf(8.dp, 16.dp, 22.dp, 14.dp, 18.dp, 10.dp)
-                    } else {
-                        listOf(4.dp, 4.dp, 4.dp, 4.dp, 4.dp, 4.dp)
-                    }
-                    val waveColors = if (isSoundActive) {
-                        listOf(
-                            Color(0xFF4A4A54),
-                            Color(0xFF8A8A96),
-                            Color(0xFFFFFFFF),
-                            Color(0xFF8A8A96),
-                            Color(0xFFCFCFCF),
-                            Color(0xFF4A4A54),
-                        )
-                    } else {
-                        listOf(
-                            Color(0xFF33333A),
-                            Color(0xFF33333A),
-                            Color(0xFF444450),
-                            Color(0xFF444450),
-                            Color(0xFF33333A),
-                            Color(0xFF33333A),
-                        )
-                    }
+                    val waveHeights = if (isSoundActive) WAVE_HEIGHTS_ACTIVE else WAVE_HEIGHTS_INACTIVE
+                    val waveColors = if (isSoundActive) WAVE_COLORS_ACTIVE else WAVE_COLORS_INACTIVE
                     waveHeights.forEachIndexed { idx, h ->
                         Box(
                             modifier = Modifier
@@ -1640,3 +1624,22 @@ private fun LofiGenreSelectionDialog(
         shape = RoundedCornerShape(16.dp),
     )
 }
+
+private val WAVE_HEIGHTS_ACTIVE = listOf(8.dp, 16.dp, 22.dp, 14.dp, 18.dp, 10.dp)
+private val WAVE_HEIGHTS_INACTIVE = listOf(4.dp, 4.dp, 4.dp, 4.dp, 4.dp, 4.dp)
+private val WAVE_COLORS_ACTIVE = listOf(
+    Color(0xFF4A4A54),
+    Color(0xFF8A8A96),
+    Color(0xFFFFFFFF),
+    Color(0xFF8A8A96),
+    Color(0xFFCFCFCF),
+    Color(0xFF4A4A54),
+)
+private val WAVE_COLORS_INACTIVE = listOf(
+    Color(0xFF33333A),
+    Color(0xFF33333A),
+    Color(0xFF444450),
+    Color(0xFF444450),
+    Color(0xFF33333A),
+    Color(0xFF33333A),
+)

@@ -44,6 +44,7 @@ object DatabaseModule {
         NemoDatabase::class.java,
         NemoDatabase.NAME,
     )
+        .setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
         .addMigrations(*NemoDatabase.ALL_MIGRATIONS)
         .addCallback(object : RoomDatabase.Callback() {
             override fun onOpen(db: SupportSQLiteDatabase) {

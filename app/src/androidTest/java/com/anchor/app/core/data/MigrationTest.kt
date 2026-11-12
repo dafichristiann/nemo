@@ -332,4 +332,25 @@ class MigrationTest {
             assertTrue(c.isNull(0))
         }
     }
+
+    @Test
+    fun migrate15ToLatest_addsUsageSessionCompositeIndex() {
+        helper.createDatabase(testDb, 15).use { db ->
+            db.execSQL(
+                "INSERT INTO usage_session (id, packageName, startTime, endTime, durationMs, collectedAt) " +
+                    "VALUES ('us1', 'com.example.app', 1000, 2000, 1000, 2000)",
+            )
+        }
+        val db = helper.runMigrationsAndValidate(
+            testDb,
+            NemoDatabase.VERSION,
+            true,
+            *NemoDatabase.ALL_MIGRATIONS,
+        )
+        db.query(
+            "SELECT name FROM sqlite_master WHERE type='index' AND name='index_usage_session_startTime_endTime'",
+        ).use { c ->
+            assertTrue("Composite index index_usage_session_startTime_endTime should exist", c.moveToFirst())
+        }
+    }
 }

@@ -34,6 +34,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -346,6 +347,7 @@ private fun HomeHeader(nickname: String, onOpenSettings: () -> Unit) {
         action = {
             Box(
                 modifier = Modifier
+                    .minimumInteractiveComponentSize()
                     .size(42.dp)
                     .clip(CircleShape)
                     .border(1.dp, Nemo.colors.line, CircleShape)
@@ -536,7 +538,7 @@ private fun TaskCardRow(
         null
     }
 
-    val meta = if (!isDone && row.deadlineLabel != null) {
+    val meta = if (!isDone) {
         row.metaLabel
     } else {
         null
@@ -565,8 +567,7 @@ private fun TaskCardRow(
         },
         content = {
             if (!isDone) {
-                val timeLabel = row.deadlineLabel ?: row.metaLabel
-                if (!timeLabel.isNullOrBlank()) {
+                if (!row.deadlineLabel.isNullOrBlank()) {
                     Spacer(modifier = Modifier.height(2.dp))
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(Spacing.x2),
@@ -579,7 +580,7 @@ private fun TaskCardRow(
                                 .padding(horizontal = Spacing.x2, vertical = 2.dp),
                         ) {
                             Text(
-                                text = timeLabel,
+                                text = row.deadlineLabel,
                                 fontFamily = GeistMonoFamily,
                                 fontWeight = FontWeight.Normal,
                                 fontSize = 11.sp,

@@ -70,7 +70,7 @@ import com.anchor.app.core.data.entity.WeeklyUsageSummaryEntity
         TaskDependencyEntity::class,
         InsightEntity::class,
     ],
-    version = 15,
+    version = 16,
     exportSchema = true,
 )
 abstract class NemoDatabase : RoomDatabase() {
@@ -92,11 +92,11 @@ abstract class NemoDatabase : RoomDatabase() {
         const val NAME = "nemo.db"
 
         /** Current schema version (mirrors the `@Database(version = ...)` above). */
-        const val VERSION = 15
+        const val VERSION = 16
 
         /** All migration steps, in order — used by tests and by [DatabaseModule]. */
         val ALL_MIGRATIONS: Array<Migration>
-            get() = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15)
+            get() = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16)
 
         /** v1 → v2: add the Phase-1 task tables (docs 03 §2). */
         val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -472,6 +472,15 @@ abstract class NemoDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE `focus_session` ADD COLUMN `rating` INTEGER DEFAULT NULL")
                 db.execSQL("ALTER TABLE `app_settings` ADD COLUMN `manualWakeTimeEpochDay` INTEGER DEFAULT NULL")
                 db.execSQL("ALTER TABLE `app_settings` ADD COLUMN `manualWakeTimeMinutes` INTEGER DEFAULT NULL")
+            }
+        }
+
+        /**
+         * v15 → v16: + composite index on usage_session (startTime, endTime) for efficient range & overlap scans.
+         */
+        val MIGRATION_15_16 = object : Migration(15, 16) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_usage_session_startTime_endTime` ON `usage_session` (`startTime`, `endTime`)")
             }
         }
     }

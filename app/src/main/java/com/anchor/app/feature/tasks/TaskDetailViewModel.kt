@@ -93,6 +93,26 @@ class TaskDetailViewModel @Inject constructor(
         }
     }
 
+    fun onUpdateTask(
+        title: String,
+        description: String?,
+        priority: com.anchor.app.core.domain.model.TaskPriority,
+        estimatedDurationMin: Int?,
+        category: String?,
+        deadline: Long?,
+    ) = viewModelScope.launch(dispatchers.io) {
+        val current = uiState.value.task ?: return@launch
+        val updated = current.copy(
+            title = title.trim(),
+            description = description?.trim()?.ifEmpty { null },
+            priority = priority,
+            estimatedDurationMin = estimatedDurationMin,
+            category = category?.trim()?.ifEmpty { null },
+            deadline = deadline,
+        )
+        taskRepository.update(updated)
+    }
+
     fun onDelete() = viewModelScope.launch(dispatchers.io) { taskRepository.delete(taskId) }
 
     companion object {

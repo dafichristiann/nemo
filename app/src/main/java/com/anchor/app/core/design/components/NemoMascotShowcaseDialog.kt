@@ -174,7 +174,10 @@ fun NemoMascotShowcaseDialog(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    items(ALL_MASCOT_ITEMS) { item ->
+                    items(
+                        items = ALL_MASCOT_ITEMS,
+                        key = { it.expression.name },
+                    ) { item ->
                         val isSelected = selectedItem?.expression == item.expression
                         Column(
                             modifier = Modifier

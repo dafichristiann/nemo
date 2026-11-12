@@ -101,6 +101,10 @@
     <string name="add_task_save">Simpen To-Do</string>
     <string name="add_task_saving">Nyimpen…</string>
     <string name="add_task_error_empty_title">Judul to-do tidak boleh kosong</string>
+    <string name="add_task_validation_dialog_title">Data Belum Lengkap</string>
+    <string name="add_task_validation_dialog_message">Harap isi kolom wajib berikut sebelum menyimpan:\n\n%1$s</string>
+    <string name="add_task_validation_dialog_dismiss">OK</string>
+    <string name="add_task_field_title_name">Judul to-do</string>
     <string name="task_toast_done">Mantap, to-do beres! Dipindah ke tab Selesai</string>
     <string name="task_toast_created">To-Do berhasil ditambah!</string>
     <string name="task_toast_undo">Undo</string>

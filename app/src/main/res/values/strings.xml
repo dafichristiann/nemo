@@ -86,6 +86,7 @@
     <string name="add_task_duration_minutes">%1$d min</string>
     <string name="add_task_duration_choose">Choose</string>
     <string name="dialog_cancel">Cancel</string>
+    <string name="dialog_save">Save</string>
     <string name="dialog_set">Set</string>
     <string name="add_task_category_label">Category (optional)</string>    <string name="add_task_category_hint">e.g. Study</string>
     <string name="add_task_subtasks_label">Subtasks (%1$d)</string>
@@ -99,6 +100,10 @@
     <string name="add_task_save">Save Task</string>
     <string name="add_task_saving">Saving…</string>
     <string name="add_task_error_empty_title">Task title cannot be empty</string>
+    <string name="add_task_validation_dialog_title">Incomplete Information</string>
+    <string name="add_task_validation_dialog_message">Please fill in the following required fields before saving:\n\n%1$s</string>
+    <string name="add_task_validation_dialog_dismiss">OK</string>
+    <string name="add_task_field_title_name">Task title</string>
     <string name="task_toast_done">Task completed · Moved to Done</string>
     <string name="task_toast_created">Task created</string>
     <string name="task_toast_undo">Undo</string>
@@ -175,6 +180,10 @@
     <string name="settings_ai_api_key_clear_action">Clear</string>
     <string name="settings_ai_api_key_dialog_title">Gemini API Key</string>
     <string name="settings_ai_api_key_dialog_desc">Provide your Gemini API key from Google AI Studio (aistudio.google.com). Stored locally in private app preferences.</string>
+    <string name="settings_ai_api_key_test_action">Test Key</string>
+    <string name="settings_ai_api_key_test_success">API Key is valid ✓</string>
+    <string name="settings_ai_api_key_test_testing">Testing API Key…</string>
+    <string name="settings_ai_api_key_test_failed">Test failed: %1$s</string>
     <string name="settings_tracking_title">Usage tracking</string>
     <string name="settings_tracking_subtitle">Collect local screen-time to power Wellbeing.</string>
     <string name="settings_retention_label" tools:ignore="PluralsCandidate">Data retention — keep at most %1$d days</string>

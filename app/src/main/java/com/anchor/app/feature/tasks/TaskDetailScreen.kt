@@ -24,6 +24,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -86,6 +87,7 @@ fun TaskDetailScreen(
     }
     var newSubtask by remember { mutableStateOf("") }
     var showReschedule by remember { mutableStateOf(false) }
+    var showEditSheet by remember { mutableStateOf(false) }
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
     val task = state.task
 
@@ -158,6 +160,7 @@ fun TaskDetailScreen(
         ) {
             Row(
                 modifier = Modifier
+                    .minimumInteractiveComponentSize()
                     .clip(PillShape)
                     .pressable(
                         shape = PillShape,
@@ -182,7 +185,7 @@ fun TaskDetailScreen(
                     color = Nemo.colors.ink,
                 )
             }
-            if (onEditTask != null && task != null) {
+            if (task != null) {
                 Text(
                     text = stringResource(R.string.detail_edit),
                     fontFamily = GeistFamily,
@@ -190,8 +193,18 @@ fun TaskDetailScreen(
                     fontSize = 14.sp,
                     color = Nemo.colors.ink,
                     modifier = Modifier
+                        .minimumInteractiveComponentSize()
                         .clip(PillShape)
-                        .pressable(shape = PillShape, onClick = { onEditTask(task.id) })
+                        .pressable(
+                            shape = PillShape,
+                            onClick = {
+                                if (onEditTask != null) {
+                                    onEditTask(task.id)
+                                } else {
+                                    showEditSheet = true
+                                }
+                            },
+                        )
                         .padding(horizontal = Spacing.x2, vertical = Spacing.x1),
                 )
             }
@@ -232,6 +245,17 @@ fun TaskDetailScreen(
                     if (task.isDone) R.string.detail_status_completed else R.string.detail_status_in_progress
                 ),
                 filled = task.isDone,
+            )
+        }
+
+        if (!task.description.isNullOrBlank()) {
+            Text(
+                text = task.description,
+                fontFamily = GeistFamily,
+                fontSize = 14.sp,
+                lineHeight = 20.sp,
+                color = Nemo.colors.inkSecondary,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
 
@@ -484,13 +508,6 @@ fun TaskDetailScreen(
                     style = NemoButtonStyle.Primary,
                 )
 
-                NemoButton(
-                    text = stringResource(R.string.detail_action_complete),
-                    onClick = { viewModel.onToggleDone() },
-                    modifier = Modifier.fillMaxWidth(),
-                    style = NemoButtonStyle.Secondary,
-                )
-
                 // Quiet secondary actions centered
                 Row(
                     modifier = Modifier
@@ -605,6 +622,27 @@ fun TaskDetailScreen(
             onConfirm = { newDeadline ->
                 viewModel.onReschedule(newDeadline)
                 showReschedule = false
+            },
+        )
+    }
+
+    if (showEditSheet && task != null) {
+        AddTaskSheet(
+            initialTask = task,
+            today = state.today,
+            zone = state.zone,
+            onDismiss = { showEditSheet = false },
+            onSave = { draft, onResult ->
+                viewModel.onUpdateTask(
+                    title = draft.title,
+                    description = draft.description,
+                    priority = draft.priority,
+                    estimatedDurationMin = draft.estimatedDurationMinutes,
+                    category = draft.category,
+                    deadline = draft.deadline,
+                )
+                showEditSheet = false
+                onResult(com.anchor.app.core.domain.usecase.task.CreateTaskResult.Success(task.id))
             },
         )
     }

@@ -16,6 +16,7 @@ import androidx.room.PrimaryKey
     indices = [
         Index("startTime"),
         Index("packageName"),
+        Index("startTime", "endTime"),
     ],
 )
 data class UsageSessionEntity(

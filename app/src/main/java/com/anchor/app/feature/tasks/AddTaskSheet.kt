@@ -24,6 +24,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -94,24 +95,39 @@ private val DEADLINE_HOUR_OPTIONS: List<Int> = (0..23).toList()
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun AddTaskSheet(
+    initialTask: com.anchor.app.core.domain.model.Task? = null,
     today: java.time.LocalDate = java.time.LocalDate.now(),
     zone: java.time.ZoneId = java.time.ZoneId.systemDefault(),
     onDismiss: () -> Unit,
     onSave: (TaskDraft, (CreateTaskResult) -> Unit) -> Unit,
 ) {
     var isSubmitting by remember { mutableStateOf(false) }
-    var title by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var priority by remember { mutableStateOf(TaskPriority.MEDIUM) }
-    var durationMinutes by remember { mutableStateOf<Int?>(null) }
-    var category by remember { mutableStateOf("") }
+    var title by remember { mutableStateOf(initialTask?.title.orEmpty()) }
+    var description by remember { mutableStateOf(initialTask?.description.orEmpty()) }
+    var priority by remember { mutableStateOf(initialTask?.priority ?: TaskPriority.MEDIUM) }
+    var durationMinutes by remember { mutableStateOf<Int?>(initialTask?.estimatedDurationMin ?: 25) }
+    var category by remember { mutableStateOf(initialTask?.category.orEmpty()) }
     var recurrence by remember { mutableStateOf(RecurrenceRule.NONE) }
-    var deadlineHours by remember { mutableStateOf<Int?>(null) }
+    var deadlineHours by remember {
+        mutableStateOf<Int?>(
+            initialTask?.deadline?.let {
+                java.time.Instant.ofEpochMilli(it).atZone(zone).hour
+            } ?: 23
+        )
+    }
     val subtasks = remember { mutableStateListOf<String>() }
     var subtaskInput by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<CreateTaskResult?>(null) }
+    var showValidationAlert by remember { mutableStateOf(false) }
     // "More" disclosure (design-spec.md §7 #5): repeat, category and subtasks live behind it.
-    var moreExpanded by remember { mutableStateOf(false) }
+    var moreExpanded by remember {
+        mutableStateOf(
+            initialTask != null && (
+                !initialTask.category.isNullOrBlank() ||
+                !initialTask.description.isNullOrBlank()
+            )
+        )
+    }
     val keyboardController = LocalSoftwareKeyboardController.current
 
     NemoBottomSheet(onDismissRequest = { if (!isSubmitting) onDismiss() }) {
@@ -132,7 +148,7 @@ fun AddTaskSheet(
             ) {
                 // Header: title + close
                 NemoSheetHeader(
-                    title = stringResource(R.string.add_task_title),
+                    title = stringResource(if (initialTask != null) R.string.detail_edit else R.string.add_task_title),
                     onClose = onDismiss,
                     isClosingEnabled = !isSubmitting,
                 )
@@ -414,27 +430,34 @@ fun AddTaskSheet(
                 .padding(top = Spacing.x2, bottom = Spacing.x4),
         ) {
             PrimaryButton(
-                label = stringResource(R.string.add_task_save),
-                enabled = title.isNotBlank() && !isSubmitting,
+                label = stringResource(if (initialTask != null) R.string.dialog_save else R.string.add_task_save),
+                enabled = !isSubmitting,
                 loading = isSubmitting,
                 loadingText = stringResource(R.string.add_task_saving),
                 onClick = {
                     keyboardController?.hide()
                     if (isSubmitting) return@PrimaryButton
+                    if (title.isBlank() || deadlineHours == null || durationMinutes == null) {
+                        showValidationAlert = true
+                        return@PrimaryButton
+                    }
                     isSubmitting = true
+                    val computedDeadline = if (deadlineHours != null) {
+                        val targetDate = if (initialTask?.deadline != null) {
+                            java.time.Instant.ofEpochMilli(initialTask.deadline).atZone(zone).toLocalDate()
+                        } else {
+                            today
+                        }
+                        java.time.LocalDateTime.of(targetDate, java.time.LocalTime.of(deadlineHours!!, 0))
+                            .atZone(zone)
+                            .toInstant().toEpochMilli()
+                    } else {
+                        null
+                    }
                     val draft = TaskDraft(
                         title = title.trim(),
                         description = description.trim().ifEmpty { null },
-                        deadline = deadlineHours?.let { hour ->
-                            val targetDate = if (today == java.time.LocalDate.now(zone) && java.time.LocalTime.now(zone).hour >= hour) {
-                                today.plusDays(1)
-                            } else {
-                                today
-                            }
-                            java.time.LocalDateTime.of(targetDate, java.time.LocalTime.of(hour, 0))
-                                .atZone(zone)
-                                .toInstant().toEpochMilli()
-                        },
+                        deadline = computedDeadline,
                         priority = priority,
                         estimatedDurationMinutes = durationMinutes,
                         category = category.trim().ifEmpty { null },
@@ -452,6 +475,47 @@ fun AddTaskSheet(
                 },
             )
         }
+    }
+
+    if (showValidationAlert) {
+        val missingFields = buildList {
+            if (title.isBlank()) add("• " + stringResource(R.string.add_task_field_title_name))
+            if (deadlineHours == null) add("• " + stringResource(R.string.add_task_deadline_label))
+            if (durationMinutes == null) add("• " + stringResource(R.string.add_task_duration_label))
+        }.joinToString("\n")
+
+        AlertDialog(
+            onDismissRequest = { showValidationAlert = false },
+            containerColor = Nemo.colors.surface,
+            title = {
+                Text(
+                    text = stringResource(R.string.add_task_validation_dialog_title),
+                    fontFamily = GeistFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 18.sp,
+                    color = Nemo.colors.ink,
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.add_task_validation_dialog_message, missingFields),
+                    fontFamily = GeistFamily,
+                    fontSize = 14.sp,
+                    lineHeight = 20.sp,
+                    color = Nemo.colors.inkSecondary,
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showValidationAlert = false }) {
+                    Text(
+                        text = stringResource(R.string.add_task_validation_dialog_dismiss),
+                        fontFamily = GeistFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Nemo.colors.ink,
+                    )
+                }
+            },
+        )
     }
 }
 }

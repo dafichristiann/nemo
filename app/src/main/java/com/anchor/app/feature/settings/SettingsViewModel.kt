@@ -64,8 +64,45 @@ class SettingsViewModel @Inject constructor(
     val customApiKey: StateFlow<String> = aiPreferences?.customApiKey
         ?: MutableStateFlow("")
 
+    private val _apiKeyTestStatus = MutableStateFlow<ApiKeyTestStatus>(ApiKeyTestStatus.Idle)
+    val apiKeyTestStatus: StateFlow<ApiKeyTestStatus> = _apiKeyTestStatus.asStateFlow()
+
     fun setCustomApiKey(key: String) {
         aiPreferences?.setCustomApiKey(key)
+        _apiKeyTestStatus.value = ApiKeyTestStatus.Idle
+    }
+
+    fun testApiKey(keyToTest: String? = null) {
+        val key = (keyToTest ?: aiPreferences?.getEffectiveApiKey()).orEmpty().trim()
+        if (key.isBlank()) {
+            _apiKeyTestStatus.value = ApiKeyTestStatus.Error("API key is blank")
+            return
+        }
+        viewModelScope.launch(dispatchers.io) {
+            _apiKeyTestStatus.value = ApiKeyTestStatus.Testing
+            try {
+                val url = java.net.URL("https://generativelanguage.googleapis.com/v1beta/models")
+                val connection = (url.openConnection() as java.net.HttpURLConnection).apply {
+                    requestMethod = "GET"
+                    connectTimeout = 8_000
+                    readTimeout = 8_000
+                    setRequestProperty("x-goog-api-key", key)
+                }
+                val code = connection.responseCode
+                connection.disconnect()
+                _apiKeyTestStatus.value = if (code in 200..299) {
+                    ApiKeyTestStatus.Success
+                } else {
+                    ApiKeyTestStatus.Error("HTTP $code")
+                }
+            } catch (e: Exception) {
+                _apiKeyTestStatus.value = ApiKeyTestStatus.Error(e.message ?: "Network error")
+            }
+        }
+    }
+
+    fun clearApiKeyTestStatus() {
+        _apiKeyTestStatus.value = ApiKeyTestStatus.Idle
     }
 
     fun hasCustomApiKey(): Boolean = aiPreferences?.hasCustomApiKey() ?: false
@@ -265,3 +302,10 @@ data class PermissionStatus(
     val notificationsGranted: Boolean = false,
     val focusBlockingGranted: Boolean = false,
 )
+
+sealed interface ApiKeyTestStatus {
+    object Idle : ApiKeyTestStatus
+    object Testing : ApiKeyTestStatus
+    object Success : ApiKeyTestStatus
+    data class Error(val message: String) : ApiKeyTestStatus
+}

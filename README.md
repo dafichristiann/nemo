@@ -21,7 +21,7 @@
 
 <p align="center">
   <a href="#-kenapa-nemo">Kenapa Nemo?</a> •
-  <a href="#-tampilan--demo-aplikasi">Galeri & Demo</a> •
+  <a href="#-tampilan-aplikasi">Galeri Tampilan</a> •
   <a href="#-fitur-fitur-unggulan">Fitur Unggulan</a> •
   <a href="#-sistem-maskot-chibi-12-ekspresi">Sistem Maskot</a> •
   <a href="#-arsitektur--teknologi">Arsitektur</a> •
@@ -46,22 +46,9 @@ Aplikasi pemblokir biasa (*traditional app blockers*) sering kali terlalu agresi
 
 ---
 
-## 🎬 Tampilan & Demo Aplikasi
+## 🎬 Tampilan Aplikasi
 
-Berikut sekilas pengalaman visual Nemo yang tenang dan monokromatis:
-
-### 🎥 Video Intro & Animasi Splash Chill
-Animasi splash screen bertransisi tenang dengan efek iris ekspansif, membawa nuansa lofi sebelum masuk ke alur fokus.
-
-<p align="center">
-  <a href="docs/assets/videos/splash_chill.mp4">
-    <img src="docs/assets/screenshots/splash_preview.png" width="540" alt="Tonton Animasi Splash Chill Nemo" />
-  </a>
-  <br />
-  <sub>▶️ <b><a href="docs/assets/videos/splash_chill.mp4">Klik di sini untuk menonton / memutar video demo intro lofi (splash_chill.mp4)</a></b></sub>
-</p>
-
----
+Berikut sekilas pengalaman visual antarmuka Nemo yang tenang, minimalis, dan monokromatis:
 
 ### 📱 Galeri Fitur Utama
 

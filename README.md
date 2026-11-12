@@ -54,60 +54,36 @@ Berikut sekilas pengalaman visual Nemo yang tenang dan monokromatis:
 Animasi splash screen bertransisi tenang dengan efek iris ekspansif, membawa nuansa lofi sebelum masuk ke alur fokus.
 
 <p align="center">
-  <video src="docs/assets/videos/splash_chill.mp4" width="70%" controls="controls" poster="docs/assets/screenshots/splash_preview.png">
-    Browser Anda tidak mendukung tag video. Silakan lihat berkas di <a href="docs/assets/videos/splash_chill.mp4">docs/assets/videos/splash_chill.mp4</a>.
-  </video>
-</p>
-
-<p align="center">
-  <sub>💡 <i>Pratinjau video intro / splash chill Nemo (klik video untuk memutar).</i></sub>
+  <a href="docs/assets/videos/splash_chill.mp4">
+    <img src="docs/assets/screenshots/splash_preview.png" width="540" alt="Tonton Animasi Splash Chill Nemo" />
+  </a>
+  <br />
+  <sub>▶️ <b><a href="docs/assets/videos/splash_chill.mp4">Klik di sini untuk menonton / memutar video demo intro lofi (splash_chill.mp4)</a></b></sub>
 </p>
 
 ---
 
 ### 📱 Galeri Fitur Utama
 
-<p align="center">
-  <img src="docs/assets/screenshots/01_first_launch.png" width="31%" alt="First Launch" />
-  <img src="docs/assets/screenshots/02_onboarding_step2.png" width="31%" alt="Onboarding Profile" />
-  <img src="docs/assets/screenshots/03_onboarding_step3.png" width="31%" alt="Onboarding Permissions" />
-</p>
-<p align="center">
-  <sub><b>1. Onboarding Ringkas & Transparan</b>: Tanpa login akun, setup fokus personal (College / Career / Growth), dan permintaan izin jujur tanpa memaksa.</sub>
-</p>
+| 📱 First Launch / Onboarding | 👤 Setup Profil Fokus | 🔒 Izin & Privasi Lokal |
+| :---: | :---: | :---: |
+| <img src="docs/assets/screenshots/01_first_launch.png" width="260" alt="First Launch" /> | <img src="docs/assets/screenshots/02_onboarding_step2.png" width="260" alt="Onboarding Profile" /> | <img src="docs/assets/screenshots/03_onboarding_step3.png" width="260" alt="Onboarding Permissions" /> |
+| *Tanpa login akun, langsung siap digunakan* | *Personalisasi fokus: College, Career, Growth* | *Izin sistem transparan tanpa paksaan* |
 
-<br />
+| 📋 Smart Todo Dashboard | ➕ Add Task Bottom Sheet | 📅 Upcoming Timeline |
+| :---: | :---: | :---: |
+| <img src="docs/assets/screenshots/04_main_screen.png" width="260" alt="Smart Todo Main Screen" /> | <img src="docs/assets/screenshots/05_add_task_dialog.png" width="260" alt="Add Task Sheet" /> | <img src="docs/assets/screenshots/07_tasks_upcoming.png" width="260" alt="Upcoming Tasks Filter" /> |
+| *Progress track harian & status node dinamis* | *Pecah tugas besar menjadi subtask terarah* | *Filter timeline: Today, Upcoming, Done* |
 
-<p align="center">
-  <img src="docs/assets/screenshots/04_main_screen.png" width="31%" alt="Smart Todo Main Screen" />
-  <img src="docs/assets/screenshots/05_add_task_dialog.png" width="31%" alt="Add Task Sheet" />
-  <img src="docs/assets/screenshots/07_tasks_upcoming.png" width="31%" alt="Upcoming Tasks Filter" />
-</p>
-<p align="center">
-  <sub><b>2. Smart Todo & Timeline Tugas</b>: Progress harian visual, pemecahan tugas ke subtask terkecil, dan filter timeline rapi (Today, Upcoming, Overdue, Completed).</sub>
-</p>
+| ⏳ The Domino Effect | 📊 Ritme Tubuh (Wellbeing) | ⏱️ Sesi Fokus & Ambient Lofi |
+| :---: | :---: | :---: |
+| <img src="docs/assets/screenshots/08_tasks_domino.png" width="260" alt="Domino Effect" /> | <img src="docs/assets/screenshots/09_tab_wellbeing.png" width="260" alt="Ritme Tubuh & Screen Time" /> | <img src="docs/assets/screenshots/10_tab_focus.png" width="260" alt="Focus Session" /> |
+| *Proyeksi nyata konsekuensi penundaan tugas* | *Screen time offline & tren mingguan* | *Cincin timer tebal & lofi soundscape* |
 
-<br />
-
-<p align="center">
-  <img src="docs/assets/screenshots/08_tasks_domino.png" width="31%" alt="Domino Effect" />
-  <img src="docs/assets/screenshots/09_tab_wellbeing.png" width="31%" alt="Ritme Tubuh & Screen Time" />
-  <img src="docs/assets/screenshots/10_tab_focus.png" width="31%" alt="Focus Session" />
-</p>
-<p align="center">
-  <sub><b>3. Efek Domino, Ritme Tubuh & Sesi Fokus</b>: Proyeksi dampak penundaan tugas, pelacak screen time lokal, dan mode fokus tenang dengan ambient lofi soundscape.</sub>
-</p>
-
-<br />
-
-<p align="center">
-  <img src="docs/assets/screenshots/11_tab_insights.png" width="31%" alt="Daily Insights Reflection" />
-  <img src="docs/assets/screenshots/12_settings_screen.png" width="31%" alt="Settings & Privacy" />
-  <img src="docs/assets/screenshots/14_tasks_dark_mode.png" width="31%" alt="Tasks Night Mode" />
-</p>
-<p align="center">
-  <sub><b>4. Refleksi Harian, Kontrol Data & Tema Gelap</b>: Daily reflection cerdas, pengaturan privasi granular, dan desain hitam pekat (Night Mode) yang ramah mata.</sub>
-</p>
+| 🧠 Refleksi Harian (Insights) | ⚙️ Pengaturan & Kontrol Privasi | 🌙 Antarmuka Tema Gelap |
+| :---: | :---: | :---: |
+| <img src="docs/assets/screenshots/11_tab_insights.png" width="260" alt="Daily Insights Reflection" /> | <img src="docs/assets/screenshots/12_settings_screen.png" width="260" alt="Settings & Privacy" /> | <img src="docs/assets/screenshots/14_tasks_dark_mode.png" width="260" alt="Tasks Night Mode" /> |
+| *Sintesis produktivitas lokal & Gemini AI* | *Hapus semua data & toggle offline-first* | *Monokrom pekat (#0A0A0A) ramah mata* |
 
 ---
 
@@ -182,31 +158,31 @@ Nemo dibangun mengikuti kaidah **Clean Architecture** berlapis dan pola presenta
 
 ```mermaid
 graph TD
-    subgraph UI_Layer [Presentation Layer - Jetpack Compose & MVI]
-        UI_Screens[Screens: Tasks | Wellbeing | Focus | Insights | FutureView | Settings]
-        UI_Overlays[Overlays: BlockOverlayWindow | InterventionSheet]
-        UI_Design[Design System: NemoTheme | NemoColors | AnimatedMascotView]
-        ViewModels[MVI ViewModels: TasksViewModel | WellbeingViewModel | FocusViewModel | InsightsViewModel]
+    subgraph UI_Layer ["Presentation Layer (Jetpack Compose & MVI)"]
+        UI_Screens["Screens: Tasks · Wellbeing · Focus · Insights · FutureView · Settings"]
+        UI_Overlays["Overlays: BlockOverlayWindow · InterventionSheet"]
+        UI_Design["Design System: NemoTheme · NemoColors · AnimatedMascotView"]
+        ViewModels["MVI ViewModels: TasksViewModel · FocusViewModel · InsightsViewModel"]
     end
 
-    subgraph Domain_Layer [Domain Layer - Pure Kotlin Use Cases]
-        TaskUseCases[Task UseCases: ObserveTasks | CreateTask | RescheduleTask]
-        DriftUseCases[DetectDriftUseCase | EvaluateInterventionUseCase]
-        FutureCalc[FutureViewCalculator | ComputeDominoEffectUseCase]
-        FocusUseCases[StartFocusUseCase | PauseFocusUseCase | FinishFocusUseCase]
+    subgraph Domain_Layer ["Domain Layer (Pure Kotlin Use Cases)"]
+        TaskUseCases["Task UseCases: ObserveTasks · CreateTask · RescheduleTask"]
+        DriftUseCases["Drift UseCases: DetectDriftUseCase · EvaluateInterventionUseCase"]
+        FutureCalc["Future & Domino: FutureViewCalculator · ComputeDominoEffectUseCase"]
+        FocusUseCases["Focus UseCases: StartFocusUseCase · PauseFocusUseCase · FinishFocusUseCase"]
     end
 
-    subgraph Data_Layer [Data & Persistence Layer - Room SQLite v16]
-        RoomDB[(AnchorDatabase - Room Schema v16)]
-        DAOs[TaskDao | SubtaskDao | UsageSessionDao | FocusDao | AppSettingsDao]
-        RepoImpl[TaskRepositoryImpl | UsageRepositoryImpl | SettingsRepositoryImpl]
+    subgraph Data_Layer ["Data & Persistence Layer (Room SQLite v16)"]
+        RoomDB[("AnchorDatabase (Room Schema v16)")]
+        DAOs["DAOs: TaskDao · SubtaskDao · UsageSessionDao · FocusDao · AppSettingsDao"]
+        RepoImpl["Repositories: TaskRepositoryImpl · UsageRepositoryImpl · SettingsRepositoryImpl"]
     end
 
-    subgraph Platform_Layer [Android Platform Integrations]
-        WorkManager[Android WorkManager: DriftCheckWorker | UsageCollectWorker]
-        UsageStats[Android UsageStatsManager API]
-        Accessibility[AnchorAccessibilityService: Window State & Block Overlay]
-        MediaFramework[Media3 ExoPlayer: Lofi Audio & Video Splash]
+    subgraph Platform_Layer ["Android Platform Integrations"]
+        WorkManager["WorkManager: DriftCheckWorker · UsageCollectWorker"]
+        UsageStats["Android UsageStatsManager API"]
+        Accessibility["AnchorAccessibilityService (Window State & Block Overlay)"]
+        MediaFramework["Media3 ExoPlayer (Lofi Audio & Video Splash)"]
     end
 
     UI_Screens --> ViewModels
